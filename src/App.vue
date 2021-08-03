@@ -39,7 +39,8 @@ export default {
   data(){
     return {
       qtext: [],
-      jsondata: {"collection":[], "nodes":[], "relations":[], "links":[]}
+      jsondata: {"collection":[], "nodes":[], "relations":[], "links":[]},
+      next_url: ""
     }
   },
   created(){
@@ -56,16 +57,45 @@ export default {
   mounted(){
     //this.drawing();
   },
+  // watch : {
+  //   //next_url: function(){console.log(this.next_url)},//this.getData()}
+  //   data_url: {
+  //     deep: true,
+  //     handle(val){
+  //       console.log("test");
+  //       console.log(this.data_url, val);
+  //     }
+  //   },
+  //   next_url: {
+  //     deep: true,
+  //     handle(val){
+  //       console.log("test");
+  //       console.log(this.next_url, val);
+  //     }
+  //   }
+  // },
+//   watch: {
+//   next_url: {
+//     handler(newVal, oldVal) {
+//       //console.log("test next_url")
+//       //console.log(newVal, oldVal)
+//       this.data_url = newVal;
+//       this.getData();
+//     },
+//   }
+// },
   methods : {
     async getData() {
+      this.qtext = [];
       this.jsondata = {"collection":[], "nodes":[], "relations":[], "links":[]};
       console.log("TESTING:");
       var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/a.nt';
-      if (this.eventTitle){
-        standardURL = this.eventTitle;
+      if (this.data_url){
+        standardURL = this.data_url;
       }
-      const { quads } = await rdfDereferencer.dereference(standardURL);//'https://treecg.github.io/demo_data/stops.nt');//'http://dbpedia.org/page/12_Monkeys');
-      quads.on('data', (quad) => {this.qtext.push(quad)})
+      console.log("standardURL: ", standardURL);
+      const {quads} = await rdfDereferencer.dereference(standardURL);//'https://treecg.github.io/demo_data/stops.nt');//'http://dbpedia.org/page/12_Monkeys');
+      quads.on('data', (quad) => {this.qtext.push(quad); console.log(quad)})
          .on('error', (error) => console.error(error))
          .on('end', () => {
            console.log('All done!');
@@ -156,7 +186,7 @@ export default {
               // Store the @id values
               //this.memberIds = this.memberIds.concat(memberURIs)
 
-            this.drawing();
+            this.drawing(metadata);
 
            })
 
@@ -179,7 +209,7 @@ export default {
 
          });
     },
-    drawing() {
+    drawing(metadata) {
       // set the dimensions and margins of the graph
       const margin = {top: 10, right: 30, bottom: 10, left: 30};
       if(!this.graph_width){
@@ -354,7 +384,37 @@ svg.append("line")
             tooltipdiv.transition()
                 .duration(500)
                 .style("opacity", 0);
-        });
+        })
+        .on("click", clickNext.bind(this));
+
+        function clickNext(d,i){
+          //console.log(d,i);
+          //console.log(i.id);
+          // if(i.node){
+          //   console.log(i.node);
+          // }
+
+          //TODO make this a better error
+          if (metadata.relations.get(i.id).node.length != 1){
+            console.log("ERROR: this relation has multiple node url's defined!", metadata.relations.get(i.id).node);
+          }
+          //console.log(metadata.relations.get(i.id).node[0]['@id']);
+          //console.log(window);
+
+          // console.log(this.next_url);
+          // this.next_url = metadata.relations.get(i.id).node[0]['@id'];
+          // console.log("blups", this.next_url);
+
+          console.log(metadata.relations.get(i.id).node[0]['@id']);
+          this.data_url = metadata.relations.get(i.id).node[0]['@id'];
+          this.getData();
+
+          // for (var ding of metadata.relations.get(i.id).node){
+          //   console.log(ding.key());
+          // }
+          //console.log(metadata.relations.get(i.id).node);
+          //console.log(this.metadata.relations.get(i.id));
+        }
 
         var all = this.jsondata.nodes.concat(this.jsondata.relations.concat(this.jsondata.collection));
 

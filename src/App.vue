@@ -283,6 +283,7 @@ export default {
 // .attr('marker-end', 'url(#arrow)');
 
 
+//TODO find a way to make the arrowhead placed dynamically instead of using refX
 var marker=
 svg.append("marker")
 //.attr("id", function(d) { return d; })
@@ -290,7 +291,7 @@ svg.append("marker")
 //.attr("markerUnits","strokeWidth")//The arrow set to strokeWidth will change with the thickness of the line
 .attr("markerUnits","userSpaceOnUse")
 .attr("viewBox", "0 -5 10 10")
-.attr("refX",32)//Arrow coordinates
+.attr("refX",55)//Arrow coordinates
 .attr("refY", -1)
 .attr("markerWidth", 12)//The size of the logo
 .attr("markerHeight", 12)
@@ -372,7 +373,12 @@ console.log(marker);
             tooltipdiv.transition()
                 .duration(500)
                 .style("opacity", 0);
-        });
+        })
+        .call(d3.drag()
+        .on("start", dragstartX)
+        .on("end", dragendX)
+        .on("drag", dragX)
+      );
 
         const collection = svg
         .selectAll("circle2")
@@ -393,7 +399,12 @@ console.log(marker);
             tooltipdiv.transition()
                 .duration(500)
                 .style("opacity", 0);
-        });
+        })
+        .call(d3.drag()
+        .on("start", dragstartX)
+        .on("end", dragendX)
+        .on("drag", dragX)
+      );
 
         const relation = svg
         .selectAll("circle3")
@@ -401,6 +412,7 @@ console.log(marker);
         .join("ellipse")
         .attr("rx", 90)
         .attr("ry", 20)
+        .attr("class", "relation")
         .style("fill", "#6562cc")
         .on("mouseover", function(d, i) {
             tooltipdiv.transition()
@@ -415,7 +427,23 @@ console.log(marker);
                 .duration(500)
                 .style("opacity", 0);
         })
-        .on("click", clickNext.bind(this));
+        .on("click", clickNext.bind(this))
+        //.call(drag);
+        .call(d3.drag()
+        .on("start", dragstartX)
+        .on("end", dragendX)
+        .on("drag", dragX)
+      );
+      // .enter().append('text')
+      // .attr("text-anchor", "middle")
+      // .text(function(d) {
+      //   return (d.type + "").split('#').pop()
+      // });
+        // .on("drag", function(d) {console.log("drag"); dragX(event, d)})
+        // .on("dragstart", function() {console.log("dragstart");dragstartX()})
+        // .on("dragend", function() {console.log("dragend");dragendX()});
+
+        console.log(metadata);
 
         function clickNext(d,i){
           //console.log(d,i);
@@ -437,6 +465,7 @@ console.log(marker);
 
           console.log(metadata.relations.get(i.id).node[0]['@id']);
           this.data_url = metadata.relations.get(i.id).node[0]['@id'];
+          d3.selectAll(".tooltip").remove();
           this.getData();
 
           // for (var ding of metadata.relations.get(i.id).node){
@@ -445,6 +474,7 @@ console.log(marker);
           //console.log(metadata.relations.get(i.id).node);
           //console.log(this.metadata.relations.get(i.id));
         }
+
 
         var all = this.jsondata.nodes.concat(this.jsondata.relations.concat(this.jsondata.collection));
 
@@ -469,6 +499,7 @@ console.log(marker);
         })
         .enter().append('text')
         .attr("text-anchor", "middle")
+        .attr("class", "bubbleText")
         .text(function(d) {
           return (d.type + "").split('#').pop()
         });
@@ -551,6 +582,36 @@ console.log(marker);
         .attr('x', function(d) { return d.x+6; })
         .attr('y', function(d) { return d.y-6; });
       }
+
+
+
+
+  function dragstartX() {
+    d3.select(this).attr("stroke", "black");
+  }
+
+  function dragX(event, d) {
+    d3.select(this).attr("cx", d.x = event.x).attr("cy", d.y = event.y);
+    link.attr('d', function(d) {
+        var path='M '+d.source.x+' '+d.source.y+' L '+ d.target.x +' '+d.target.y;
+        return path;
+    });
+    bubblesText
+    .attr('x', function(d) { return d.x; })
+    .attr('y', function(d) { return d.y; });
+  }
+
+  function dragendX() {
+    d3.select(this).attr("stroke", null);
+    link.attr('d', function(d) {
+        var path='M '+d.source.x+' '+d.source.y+' L '+ d.target.x +' '+d.target.y;
+        return path;
+    });
+    bubblesText
+    .attr('x', function(d) { return d.x; })
+    .attr('y', function(d) { return d.y; });
+  }
+
 
       // Create Event Handlers for mouse
       // function handleMouseOver(d, i) {  // Add interactivity

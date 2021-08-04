@@ -355,21 +355,21 @@ export default {
           .style("fill","white")
           .style('stroke',"gray")
       .attr("r", 28)//Set the circle radius
-      //     .on("click",function(node){
-      //         console.log(node.id);
-      // // Make the connection line bold
-      //
-      // //when you click
-      //         edges_line.style("stroke-width",function(line){
-      //             if(line.source.name==node.name || line.target.name==node.name){
-      //                 return 2;
-      //             }else{
-      //                 return 0.5;
-      //             }
-      //         });
-      //         //d3.select(this).style('stroke-width',2);
-      //     })
-      // .call(force.drag);//Pass the currently selected element to the drag function so that the vertex can be dragged
+          .on("click",function(node){
+              console.log(node.id);
+      // Make the connection line bold
+
+      //when you click
+              // edges_line.style("stroke-width",function(line){
+              //     if(line.source.name==node.name || line.target.name==node.name){
+              //         return 2;
+              //     }else{
+              //         return 0.5;
+              //     }
+              // });
+              //d3.select(this).style('stroke-width',2);
+          })
+      .call(d3.drag());//Pass the currently selected element to the drag function so that the vertex can be dragged
           /*
            circle.append("text")
           .attr("dy", ".35em")
@@ -381,8 +381,8 @@ export default {
 
        //Circle prompt text
         circle.append("svg:title")
-              .text(function(node) {
-                console.log(node);
+              .text(function() {
+                //console.log(node);
       return "Double-click to see details";
                });
       /* rectangle

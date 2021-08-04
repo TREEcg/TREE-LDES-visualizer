@@ -11,6 +11,8 @@
     "@treecg/tree-metadata-extraction": "^1.1.1",
     "core-js": "^3.6.5",
     "d3": "^7.0.0",
+    "d3-jetpack": "^2.2.0",
+    "d3-textwrap": "^3.0.0",
     "rdf-dereference": "^1.8.0",
     "setimmediate": "^1.0.5",
     "vue": "^3.0.0"

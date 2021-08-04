@@ -2,6 +2,9 @@
   <!-- <img alt="Vue logo" src="./assets/logo.png">
   <HelloWorld msg="Welcome to Your Vue.js App"/> -->
 
+  <p>Click a bubble to show all attributes</p>
+  <p>ctrl+click a relation to navigate to the node</p>
+
   <label for="width">Enter prefered graph width: </label>
   <input type="number" v-model="graph_width" placeholder="400" name="width"><br>
 
@@ -12,6 +15,20 @@
   <input type="url" v-model="data_url" placeholder="URL" name="url"><br>
 
   <button v-on:click="getData">Draw Graph</button><br>
+
+  <!-- <label for="checkbox_shape">Show shape information</label>
+  <input type="checkbox" id="checkbox_shape" v-model="checked_shape">
+
+  <div v-if="checked_shape" style="text-align:center">
+    <div v-if="shape_info.length === 0" style="text-align:center">
+      <p>No shape specified!</p>
+    </div>
+    <div v-else style="text-align:center">
+      <p>{{this.shape_info}}</p>
+    </div>
+  </div> -->
+
+
 
   <div id="my_dataviz" style="overflow:scroll"></div>
 
@@ -25,10 +42,13 @@
 import rdfDereferencer from "rdf-dereference";
 import 'setimmediate';
 import * as d3 from "d3";
+//import * as d3 from 'd3-jetpack';
+//const d3J = require('d3-jetpack');
 //import data from "./assets/data_network.json";
 //import data2 from "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/data_network.json"
 //import setimmediate from 'setimmediate';
 const extractMetadata = require('@treecg/tree-metadata-extraction').extractMetadata
+// import { textwrap } from 'd3-textwrap';
 
 
 export default {
@@ -39,8 +59,12 @@ export default {
   data(){
     return {
       qtext: [],
-      jsondata: {"collection":[], "nodes":[], "relations":[], "links":[]},
-      next_url: ""
+      jsondata: {"collection":[], "nodes":[], "relations":[], "links":[], "shapes":[]},
+      next_url: "",
+      checked_shape: false,
+      graph_height: 2000,
+      graph_width: 2000,
+      data_url: null
     }
   },
   created(){
@@ -85,9 +109,31 @@ export default {
 //   }
 // },
   methods : {
+    prettyJ(json) {
+      if (typeof json !== 'string') {
+        json = JSON.stringify(json, undefined, 2);
+      }
+      return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[ eE][+\\-]?\d+)?)/g,
+      function (match) {
+        let cls = "\x1b[36m";
+        if (/^"/.test(match)) {
+          if (/:$/.test(match)) {
+            cls = "\x1b[34m";
+          } else {
+            cls = "\x1b[32m";
+          }
+        } else if (/true|false/.test(match)) {
+          cls = "\x1b[35m";
+        } else if (/null/.test(match)) {
+          cls = "\x1b[31m";
+        }
+        return cls + match + "\x1b[0m";
+      }
+    );
+  },
     async getData() {
       this.qtext = [];
-      this.jsondata = {"collection":[], "nodes":[], "relations":[], "links":[]};
+      this.jsondata = {"collection":[], "nodes":[], "relations":[], "links":[], "shapes":[]};
       console.log("TESTING:");
       var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/a.nt';
       if (this.data_url){
@@ -112,8 +158,9 @@ export default {
                  var count = 0;
                  //console.log(collectionObj.shape.length);
                  for (var shapeNode of collectionObj.shape){
-                   console.log(shapeNode);
-                   this.jsondata.collection.push({"id":collectionId+"shape"+count, "type":"shape"});
+                   //console.log(shapeNode);
+                   this.jsondata.shapes.push({"id":collectionId+"shape"+count, "type":"shape", "shape_extra":shapeNode});
+                   //this.shape_info.push({"id":collectionId+"shape"+count, "shape_extra":shapeNode});
                    this.jsondata.links.push({"source":collectionId, "target":collectionId+"shape"+count, "name":"shape_TOBECHANGED"});
                    count++;
                  }
@@ -231,13 +278,54 @@ export default {
       .append("svg")
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom)
+      //.attr("viewBox", [0, 0, width, height]);
       //.attr("width", "101%")
       //.attr("height", "101%")
+
       .append("g")
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom)
+
+  //       const g = svg.append("g")
+  //       .attr("width", width + margin.left + margin.right)
+  //       .attr("height", height + margin.top + margin.bottom)
+  //       // .attr("cursor", "grab");
+  //
+  //
+  //     svg
+  //     .call(zoom)
+  //   .call(zoom.transform, d3.zoomIdentity)
+  //   .on("pointermove", event => {
+  //     console.log(event);
+  //     //const p = transform.invert(d3.pointer(event));
+  //     //const i = delaunay.find(...p);
+  //     //points.classed("highlighted", (_, j) => i === j);
+  //     //d3.select(points.nodes()[i]).raise();
+  //   })
+  //
+  //   let transform;
+  //
+  // const zoom = d3.zoom().on("zoom", e => {
+  //   g.attr("transform", (transform = e.transform));
+  //   g.style("stroke-width", 3 / Math.sqrt(transform.k));
+  //   //points.attr("r", 3 / Math.sqrt(transform.k));
+  // });
+
       // .attr("transform",
       // `translate(${margin.left}, ${margin.top})`);
+
+
+    //
+    //
+    //   svg.call(d3.zoom()
+    //   .extent([[0, 0], [width, height]])
+    //   .scaleExtent([1, 8])
+    //   .on("zoom", zoomed));
+    //
+    //
+    // function zoomed({transform}) {
+    //   g.attr("transform", transform);
+    // }
 
   //     const markerBoxWidth = 20;
   //     const markerBoxHeight = 20;
@@ -406,6 +494,153 @@ console.log(marker);
         .on("drag", dragX)
       );
 
+      const shapes = svg
+      .selectAll("circle2")
+      .data(this.jsondata.shapes)
+      .join("ellipse")
+      .attr("rx", 60)
+      .attr("ry", 20)
+      .style("fill", "#5e915a")
+      .on("mouseover", function(d, i) {
+          tooltipdiv.transition()
+              .duration(200)
+              .style("opacity", .9);
+          tooltipdiv.html(i.name)
+          .style("left", d.x + 2 + window.pageXOffset + "px")
+          .style("top", d.y + 2 + window.pageYOffset + "px");
+          })
+      .on("mouseout", function() {
+          tooltipdiv.transition()
+              .duration(500)
+              .style("opacity", 0);
+      })
+      //.on("click", function(d, i){clickCollection(d, i, svg)})
+      .on("click", function(d, i){
+        // svg.append("ellipse")
+        // .attr("rx", 600)
+        // .attr("ry", 200)
+        // .style("fill", "#5e915a")
+        // .style("left", d.x + 2 + window.pageXOffset + "px")
+        // .style("top", d.y + 2 + window.pageYOffset + "px");
+        // console.log("d:");
+        // console.log(d);
+        // console.log("i:");
+        // console.log(i);
+        // console.log("this:");
+        // console.log(this);
+        // console.log("all");
+        // console.log(d3.selectAll('.bubbleText')._groups.NodeList);
+        // d3.selectAll('.bubbleText').target.pop()['textContent']
+        // for (let temp of d3.selectAll('.bubbleText')){
+        //   //console.log(temp['__data__'].id);
+        //   if(temp['__data__'].id == i.id){
+        //     console.log(temp.textContent);
+        //     temp.textContent = "BLUPBLUPBLUP"
+        //   }
+        // }
+        // console.log("ding");
+        // d3.selectAll('.bubbleText').selectAll(function(a){
+        //   //console.log(a, i.id);
+        //   if (a.id == i.id){
+        //     console.log(a);
+        //     //return a;
+        //   }
+        // });
+        // console.log(d3.select(i.id));
+
+        if (d3.select(this).attr("rx")==60){
+          // d3.select(this).attr("rx", 600).attr("ry", 200);
+          // d3.select(this).append('tspan').text("TESTING")
+
+          for (let temp of d3.selectAll('.bubbleText')._groups.pop()){
+            //for (let temp of ding){
+            //console.log("test");
+            //console.log(ding['__data__'].id);
+            // for (let ding2 of ding){
+            //   console.log(ding2);
+            // }
+            // console.log("dingdingding")
+            // console.log(temp);
+
+
+
+            //TODO fix indent, fix height being changed incorrectly when dragged
+            if (temp['__data__'].id == i.id){
+
+              temp.textContent = "";
+
+              //console.log(d3.select(temp));
+
+              //let startingX = temp.attributes.x.value;
+              let startingX = d3.select(temp).attr("x");
+              let startingY = d3.select(temp).attr("y");
+              console.log(startingY);
+
+              let textArray = JSON.stringify(temp['__data__'].shape_extra, null, '\t').split('\n');
+              // console.log("textArray:");
+              // console.log(textArray);
+              d3.select(temp).attr("text-anchor","start");
+
+              let offset = (31 + 20*textArray.length);
+              d3.select(temp).attr("y", startingY - offset/2);
+              console.log(d3.select(temp).attr("y"));
+
+              // d3.select(temp).append('tspan').text(" ").attr("y", -1 * offset/2)
+
+              for (let t of textArray){
+                d3.select(temp).append('tspan').text(t).attr("dy", 20).attr("x", startingX);
+              }
+
+              //Use odd number so it can't ever be exactly 60 again
+              d3.select(this).attr("rx", offset).attr("ry", 200);
+
+              // bubblesText
+              // .attr('x', function(d) { return d.x; })
+              // .attr('y', function(d) { return d.y; });
+            }
+          //}
+          }
+
+          // for (let temp of d3.selectAll('.bubbleText')){
+          //   if(temp['__data__'].id == i.id){
+          //     //console.log(temp);
+          //     //let textArray = JSON.stringify(temp['__data__'].shape_extra, null, '\t').split('\t');
+          //     //temp.textContent = "";
+          //     //temp.append('tspan').text(textArray[0]);
+          //
+          //     //temp.textContent = JSON.stringify(temp['__data__'].shape_extra, null, '\t');
+          //     temp.append('tspan').text("TESTING");
+          //
+          //     //d3.select(this).append('tspan').text("TESTING2")
+          //
+          //     //console.log(JSON.stringify(temp['__data__'].shape_extra, null, '\t'));
+          //     //temp.textContent = prettyJ(temp['__data__'].shape_extra);
+          //     //console.log(prettyJ(temp['__data__'].shape_extra));
+          //   }
+          // }
+        } else {
+          d3.select(this).attr("rx", 60).attr("ry", 20);
+          for (let temp of d3.selectAll('.bubbleText')){
+            if(temp['__data__'].id == i.id){
+              d3.select(temp).attr("text-anchor","middle");
+              temp.textContent = temp['__data__'].type;
+              //temp.text = "ding \t anderding" + '\t' + "test";
+            }
+          }
+        }
+
+
+        // console.log(d.target.rx);
+        // d.target.rx = 600;
+        // d.target.ry = 200;
+        //i.rx = 600;
+      })
+      .call(d3.drag()
+      .on("start", dragstartX)
+      .on("end", dragendX)
+      .on("drag", dragX)
+    );
+
         const relation = svg
         .selectAll("circle3")
         .data(this.jsondata.relations)
@@ -446,6 +681,8 @@ console.log(marker);
         console.log(metadata);
 
         function clickNext(d,i){
+
+          if (d.ctrlKey) {
           //console.log(d,i);
           //console.log(i.id);
           // if(i.node){
@@ -473,10 +710,96 @@ console.log(marker);
           // }
           //console.log(metadata.relations.get(i.id).node);
           //console.log(this.metadata.relations.get(i.id));
+        } else {
+
+          if (d3.select(this).attr("rx")==90){
+
+            for (let temp of d3.selectAll('.bubbleText')._groups.pop()){
+
+              //TODO fix indent, fix height being changed incorrectly when dragged
+              if (temp['__data__'].id == i.id){
+
+                temp.textContent = "";
+
+                let startingX = d3.select(temp).attr("x");
+                let startingY = d3.select(temp).attr("y");
+
+                let textArray = JSON.stringify(temp['__data__'], null, '\t').split('\n');
+                d3.select(temp).attr("text-anchor","start");
+
+                let offset = (31 + 20*textArray.length);
+                d3.select(temp).attr("y", startingY - offset/2);
+
+
+                for (let t of textArray){
+                  d3.select(temp).append('tspan').text(t).attr("dy", 20).attr("x", startingX);
+                }
+
+                //Use odd number so it can't ever be exactly 60 again
+                d3.select(this).attr("rx", offset).attr("ry", 200);
+              }
+            }
+
+          } else {
+            d3.select(this).attr("rx", 90).attr("ry", 20);
+            for (let temp of d3.selectAll('.bubbleText')){
+              if(temp['__data__'].id == i.id){
+                d3.select(temp).attr("text-anchor","middle");
+                temp.textContent = temp['__data__'].type;
+              }
+            }
+
         }
 
 
-        var all = this.jsondata.nodes.concat(this.jsondata.relations.concat(this.jsondata.collection));
+        }
+      }
+
+  //       function clickCollection(d, i, svg){
+  //         if (i['shape_extra']){
+  //           console.log(d,i,svg);
+  //           // console.log(d3.select(d.target));
+  //           // console.log(d3.select(i));
+  //
+  //
+  //           // d3.select(i)
+  //           // .enter().append("text")
+  //           // .attr("text-anchor", "middle")
+  //           // .text(function(i) {
+  //           //   return (i['shape_extra'] + "")
+  //           // });
+  //           // console.log(d3.select(i));
+  //
+  //           // .style("left", d.x + 2 + window.pageXOffset + "px")
+  //           // .style("top", d.y + 2 + window.pageYOffset + "px")
+  //           // .html(i['shape_extra']);
+  // //           console.log("should show popup");
+  // //           var width = 300;
+  // //           var height = 80;
+  // //           var margin = {left:20,right:15,top:40,bottom:40};
+  // //
+  // //           //var div = d3.create("div")
+  // // var svgX = svg.append("svg")
+  // //   .attr("width", width+margin.left+margin.right)
+  // //   .attr("height", height+margin.top+margin.bottom);
+  // // var g = svgX.append("g")
+  // //   .attr("transform","translate("+[margin.left,margin.top]+")");
+  // //
+  // //   console.log(g);
+  // //   console.log("svg:");
+  // //   console.log(svg);
+  // //
+  // //   svgX.selectAll('shape_popup')
+  // //   .text(i['shape_extra'])
+  // //
+  // //   console.log(svgX);
+  //
+  //   //svg.append(g);
+  //         }
+  //       }
+
+
+        var all = this.jsondata.nodes.concat(this.jsondata.relations.concat(this.jsondata.collection.concat(this.jsondata.shapes)));
 
         // const bubblesText = svg
         // .selectAll('bubbleText1')
@@ -492,6 +815,25 @@ console.log(marker);
         // });
 
 
+        // const bubblesText = svg
+        // .selectAll('bubbleText1')
+        // .data(all, function(d) {
+        //   return d.id;
+        // })
+        // .append("foreignObject")
+        // .attr("width", 480)
+        // .attr("height", 500)
+        // .append("xhtml:div")
+        // .style("font", "14px 'Helvetica Neue'")
+        // .html("<p>Testing</p>")
+        //.html(function(d){return (d.type + "").split('#').pop()});
+
+        // .attr("text-anchor", "middle")
+        // .attr("class", "bubbleText")
+        // .text(function(d) {
+        //   return (d.type + "").split('#').pop()
+        // });
+
         const bubblesText = svg
         .selectAll('bubbleText1')
         .data(all, function(d) {
@@ -503,6 +845,40 @@ console.log(marker);
         .text(function(d) {
           return (d.type + "").split('#').pop()
         });
+
+        //console.log(d3.selectAll('.bubbleText')._groups);
+        // console.log("spullen");
+        // for (let ding of d3.selectAll('.bubbleText')._groups.pop()){
+        //   //console.log("test");
+        //   //console.log(ding['__data__'].id);
+        //   // for (let ding2 of ding){
+        //   //   console.log(ding2);
+        //   // }
+        //
+        //   if (ding['__data__'].id == 'https://treecg.github.io/demo_data/stops/shape0'){
+        //     console.log(d3.select(ding));
+        //     d3.select(ding).append('tspan').text("TESING");
+        //   }
+        // }
+
+        // const bubblesText = svg
+        // .selectAll('bubbleText1')
+        // .data(all, function(d) {
+        //   return d.id;
+        // })
+        // .enter().append('text')
+        // .attr("text-anchor", "middle")
+        // .attr("class", "bubbleText")
+        // .tspans(function(d) {
+        //   return (d.type + "").split('#').pop()
+        // });
+
+
+//         selection.append('text')
+//     .tspans(function(d) {
+//         return d.text.split('\n');
+//     });
+// selection.append('text').tspans(['Multiple', 'lines'], 20);
 
 
 
@@ -522,10 +898,10 @@ console.log(marker);
       d3.forceSimulation(all)
           .force("charge", d3.forceManyBody().strength(-400))
 
-      d3.forceSimulation(this.jsondata.collection.concat(this.jsondata.nodes))
+      d3.forceSimulation(this.jsondata.collection.concat(this.jsondata.nodes.concat(this.jsondata.shapes)))
           .force("charge", d3.forceManyBody().strength(-800))
 
-    d3.forceSimulation(this.jsondata.collection.concat(this.jsondata.relations))
+    d3.forceSimulation(this.jsondata.collection.concat(this.jsondata.relations.concat(this.jsondata.shapes)))
         .force("charge", d3.forceManyBody().strength(-2000))
 
         d3.forceSimulation(this.jsondata.nodes)
@@ -575,6 +951,10 @@ console.log(marker);
         .attr("cy", function(d) { return d.y-6; });
 
         collection
+        .attr("cx", function(d) { return d.x+6; })
+        .attr("cy", function(d) { return d.y-6; });
+
+        shapes
         .attr("cx", function(d) { return d.x+6; })
         .attr("cy", function(d) { return d.y-6; });
 

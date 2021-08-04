@@ -95,7 +95,7 @@ export default {
       }
       console.log("standardURL: ", standardURL);
       const {quads} = await rdfDereferencer.dereference(standardURL);//'https://treecg.github.io/demo_data/stops.nt');//'http://dbpedia.org/page/12_Monkeys');
-      quads.on('data', (quad) => {this.qtext.push(quad); console.log(quad)})
+      quads.on('data', (quad) => {this.qtext.push(quad); /*console.log(quad)*/})
          .on('error', (error) => console.error(error))
          .on('end', () => {
            console.log('All done!');
@@ -262,25 +262,45 @@ export default {
   // .attr('stroke', 'black');
 
   //arrows
-svg.append('svg:defs').append('svg:marker')
-.attr('id', 'arrow').attr('viewBox', '0 0 10 10')
-.attr('refX', 0).attr('refY', 5)
-.attr('markerUnits', 'strokeWidth')
-.attr('markerWidth', 8)
-.attr('markerHeight', 6)
-.attr('orient', 'auto')
-.append('svg:path')
-.attr('d', 'M 0 0 L 10 5 L 0 10 z');
+// svg.append('svg:defs').append('svg:marker')
+// .attr('id', 'arrow').attr('viewBox', '0 0 10 10')
+// .attr('refX', 0).attr('refY', 5)
+// .attr('markerUnits', 'strokeWidth')
+// .attr('markerWidth', 8)
+// .attr('markerHeight', 6)
+// .attr('orient', 'auto')
+// .append('svg:path')
+// .attr('d', 'M 0 0 L 10 5 L 0 10 z');
+//
+//
+// svg.append("line")
+// .attr('x1', 5)
+// .attr('x2', 50)
+// .attr('y1', 5)
+// .attr('y2', 50)
+// .style('stroke', 'black')
+// .attr('stroke-width', 2)
+// .attr('marker-end', 'url(#arrow)');
 
 
-svg.append("line")
-.attr('x1', 5)
-.attr('x2', 50)
-.attr('y1', 5)
-.attr('y2', 50)
-.style('stroke', 'black')
-.attr('stroke-width', 2)
-.attr('marker-end', 'url(#arrow)');
+var marker=
+svg.append("marker")
+//.attr("id", function(d) { return d; })
+.attr("id", "resolved")
+//.attr("markerUnits","strokeWidth")//The arrow set to strokeWidth will change with the thickness of the line
+.attr("markerUnits","userSpaceOnUse")
+.attr("viewBox", "0 -5 10 10")
+.attr("refX",32)//Arrow coordinates
+.attr("refY", -1)
+.attr("markerWidth", 12)//The size of the logo
+.attr("markerHeight", 12)
+.attr("orient", "auto")//Drawing direction, can be set to: auto (automatically confirm the direction) and angle value
+.attr("stroke-width",2)//arrow width
+.append("path")
+.attr("d", "M0,-5L10,0L0,5")//The path of the arrow
+.attr('fill','gray');//Arrow color
+
+console.log(marker);
 
 
 
@@ -295,11 +315,21 @@ svg.append("line")
       //d3.json("http url ding").then( function( data) {
 
         // Initialize the links
-        const link = svg
-        .selectAll("line1")
-        .data(this.jsondata.links)
-        .join("line")
-        .style("stroke", "#aaa")
+        // const link = svg
+        // .selectAll("line1")
+        // .data(this.jsondata.links)
+        // .join("line")
+        // .style("stroke", "#aaa")
+
+
+        const link = svg.selectAll(".edgepath")
+            .data(this.jsondata.links)
+            .enter()
+            .append("path")
+            .style("stroke","gray")
+            .style("pointer-events", "none")
+        .style("stroke-width",0.5)//line thickness
+        .attr("marker-end", "url(#resolved)" );//Mark the arrow according to the id number of the arrow mark
 
 //         const link = svg.selectAll("line")
 // .data(this.jsondata.links).enter().append('g').attr('class', 'node')
@@ -494,11 +524,16 @@ svg.append("line")
       // This function is run at each iteration of the force algorithm, updating the nodes position.
       function ticked() {
         console.log("fixing layout done (why is this so slow?)");
-        link
-        .attr("x1", function(d) { return d.source.x; })
-        .attr("y1", function(d) { return d.source.y; })
-        .attr("x2", function(d) { return d.target.x; })
-        .attr("y2", function(d) { return d.target.y; });
+        // link
+        // .attr("x1", function(d) { return d.source.x; })
+        // .attr("y1", function(d) { return d.source.y; })
+        // .attr("x2", function(d) { return d.target.x; })
+        // .attr("y2", function(d) { return d.target.y; });
+
+        link.attr('d', function(d) {
+            var path='M '+d.source.x+' '+d.source.y+' L '+ d.target.x +' '+d.target.y;
+            return path;
+        });
 
         node
         .attr("cx", function(d) { return d.x+6; })

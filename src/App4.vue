@@ -174,11 +174,14 @@ export default {
 
 
       const collection = svg
-      .selectAll("gcoll")
-      .data(all)
+      .selectAll("gcollection")
+      .data(this.jsondata.collection)
       .join("g")
       .attr("class", "collection_g")
-
+      .call(d3.drag()
+      .on("start", dragstartX)
+      .on("end", dragendX)
+      .on("drag", dragX));
 
       collection.append("rect")
       .attr("class", "collection_rect")
@@ -196,42 +199,88 @@ export default {
       .raise();
 
 
+      const shape = svg
+      .selectAll("gshape")
+      .data(this.jsondata.shapes)
+      .join("g")
+      .attr("class", "shape_g")
+      .call(d3.drag()
+      .on("start", dragstartX)
+      .on("end", dragendX)
+      .on("drag", dragX));
 
-      // const collectionG = svg
-      // .selectAll("coll")
-      // .data(all)
-      // .join("rect")
-      // .attr("width", 60)
-      // .attr("height", 20)
-      // .style("fill", "#69b3a2")
-      // .append("text")
-      // .text("TEST");
+      shape.append("rect")
+      .attr("class", "shape_rect")
+      .attr("width", 80)
+      .attr("height", 30)
+      .style("fill", "#5e915a")
+
+      shape.append("text")
+      .attr("text-anchor", "start")
+      .attr("class", "shape_text")
+      .attr("dy",20)
+      .text(function(d) {
+        return (d.type + "").split('#').pop()
+      })
+      .raise();
+
+
+      const node = svg
+      .selectAll("gnode")
+      .data(this.jsondata.nodes)
+      .join("g")
+      .attr("class", "node_g")
+      .call(d3.drag()
+      .on("start", dragstartX)
+      .on("end", dragendX)
+      .on("drag", dragX));
+
+      node.append("rect")
+      .attr("class", "node_rect")
+      .attr("width", 80)
+      .attr("height", 30)
+      .style("fill", "#69b3a2")
+
+      node.append("text")
+      .attr("text-anchor", "start")
+      .attr("class", "node_text")
+      .attr("dy",20)
+      .text(function(d) {
+        return (d.type + "").split('#').pop()
+      })
+      .raise();
+
 
       d3.forceSimulation(all)
       .force("center", d3.forceCenter(width / 2, height / 2))
       .force("charge", d3.forceManyBody().strength(-400))
       .alphaDecay(this.alpha_decay_rate)
       .on("end", ticked);
-      console.log(d3.selectAll(".collection_g"));
+
 
       function ticked() {
         console.log("ticked");
-        //console.log(d3.selectAll(".collection_g"));
-        // console.log(d3.selectAll("g"))
-        // console.log(d3.selectAll(".collection_rect"))
-        // collection
-        // .attr("x", function(d) { return d.x })//- d3.select(this).attr("width")/2; })
-        // .attr("y", function(d) { return d.y });//- d3.select(this).attr("height"); });
-        d3.selectAll(".collection_g")
-        .attr("x", function(d) { return d.x })//- d3.select(this).attr("width")/2; })
+
+        d3.selectAll(".collection_g, .shape_g, .node_g")
+        .attr("x", function(d) { return d.x })
         .attr("y", function(d) { return d.y })
         .attr("transform", function(d){return "translate("+d.x+","+d.y+")"});
-        //.attr("transform"="translate(x,y)");//- d3.select(this).attr("height"); });
-        // .attr("x", function() { return this.x - d3.select(this).attr("width")/2; })
-        // .attr("y", function() { return this.y - d3.select(this).attr("height"); });
+      }
 
-        // d3.selectAll("c")
-        // .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+
+      //Use X at the end to not confuse with buildin stuff
+      function dragstartX() {
+        d3.select(this).attr("stroke", "black");
+      }
+
+      function dragX(event, d) {
+        d3.select(this).attr("x", d.x = event.x).attr("y", d.y = event.y);
+        ticked();
+      }
+
+      function dragendX() {
+        d3.select(this).attr("stroke", null);
+        ticked();
       }
 
     }

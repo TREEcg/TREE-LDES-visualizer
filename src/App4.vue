@@ -49,7 +49,9 @@ export default {
   },
   methods : {
     async getData() {
-      //TODO probably change this to add on click not redo all on click?
+      //TODO is it possible to keep all quads, extract all metadata and then not have to check for doubles?
+      //Simply by removing all doubles from the saved quads?
+
       //Need to clear the data before redrawing
       this.qtext = [];
 
@@ -72,15 +74,16 @@ export default {
         extractMetadata(this.qtext).then(metadata => {
           console.log(metadata);
 
-          if (metadata.collections.keys().length != 1){
-            console.log("ERROR: found multiple collection! This is not allowed.")
+          if (metadata.collections.keys().length > 1){
+            console.log("ERROR: found multiple collection! This is not allowed.");
+            console.log(metadata.collections.keys());
           }
           for (var collectionId of metadata.collections.keys()) {
             var collectionObj = metadata.collections.get(collectionId);
 
             let double = true;
             if (this.jsondata.collection.length > 0){
-              for (var checker of this.jsondata.collection){
+              for (let checker of this.jsondata.collection){
                 if (checker.id != collectionId){
                   double = false;
                 }
@@ -122,11 +125,20 @@ export default {
               for (var viewNode of collectionObj.view){
                 //Change the id to include _node because collection and main view can have the same URI
                 //We do still want to show them as two separate nodes even though they are the same thing
-                //TODO IMPORTANT add a check on duplicate nodes!!
-                this.jsondata.nodes.push({"id":viewNode['@id']+"_node", "type":"Node", "name":viewNode['@id'], "relation_count":metadata.nodes.get(viewNode['@id']).relation.length});
-                this.jsondata.links.push({"source":collectionId, "target":viewNode['@id']+"_node", "name":"view"});
-                this.jsondata.relations_holder.push({"id":viewNode['@id']+"_relation_holder", "node_id":viewNode['@id']+"_node", "relation_count":metadata.nodes.get(viewNode['@id']).relation.length})
-                this.jsondata.links.push({"source":viewNode['@id']+"_node", "target":viewNode['@id']+"_relation_holder", "name":"relation_holder"});
+
+                let double = false;
+                for (let checker of this.jsondata.nodes){
+                  if (checker.id == viewNode['@id']+"_node"){
+                    double = true;
+                  }
+                }
+
+                if (!double){
+                  this.jsondata.nodes.push({"id":viewNode['@id']+"_node", "type":"Node", "name":viewNode['@id'], "relation_count":metadata.nodes.get(viewNode['@id']).relation.length});
+                  this.jsondata.links.push({"source":collectionId, "target":viewNode['@id']+"_node", "name":"view"});
+                  this.jsondata.relations_holder.push({"id":viewNode['@id']+"_relation_holder", "node_id":viewNode['@id']+"_node", "relation_count":metadata.nodes.get(viewNode['@id']).relation.length})
+                  this.jsondata.links.push({"source":viewNode['@id']+"_node", "target":viewNode['@id']+"_relation_holder", "name":"relation_holder"});
+                }
               }
             }
 
@@ -135,10 +147,11 @@ export default {
 
           }
 
-// /*
+
+          //This does not need a duplicate check since old node relations won't be included in the new metadata
+          //or they will just overwrite with the exact same data as was already present
           for (var nodeId of metadata.nodes.keys()){
             var nodeObj = metadata.nodes.get(nodeId);
-            //TODO IMPORTANT add a check on duplicate nodes!!
             this.jsondata[nodeId+"_node"] = [];
             //console.log(nodeId);
             //console.log(this.jsondata.nodes);
@@ -166,7 +179,6 @@ export default {
             }
 
           }
-// */
 
           console.log("jsondata:");
           console.log(this.jsondata);
@@ -226,11 +238,11 @@ export default {
 
 
       const link = svg.selectAll(".edgepath")
-          .data(this.jsondata.links)
-          .enter()
-          .append("path")
-          .style("stroke","gray")
-          .style("pointer-events", "none")
+      .data(this.jsondata.links)
+      .enter()
+      .append("path")
+      .style("stroke","gray")
+      .style("pointer-events", "none")
       .style("stroke-width",0.5)//line thickness
       .attr("marker-end", "url(#arrow)" );
 
@@ -347,28 +359,32 @@ export default {
       .force("link", d3.forceLink()
       .id(function(d) { return d.id; })
       .links(this.jsondata.links)
-      )
+      .distance(200))
+      .alphaDecay(this.alpha_decay_rate)
+      .on("tick", ticked);
 
 
       d3.forceSimulation(all)
       .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("charge", d3.forceManyBody().strength(-400))
+      .force("charge", d3.forceManyBody().strength(-800))
       .alphaDecay(this.alpha_decay_rate)
-      .on("end", ticked);
+      .on("tick", ticked);
 
 
       function ticked() {
         console.log("ticked");
 
         link.attr('d', function(d) {
-            var path='M '+d.source.x+' '+d.source.y+' L '+ d.target.x +' '+d.target.y;
-            return path;
+          //TODO find a way to make the path go to the center, not the top corner by finding source, target width and height
+          var path='M '+d.source.x+' '+d.source.y+' L '+ d.target.x +' '+d.target.y;
+          return path;
         });
 
         d3.selectAll(".collection_g, .shape_g, .node_g, .relation_holder_g")
         .attr("x", function(d) { return d.x })
         .attr("y", function(d) { return d.y })
         .attr("transform", function(d){return "translate("+d.x+","+d.y+")"});
+
       }
 
 

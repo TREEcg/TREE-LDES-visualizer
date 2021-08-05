@@ -5,6 +5,9 @@
   <p>Click a bubble to show all attributes</p>
   <p>ctrl+click a relation to navigate to the node</p>
 
+  <label for="adecay">Enter graph convergence speed, between 0 and 1</label>
+  <input type="number" v-model="alpha_decay_rate" placeholder="0.023" name="adecay"><br>
+
   <label for="width">Enter prefered graph width: </label>
   <input type="number" v-model="graph_width" placeholder="400" name="width"><br>
 
@@ -64,7 +67,8 @@ export default {
       checked_shape: false,
       graph_height: 2000,
       graph_width: 2000,
-      data_url: null
+      data_url: null,
+      alpha_decay_rate: 0.5//1 - Math.pow(0.001, 1 / 300)
     }
   },
   created(){
@@ -712,12 +716,37 @@ console.log(marker);
           //console.log(this.metadata.relations.get(i.id));
         } else {
 
-          if (d3.select(this).attr("rx")==90){
+          console.log("d:");
+          console.log(d);
+          console.log("i:");
+          console.log(i);
+          console.log("this:");
+          console.log(this);
+          console.log("test:");
+          console.log(d3.select(i));
+          console.log(d3.select(d));
+
+          //console.log(d3.select(d).attr("rx"));
+          console.log("target:")
+          console.log(d3.select(d)._groups.pop().pop().target);
+          //console.log(d3.select(d)._groups.pop().pop().target.attr("rx"));
+          console.log("d3.select(target):")
+          console.log(d3.select(d3.select(d)._groups.pop().pop().target))
+          console.log("attr?:")
+          console.log(d3.select(d3.select(d)._groups.pop().pop().target).attr("rx"))
+
+
+          let d3Object = d3.select(d)._groups.pop().pop().target;
+          d3.select(d3Object).raise();
+          if (d3.select(d3Object).attr("rx")==90){
 
             for (let temp of d3.selectAll('.bubbleText')._groups.pop()){
 
               //TODO fix indent, fix height being changed incorrectly when dragged
               if (temp['__data__'].id == i.id){
+                d3.select(temp).raise();
+
+                console.log(temp);
 
                 temp.textContent = "";
 
@@ -736,12 +765,12 @@ console.log(marker);
                 }
 
                 //Use odd number so it can't ever be exactly 60 again
-                d3.select(this).attr("rx", offset).attr("ry", 200);
+                d3.select(d3Object).attr("rx", offset).attr("ry", 200);
               }
             }
 
           } else {
-            d3.select(this).attr("rx", 90).attr("ry", 20);
+            d3.select(d3Object).attr("rx", 90).attr("ry", 20);
             for (let temp of d3.selectAll('.bubbleText')){
               if(temp['__data__'].id == i.id){
                 d3.select(temp).attr("text-anchor","middle");
@@ -891,21 +920,22 @@ console.log(marker);
         .id(function(d) { return d.id; })                     // This provide  the id of a node
         .links(this.jsondata.links)                                    // and this the list of links
        )
+       //.alphaDecay(0.5)
       //.force("charge", d3.forceManyBody().strength(-800))         // This adds repulsion between nodes. Play with the -400 for the repulsion strength
       //.force("center", d3.forceCenter(width / 2, height / 2))     // This force attracts nodes to the center of the svg area
       //.on("end", ticked);
 
       d3.forceSimulation(all)
-          .force("charge", d3.forceManyBody().strength(-400))
+          .force("charge", d3.forceManyBody().strength(-400))//.alphaDecay(0.5)
 
       d3.forceSimulation(this.jsondata.collection.concat(this.jsondata.nodes.concat(this.jsondata.shapes)))
-          .force("charge", d3.forceManyBody().strength(-800))
+          .force("charge", d3.forceManyBody().strength(-800))//.alphaDecay(0.5)
 
     d3.forceSimulation(this.jsondata.collection.concat(this.jsondata.relations.concat(this.jsondata.shapes)))
-        .force("charge", d3.forceManyBody().strength(-2000))
+        .force("charge", d3.forceManyBody().strength(-2000))//.alphaDecay(0.5)
 
         d3.forceSimulation(this.jsondata.nodes)
-      .force("center", d3.forceCenter(width / 2, height / 2))
+      .force("center", d3.forceCenter(width / 2, height / 2))//.alphaDecay(0.5)
 
     //   d3.forceSimulation(this.jsondata.nodes)
     //       // Force algorithm is applied to data.nodes
@@ -915,6 +945,7 @@ console.log(marker);
 
     d3.forceSimulation(this.jsondata.relations)
   .force("charge", d3.forceManyBody().strength(-3000))
+  .alphaDecay(this.alpha_decay_rate)
   .on("end", ticked);
 
       console.log(simulation);
@@ -972,24 +1003,27 @@ console.log(marker);
 
   function dragX(event, d) {
     d3.select(this).attr("cx", d.x = event.x).attr("cy", d.y = event.y);
-    link.attr('d', function(d) {
-        var path='M '+d.source.x+' '+d.source.y+' L '+ d.target.x +' '+d.target.y;
-        return path;
-    });
-    bubblesText
-    .attr('x', function(d) { return d.x; })
-    .attr('y', function(d) { return d.y; });
+    // link.attr('d', function(d) {
+    //     var path='M '+d.source.x+' '+d.source.y+' L '+ d.target.x +' '+d.target.y;
+    //     return path;
+    // });
+    // bubblesText
+    // .attr('x', function(d) { return d.x; })
+    // .attr('y', function(d) { return d.y; });
+
+    ticked();
   }
 
   function dragendX() {
     d3.select(this).attr("stroke", null);
-    link.attr('d', function(d) {
-        var path='M '+d.source.x+' '+d.source.y+' L '+ d.target.x +' '+d.target.y;
-        return path;
-    });
-    bubblesText
-    .attr('x', function(d) { return d.x; })
-    .attr('y', function(d) { return d.y; });
+    // link.attr('d', function(d) {
+    //     var path='M '+d.source.x+' '+d.source.y+' L '+ d.target.x +' '+d.target.y;
+    //     return path;
+    // });
+    // bubblesText
+    // .attr('x', function(d) { return d.x; })
+    // .attr('y', function(d) { return d.y; });
+    ticked();
   }
 
 

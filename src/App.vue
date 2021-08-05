@@ -286,9 +286,9 @@ export default {
       //.attr("width", "101%")
       //.attr("height", "101%")
 
-      .append("g")
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom)
+      // .append("g")
+      // .attr("width", width + margin.left + margin.right)
+      // .attr("height", height + margin.top + margin.bottom)
 
   //       const g = svg.append("g")
   //       .attr("width", width + margin.left + margin.right)
@@ -376,10 +376,10 @@ export default {
 
 
 //TODO find a way to make the arrowhead placed dynamically instead of using refX
-var marker=
+//var marker=
 svg.append("marker")
 //.attr("id", function(d) { return d; })
-.attr("id", "resolved")
+.attr("id", "arrow")
 //.attr("markerUnits","strokeWidth")//The arrow set to strokeWidth will change with the thickness of the line
 .attr("markerUnits","userSpaceOnUse")
 .attr("viewBox", "0 -5 10 10")
@@ -393,7 +393,7 @@ svg.append("marker")
 .attr("d", "M0,-5L10,0L0,5")//The path of the arrow
 .attr('fill','gray');//Arrow color
 
-console.log(marker);
+//console.log(marker);
 
 
 
@@ -422,7 +422,7 @@ console.log(marker);
             .style("stroke","gray")
             .style("pointer-events", "none")
         .style("stroke-width",0.5)//line thickness
-        .attr("marker-end", "url(#resolved)" );//Mark the arrow according to the id number of the arrow mark
+        .attr("marker-end", "url(#arrow)" );//Mark the arrow according to the id number of the arrow mark
 
 //         const link = svg.selectAll("line")
 // .data(this.jsondata.links).enter().append('g').attr('class', 'node')
@@ -444,9 +444,9 @@ console.log(marker);
         const node = svg
         .selectAll("circle1")
         .data(this.jsondata.nodes)
-        .join("ellipse")
-        .attr("rx", 60)
-        .attr("ry", 20)
+        .join("rect")
+        .attr("width", 60)
+        .attr("height", 20)
         .style("fill", "#69b3a2")
         .on("mouseover", function(d, i) {
             tooltipdiv.transition()
@@ -475,9 +475,9 @@ console.log(marker);
         const collection = svg
         .selectAll("circle2")
         .data(this.jsondata.collection)
-        .join("ellipse")
-        .attr("rx", 60)
-        .attr("ry", 20)
+        .join("rect")
+        .attr("width", 60)
+        .attr("height", 20)
         .style("fill", "#5fd145")
         .on("mouseover", function(d, i) {
             tooltipdiv.transition()
@@ -501,9 +501,9 @@ console.log(marker);
       const shapes = svg
       .selectAll("circle2")
       .data(this.jsondata.shapes)
-      .join("ellipse")
-      .attr("rx", 60)
-      .attr("ry", 20)
+      .join("rect")
+      .attr("width", 60)
+      .attr("height", 20)
       .style("fill", "#5e915a")
       .on("mouseover", function(d, i) {
           tooltipdiv.transition()
@@ -552,7 +552,7 @@ console.log(marker);
         // });
         // console.log(d3.select(i.id));
 
-        if (d3.select(this).attr("rx")==60){
+        if (d3.select(this).attr("width")==60){
           // d3.select(this).attr("rx", 600).attr("ry", 200);
           // d3.select(this).append('tspan').text("TESTING")
 
@@ -576,27 +576,34 @@ console.log(marker);
               //console.log(d3.select(temp));
 
               //let startingX = temp.attributes.x.value;
-              let startingX = d3.select(temp).attr("x");
-              let startingY = d3.select(temp).attr("y");
-              console.log(startingY);
+
 
               let textArray = JSON.stringify(temp['__data__'].shape_extra, null, '\t').split('\n');
               // console.log("textArray:");
               // console.log(textArray);
               d3.select(temp).attr("text-anchor","start");
 
+              //Use odd number so it can't ever be exactly 60 again
               let offset = (31 + 20*textArray.length);
-              d3.select(temp).attr("y", startingY - offset/2);
+
+              //d3.select(temp).attr("y", startingY - offset/2);
               console.log(d3.select(temp).attr("y"));
 
               // d3.select(temp).append('tspan').text(" ").attr("y", -1 * offset/2)
 
+
+
+              d3.select(this).attr("height", offset).attr("width", 200);
+
+              ticked();
+
+              let startingX = d3.select(temp).attr("x");
+              let startingY = d3.select(temp).attr("y");
+              console.log(startingY);
+
               for (let t of textArray){
                 d3.select(temp).append('tspan').text(t).attr("dy", 20).attr("x", startingX);
               }
-
-              //Use odd number so it can't ever be exactly 60 again
-              d3.select(this).attr("rx", offset).attr("ry", 200);
 
               // bubblesText
               // .attr('x', function(d) { return d.x; })
@@ -623,11 +630,12 @@ console.log(marker);
           //   }
           // }
         } else {
-          d3.select(this).attr("rx", 60).attr("ry", 20);
+          d3.select(this).attr("width", 60).attr("height", 20);
           for (let temp of d3.selectAll('.bubbleText')){
             if(temp['__data__'].id == i.id){
               d3.select(temp).attr("text-anchor","middle");
               temp.textContent = temp['__data__'].type;
+              ticked();
               //temp.text = "ding \t anderding" + '\t' + "test";
             }
           }
@@ -648,9 +656,9 @@ console.log(marker);
         const relation = svg
         .selectAll("circle3")
         .data(this.jsondata.relations)
-        .join("ellipse")
-        .attr("rx", 90)
-        .attr("ry", 20)
+        .join("rect")
+        .attr("width", 90)
+        .attr("height", 20)
         .attr("class", "relation")
         .style("fill", "#6562cc")
         .on("mouseover", function(d, i) {
@@ -732,13 +740,13 @@ console.log(marker);
           //console.log(d3.select(d)._groups.pop().pop().target.attr("rx"));
           console.log("d3.select(target):")
           console.log(d3.select(d3.select(d)._groups.pop().pop().target))
-          console.log("attr?:")
-          console.log(d3.select(d3.select(d)._groups.pop().pop().target).attr("rx"))
+          //console.log("attr?:")
+          //console.log(d3.select(d3.select(d)._groups.pop().pop().target).attr("rx"))
 
 
           let d3Object = d3.select(d)._groups.pop().pop().target;
           d3.select(d3Object).raise();
-          if (d3.select(d3Object).attr("rx")==90){
+          if (d3.select(d3Object).attr("width")==90){
 
             for (let temp of d3.selectAll('.bubbleText')._groups.pop()){
 
@@ -751,30 +759,37 @@ console.log(marker);
                 temp.textContent = "";
 
                 let startingX = d3.select(temp).attr("x");
-                let startingY = d3.select(temp).attr("y");
+                //let startingY = d3.select(temp).attr("y");
 
                 let textArray = JSON.stringify(temp['__data__'], null, '\t').split('\n');
                 d3.select(temp).attr("text-anchor","start");
 
+                //Use odd number so it can't equal the original value
                 let offset = (31 + 20*textArray.length);
-                d3.select(temp).attr("y", startingY - offset/2);
+
+                //d3.select(temp).attr("y", startingY - offset/2);
 
 
                 for (let t of textArray){
                   d3.select(temp).append('tspan').text(t).attr("dy", 20).attr("x", startingX);
                 }
 
-                //Use odd number so it can't ever be exactly 60 again
-                d3.select(d3Object).attr("rx", offset).attr("ry", 200);
+                d3.select(d3Object).attr("height", offset).attr("width", 200);
+                ticked();
               }
             }
 
           } else {
-            d3.select(d3Object).attr("rx", 90).attr("ry", 20);
+            d3.select(d3Object).attr("width", 90).attr("height", 20);
+            console.log("d3 select dissapear");
+            console.log(d3.select(d3Object));
+            d3.select(d3Object).lower();
             for (let temp of d3.selectAll('.bubbleText')){
               if(temp['__data__'].id == i.id){
+                d3.select(temp).raise();
                 d3.select(temp).attr("text-anchor","middle");
                 temp.textContent = temp['__data__'].type;
+                ticked();
               }
             }
 
@@ -974,20 +989,20 @@ console.log(marker);
         });
 
         node
-        .attr("cx", function(d) { return d.x+6; })
-        .attr("cy", function(d) { return d.y-6; });
+        .attr("x", function(d) { return d.x - d3.select(this).attr("width")/2; })
+        .attr("y", function(d) { return d.y - d3.select(this).attr("height"); });
 
         relation
-        .attr("cx", function(d) { return d.x+6; })
-        .attr("cy", function(d) { return d.y-6; });
+        .attr("x", function(d) { return d.x - d3.select(this).attr("width")/2; })
+        .attr("y", function(d) { return d.y - d3.select(this).attr("height"); });
 
         collection
-        .attr("cx", function(d) { return d.x+6; })
-        .attr("cy", function(d) { return d.y-6; });
+        .attr("x", function(d) { return d.x - d3.select(this).attr("width")/2; })
+        .attr("y", function(d) { return d.y - d3.select(this).attr("height"); });
 
         shapes
-        .attr("cx", function(d) { return d.x+6; })
-        .attr("cy", function(d) { return d.y-6; });
+        .attr("x", function(d) { return d.x - d3.select(this).attr("width")/2; })
+        .attr("y", function(d) { return d.y - d3.select(this).attr("height"); });
 
         bubblesText
         .attr('x', function(d) { return d.x+6; })

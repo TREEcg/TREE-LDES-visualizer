@@ -217,6 +217,8 @@ export default {
       .data(this.jsondata.shapes)
       .join("g")
       .attr("class", "shape_g")
+      .attr("expanded", "false")
+      .on("click", clickShape.bind(this))
       .call(d3.drag()
       .on("start", dragstartX)
       .on("end", dragendX)
@@ -328,6 +330,7 @@ export default {
       function clickRelationHolder(event, d){
 
         let currentg = d3.select(event.target.parentNode);
+        //currentg could be tspan parent = text and not the group
         if (currentg.attr("class") != "relation_holder_g"){
           currentg = d3.select(currentg._groups.pop().pop().parentNode);
         }
@@ -358,6 +361,45 @@ export default {
         } else {
           currentg.attr("expanded", "false");
           currentg.select("text").text("relations: " + d.relation_count)
+          currentg.select("rect").attr("width", 1);
+          currentg.select("rect")
+          .attr("height", 30)
+          .attr("width", currentg.node().getBBox().width + 10);
+        }
+
+        ticked();
+
+      }
+
+
+      function clickShape(event, d){
+        let currentg = d3.select(event.target.parentNode);
+        if (currentg.attr("class") != "shape_g"){
+          currentg = d3.select(currentg._groups.pop().pop().parentNode);
+        }
+
+        if(currentg.attr("expanded") == "false"){
+          currentg.attr("expanded", "true");
+
+          let textArray = JSON.stringify(d.shape_extra, null, '\t').split('\n');
+
+          currentg.select("rect")
+          .attr("height", 10 + 20*textArray.length)
+
+          currentg.select("text").text("");
+
+          for (let textX of textArray){
+            let indent = (textX.split('\t').length -1) * 4;
+            currentg.select("text").append('tspan')
+            .text(textX)
+            .attr("dy", 20)
+            .attr("x", indent);
+          }
+
+          currentg.select("rect").attr("width", currentg.node().getBBox().width + 10);
+        } else {
+          currentg.attr("expanded", "false");
+          currentg.select("text").text((d.type + "").split('#').pop())
           currentg.select("rect").attr("width", 1);
           currentg.select("rect")
           .attr("height", 30)

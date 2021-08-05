@@ -38,7 +38,7 @@ export default {
   data(){
     return {
       qtext: [],
-      jsondata: {"collection":[], "nodes":[], "relations":[], "links":[], "shapes":[]},
+      jsondata: {"collection":[], "nodes":[], "relations":[], "links":[], "shapes":[], "relations_holder":[]},
       next_url: "",
       checked_shape: false,
       graph_height: 2000,
@@ -49,8 +49,10 @@ export default {
   },
   methods : {
     async getData() {
+      //TODO probably change this to add on click not redo all on click?
+      //Need to clear the data before redrawing
       this.qtext = [];
-      this.jsondata = {"collection":[], "nodes":[], "relations":[], "links":[], "shapes":[]};
+      this.jsondata = {"collection":[], "nodes":[], "relations":[], "links":[], "shapes":[], "relations_holder":[]};
       //console.log("TESTING:");
       var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/a.nt';
       if (this.data_url){
@@ -89,8 +91,10 @@ export default {
               for (var viewNode of collectionObj.view){
                 //Change the id to include _node because collection and main view can have the same URI
                 //We do still want to show them as two separate nodes even though they are the same thing
-                this.jsondata.nodes.push({"id":viewNode['@id']+"_node", "type":"Node", "name":viewNode['@id']});
+                this.jsondata.nodes.push({"id":viewNode['@id']+"_node", "type":"Node", "name":viewNode['@id'], "relation_count":metadata.nodes.get(viewNode['@id']).relation.length});
                 this.jsondata.links.push({"source":collectionId, "target":viewNode['@id']+"_node", "name":"view"});
+                this.jsondata.relations_holder.push({"id":viewNode['@id']+"_relation_holder", "node_id":viewNode['@id']+"_node", "relation_count":metadata.nodes.get(viewNode['@id']).relation.length})
+                this.jsondata.links.push({"source":viewNode['@id']+"_node", "target":viewNode['@id']+"_relation_holder", "name":"relation_holder"});
               }
             }
 
@@ -98,27 +102,36 @@ export default {
 
           }
 
-/*
+// /*
           for (var nodeId of metadata.nodes.keys()){
             var nodeObj = metadata.nodes.get(nodeId);
+            this.jsondata[nodeId+"_node"] = [];
+            //console.log(nodeId);
+            //console.log(this.jsondata.nodes);
+            //console.log(nodeObj.relation.length);
             for (var relation of nodeObj.relation){
-              this.jsondata.relations.push({"id":relation['@id'], "name":relation['@id'], "type":"relation"});
+              this.jsondata[nodeId+"_node"].push({"id":relation['@id'], "node_id":nodeId+"_node", "name":relation['@id'], "type":"relation"});
               //Don't forget to add _node to the source id, else all relations will be linked to the collection not the node
               this.jsondata.links.push({"source":nodeId+"_node", "target":relation['@id'], "name":"relation"});
             }
           }
 
-          for (var relationJson of this.jsondata.relations){
-            var relationObj = metadata.relations.get(relationJson.id);
-            relationJson.type = relationObj['@type'];
-            relationJson.node = relationObj.node;
-            relationJson.path = relationObj.path;
-            relationJson.value = relationObj.value;
-            relationJson.remainingItems = relationObj.remainingItems;
+          for (let relationNode of this.jsondata.nodes){
+            //console.log("tst: ", relationNode.id);
+            //console.log(this.jsondata[relationNode.id])
+            for (var relationJson of this.jsondata[relationNode.id]){
+              var relationObj = metadata.relations.get(relationJson.id);
+              relationJson.type = relationObj['@type'];
+              relationJson.node = relationObj.node;
+              relationJson.path = relationObj.path;
+              relationJson.value = relationObj.value;
+              relationJson.remainingItems = relationObj.remainingItems;
+            }
 
           }
-*/
+// */
 
+          console.log(this.jsondata);
           this.drawing(metadata);
 
         })
@@ -140,7 +153,7 @@ export default {
       d3.selectAll("svg").remove();
 
       //var all = this.jsondata.nodes.concat(this.jsondata.relations.concat(this.jsondata.collection.concat(this.jsondata.shapes)));
-      var all = this.jsondata.nodes.concat(this.jsondata.collection.concat(this.jsondata.shapes));
+      var all = this.jsondata.nodes.concat(this.jsondata.collection.concat(this.jsondata.shapes.concat(this.jsondata.relations_holder)));
 
 
 
@@ -251,6 +264,34 @@ export default {
       .raise();
 
 
+      const relation_holder = svg
+      .selectAll("grelation_holder")
+      .data(this.jsondata.relations_holder)
+      .join("g")
+      .attr("class", "relation_holder_g")
+      .attr("expanded", "false")
+      .on("click", clickRelationHolder.bind(this))
+      .call(d3.drag()
+      .on("start", dragstartX)
+      .on("end", dragendX)
+      .on("drag", dragX));
+
+      relation_holder.append("rect")
+      .attr("class", "relation_holder_rect")
+      .attr("width", 120)
+      .attr("height", 30)
+      .style("fill", "#6562cc")
+
+      relation_holder.append("text")
+      .attr("text-anchor", "start")
+      .attr("class", "relation_holder_text")
+      .attr("dy",20)
+      .text(function(d) {
+        return "relations: " + d.relation_count
+      })
+      .raise();
+
+
       d3.forceSimulation(all)
       .force("center", d3.forceCenter(width / 2, height / 2))
       .force("charge", d3.forceManyBody().strength(-400))
@@ -261,7 +302,7 @@ export default {
       function ticked() {
         console.log("ticked");
 
-        d3.selectAll(".collection_g, .shape_g, .node_g")
+        d3.selectAll(".collection_g, .shape_g, .node_g, .relation_holder_g")
         .attr("x", function(d) { return d.x })
         .attr("y", function(d) { return d.y })
         .attr("transform", function(d){return "translate("+d.x+","+d.y+")"});
@@ -281,6 +322,50 @@ export default {
       function dragendX() {
         d3.select(this).attr("stroke", null);
         ticked();
+      }
+
+
+      function clickRelationHolder(event, d){
+
+        let currentg = d3.select(event.target.parentNode);
+        if (currentg.attr("class") != "relation_holder_g"){
+          currentg = d3.select(currentg._groups.pop().pop().parentNode);
+        }
+        if(currentg.attr("expanded") == "false"){
+          currentg.attr("expanded", "true");
+
+          currentg.select("rect")
+          .attr("height", 10 + 20*this.jsondata[d.node_id].length)
+
+          currentg.select("text").text("");
+
+          for (let relX of this.jsondata[d.node_id]){
+            let textX = (relX.type + "").split('#').pop() + ": "
+            for (let v of relX.value){
+              textX += v['@value'] + ", ";
+            }
+            for (let v of relX.path){
+              textX += v['@id']//(v['@id'] + "").split("/").pop();
+            }
+
+            currentg.select("text").append('tspan')
+            .text(textX)
+            .attr("dy", 20)
+            .attr("x", 0);
+          }
+
+          currentg.select("rect").attr("width", currentg.node().getBBox().width + 10);
+        } else {
+          currentg.attr("expanded", "false");
+          currentg.select("text").text("relations: " + d.relation_count)
+          currentg.select("rect").attr("width", 1);
+          currentg.select("rect")
+          .attr("height", 30)
+          .attr("width", currentg.node().getBBox().width + 10);
+        }
+
+        ticked();
+
       }
 
     }

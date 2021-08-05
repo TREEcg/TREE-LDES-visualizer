@@ -52,7 +52,10 @@ export default {
       //TODO probably change this to add on click not redo all on click?
       //Need to clear the data before redrawing
       this.qtext = [];
-      this.jsondata = {"collection":[], "nodes":[], "relations":[], "links":[], "shapes":[], "relations_holder":[]};
+
+      //this.jsondata = {"collection":[], "nodes":[], "relations":[], "links":[], "shapes":[], "relations_holder":[]};
+
+
       //console.log("TESTING:");
       //var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/a.nt';
       var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/.root.nt'
@@ -68,22 +71,49 @@ export default {
         // quads is an array of RDF Quads (RDF.Quad[])
         extractMetadata(this.qtext).then(metadata => {
           console.log(metadata);
+
+          if (metadata.collections.keys().length != 1){
+            console.log("ERROR: found multiple collection! This is not allowed.")
+          }
           for (var collectionId of metadata.collections.keys()) {
             var collectionObj = metadata.collections.get(collectionId);
 
-            this.jsondata.collection.push({"id":collectionId, "name":collectionObj['@id'], "type":"collection", "vocab":collectionObj['@context']["@vocab"]});
-
-            //TODO shape is an array, fix this with a for loop and make sure id's are different
-            if (metadata.collections.get(collectionId).shape){
-              var count = 0;
-              for (var shapeNode of collectionObj.shape){
-                this.jsondata.shapes.push({"id":collectionId+"shape"+count, "type":"shape", "shape_extra":shapeNode});
-                this.jsondata.links.push({"source":collectionId, "target":collectionId+"shape"+count, "name":"shape_TOBECHANGED"});
-                count++;
+            let double = true;
+            if (this.jsondata.collection.length > 0){
+              for (var checker of this.jsondata.collection){
+                if (checker.id != collectionId){
+                  double = false;
+                }
               }
+            }
 
-              // TODO Need to find a way to show actual shape data later
-              // Maybe allow user to click on shape buble and simply show shape in text form in a new screen?
+            if (!double){
+              let errorText = "";
+              errorText += "ERROR: new node is linked to a different collection! This is not allowed.";
+              errorText += '\n' + "current URL: " + standardURL;
+              errorText += '\n' + "new collection: " + collectionId;
+              errorText += '\n' + "original collection: " + this.jsondata.collection[0].id;
+              alert(errorText);
+              return;
+            }
+
+            if (this.jsondata.collection.length == 0){
+
+              this.jsondata.collection.push({"id":collectionId, "name":collectionObj['@id'], "type":"collection", "vocab":collectionObj['@context']["@vocab"]});
+
+              //TODO shape is an array, fix this with a for loop and make sure id's are different
+              if (metadata.collections.get(collectionId).shape){
+                var count = 0;
+                for (var shapeNode of collectionObj.shape){
+                  this.jsondata.shapes.push({"id":collectionId+"shape"+count, "type":"shape", "shape_extra":shapeNode});
+                  this.jsondata.links.push({"source":collectionId, "target":collectionId+"shape"+count, "name":"shape_TOBECHANGED"});
+                  count++;
+                }
+
+                // TODO Need to find a way to show actual shape data later
+                // Maybe allow user to click on shape buble and simply show shape in text form in a new screen?
+
+              }
 
             }
 
@@ -92,6 +122,7 @@ export default {
               for (var viewNode of collectionObj.view){
                 //Change the id to include _node because collection and main view can have the same URI
                 //We do still want to show them as two separate nodes even though they are the same thing
+                //TODO IMPORTANT add a check on duplicate nodes!!
                 this.jsondata.nodes.push({"id":viewNode['@id']+"_node", "type":"Node", "name":viewNode['@id'], "relation_count":metadata.nodes.get(viewNode['@id']).relation.length});
                 this.jsondata.links.push({"source":collectionId, "target":viewNode['@id']+"_node", "name":"view"});
                 this.jsondata.relations_holder.push({"id":viewNode['@id']+"_relation_holder", "node_id":viewNode['@id']+"_node", "relation_count":metadata.nodes.get(viewNode['@id']).relation.length})
@@ -100,12 +131,14 @@ export default {
             }
 
             //TODO add member check and visualisation
+            //TODO don't forget to remove old members on adding new ones?
 
           }
 
 // /*
           for (var nodeId of metadata.nodes.keys()){
             var nodeObj = metadata.nodes.get(nodeId);
+            //TODO IMPORTANT add a check on duplicate nodes!!
             this.jsondata[nodeId+"_node"] = [];
             //console.log(nodeId);
             //console.log(this.jsondata.nodes);
@@ -113,7 +146,7 @@ export default {
             for (var relation of nodeObj.relation){
               this.jsondata[nodeId+"_node"].push({"id":relation['@id'], "node_id":nodeId+"_node", "name":relation['@id'], "type":"relation"});
               //Don't forget to add _node to the source id, else all relations will be linked to the collection not the node
-              this.jsondata.links.push({"source":nodeId+"_node", "target":relation['@id'], "name":"relation"});
+              //this.jsondata.links.push({"source":nodeId+"_node", "target":relation['@id'], "name":"relation"});
             }
           }
 
@@ -121,18 +154,23 @@ export default {
             //console.log("tst: ", relationNode.id);
             //console.log(this.jsondata[relationNode.id])
             for (var relationJson of this.jsondata[relationNode.id]){
+              if (metadata.relations.get(relationJson.id)){
+
               var relationObj = metadata.relations.get(relationJson.id);
               relationJson.type = relationObj['@type'];
               relationJson.node = relationObj.node;
               relationJson.path = relationObj.path;
               relationJson.value = relationObj.value;
               relationJson.remainingItems = relationObj.remainingItems;
+              }
             }
 
           }
 // */
 
-          //console.log(this.jsondata);
+          console.log("jsondata:");
+          console.log(this.jsondata);
+
           this.drawing(metadata);
 
         })
@@ -185,6 +223,16 @@ export default {
       .append("path")
       .attr("d", "M0,-5L10,0L0,5")//The path of the arrow
       .attr('fill','gray');//Arrow color
+
+
+      const link = svg.selectAll(".edgepath")
+          .data(this.jsondata.links)
+          .enter()
+          .append("path")
+          .style("stroke","gray")
+          .style("pointer-events", "none")
+      .style("stroke-width",0.5)//line thickness
+      .attr("marker-end", "url(#arrow)" );
 
 
       const collection = svg
@@ -296,6 +344,13 @@ export default {
 
 
       d3.forceSimulation(all)
+      .force("link", d3.forceLink()
+      .id(function(d) { return d.id; })
+      .links(this.jsondata.links)
+      )
+
+
+      d3.forceSimulation(all)
       .force("center", d3.forceCenter(width / 2, height / 2))
       .force("charge", d3.forceManyBody().strength(-400))
       .alphaDecay(this.alpha_decay_rate)
@@ -304,6 +359,11 @@ export default {
 
       function ticked() {
         console.log("ticked");
+
+        link.attr('d', function(d) {
+            var path='M '+d.source.x+' '+d.source.y+' L '+ d.target.x +' '+d.target.y;
+            return path;
+        });
 
         d3.selectAll(".collection_g, .shape_g, .node_g, .relation_holder_g")
         .attr("x", function(d) { return d.x })
@@ -333,8 +393,13 @@ export default {
 
 
         if (event.ctrlKey) {
+          //TODO what if node data is wrong, multiple urls, etc?
           console.log(d3.select(event.target).attr("node_link"));
 
+          //console.log(metadata.relations.get(i.id).node[0]['@id']);
+          this.data_url = d3.select(event.target).attr("node_link");
+          //d3.selectAll(".tooltip").remove();
+          this.getData();
         } else {
 
           let currentg = d3.select(event.target.parentNode);

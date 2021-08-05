@@ -54,7 +54,8 @@ export default {
       this.qtext = [];
       this.jsondata = {"collection":[], "nodes":[], "relations":[], "links":[], "shapes":[], "relations_holder":[]};
       //console.log("TESTING:");
-      var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/a.nt';
+      //var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/a.nt';
+      var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/.root.nt'
       if (this.data_url){
         standardURL = this.data_url;
       }
@@ -131,7 +132,7 @@ export default {
           }
 // */
 
-          console.log(this.jsondata);
+          //console.log(this.jsondata);
           this.drawing(metadata);
 
         })
@@ -156,7 +157,7 @@ export default {
       var all = this.jsondata.nodes.concat(this.jsondata.collection.concat(this.jsondata.shapes.concat(this.jsondata.relations_holder)));
 
 
-
+      //TODO fix scrolling, zoom,
       // append the svg object to the body of the page
       const svg = d3.select("#my_dataviz")
       .attr("width", width + margin.left + margin.right)
@@ -329,45 +330,61 @@ export default {
 
       function clickRelationHolder(event, d){
 
-        let currentg = d3.select(event.target.parentNode);
-        //currentg could be tspan parent = text and not the group
-        if (currentg.attr("class") != "relation_holder_g"){
-          currentg = d3.select(currentg._groups.pop().pop().parentNode);
-        }
-        if(currentg.attr("expanded") == "false"){
-          currentg.attr("expanded", "true");
 
-          currentg.select("rect")
-          .attr("height", 10 + 20*this.jsondata[d.node_id].length)
 
-          currentg.select("text").text("");
+        if (event.ctrlKey) {
+          console.log(d3.select(event.target).attr("node_link"));
 
-          for (let relX of this.jsondata[d.node_id]){
-            let textX = (relX.type + "").split('#').pop() + ": "
-            for (let v of relX.value){
-              textX += v['@value'] + ", ";
-            }
-            for (let v of relX.path){
-              textX += v['@id']//(v['@id'] + "").split("/").pop();
-            }
+        } else {
 
-            currentg.select("text").append('tspan')
-            .text(textX)
-            .attr("dy", 20)
-            .attr("x", 0);
+          let currentg = d3.select(event.target.parentNode);
+          //currentg could be tspan parent = text and not the group
+          if (currentg.attr("class") != "relation_holder_g"){
+            currentg = d3.select(currentg._groups.pop().pop().parentNode);
           }
 
-          currentg.select("rect").attr("width", currentg.node().getBBox().width + 10);
-        } else {
-          currentg.attr("expanded", "false");
-          currentg.select("text").text("relations: " + d.relation_count)
-          currentg.select("rect").attr("width", 1);
-          currentg.select("rect")
-          .attr("height", 30)
-          .attr("width", currentg.node().getBBox().width + 10);
-        }
+          if(currentg.attr("expanded") == "false"){
+            currentg.attr("expanded", "true");
 
-        ticked();
+            currentg.raise();
+
+            currentg.select("rect")
+            .attr("height", 10 + 20*this.jsondata[d.node_id].length)
+
+            currentg.select("text").text("");
+
+            for (let relX of this.jsondata[d.node_id]){
+              let textX = (relX.type + "").split('#').pop() + ": "
+              for (let v of relX.value){
+                textX += v['@value'] + ", ";
+              }
+              for (let v of relX.path){
+                textX += v['@id']//(v['@id'] + "").split("/").pop();
+              }
+
+              let tempSpan = currentg.select("text").append('tspan')
+              .text(textX)
+              .attr("dy", 20)
+              .attr("x", 0);
+
+              if(relX.node){
+                tempSpan.attr("node_link", relX.node[0]['@id']);
+              }
+
+            }
+
+            currentg.select("rect").attr("width", currentg.node().getBBox().width + 10);
+          } else {
+            currentg.attr("expanded", "false");
+            currentg.select("text").text("relations: " + d.relation_count)
+            currentg.select("rect").attr("width", 1);
+            currentg.select("rect")
+            .attr("height", 30)
+            .attr("width", currentg.node().getBBox().width + 10);
+          }
+
+          ticked();
+        }
 
       }
 
@@ -380,6 +397,8 @@ export default {
 
         if(currentg.attr("expanded") == "false"){
           currentg.attr("expanded", "true");
+
+          currentg.raise();
 
           let textArray = JSON.stringify(d.shape_extra, null, '\t').split('\n');
 

@@ -362,10 +362,10 @@ export default {
       .force("link", d3.forceLink()
       .id(function(d) { return d.id; })
       .links(this.jsondata.links)
-      .distance(200)
+      //.distance(200)
       )
       .alphaDecay(this.alpha_decay_rate)
-      //.on("tick", ticked);
+      .on("tick", firstTick.bind(this));
 
 
       //TODO change this to collection fixed top left
@@ -373,21 +373,40 @@ export default {
       //node beneath collection, every next node should be moved somewhat to the right
       //relation underneath the connected node
       // use "offsetX" from the json.nodes / relations_holder and multiply with 100?
-      d3.forceSimulation(all)
-      .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("charge", d3.forceManyBody().strength(-800))
-      .alphaDecay(this.alpha_decay_rate)
-      .on("tick", firstTick.bind(this));
+
+      // d3.forceSimulation(all)
+      // .force("center", d3.forceCenter(width / 2, height / 2))
+      // .force("charge", d3.forceManyBody().strength(-800))
+      // .alphaDecay(this.alpha_decay_rate)
+      // .on("tick", firstTick.bind(this));
+
+
+      //console.log("testing:")
+      //console.log(d3.select(collection).node())
+
+      //shape.attr("x", d3.select(collection).node().getBBox().width + 60).attr("y", 20)
 
 
       function firstTick(){
         for(let tempG of shape){
-          expandShape.bind(this)(d3.select(tempG), tempG['__data__']);
+          if(d3.select(tempG).attr("expanded") == "true"){
+            expandShapeTrue.bind(this)(d3.select(tempG), tempG['__data__']);
+          }
         }
         for(let tempG of relation_holder){
-          expandRelationHolder.bind(this)(d3.select(tempG), tempG['__data__']);
+          if(d3.select(tempG).attr("expanded") == "true"){
+            expandRelationHolderTrue.bind(this)(d3.select(tempG), tempG['__data__']);
+          }
         }
         ticked();
+
+        svg.selectAll(".collection_g").attr("x", function(d){d.x=50; return d.x}).attr("y", function(d){d.y=20; return d.y});
+        svg.selectAll(".shape_g").attr("x", function(d){d.x=200+50; return d.x}).attr("y", function(d){d.y=20; return d.y});
+        svg.selectAll(".node_g").attr("x", function(d){d.x=50+d.offsetX*500; return d.x}).attr("y", function(d){d.y=150; return d.y});
+        svg.selectAll(".relation_holder_g").attr("x", function(d){d.x=50+d.offsetX*500; return d.x}).attr("y", function(d){d.y=300; return d.y});
+
+        fixGroupChildren();
+        fixLinks();
       }
 
       function ticked() {
@@ -517,35 +536,9 @@ export default {
       function expandShape(currentg, d){
         if(currentg.attr("expanded") == "false"){
           currentg.attr("expanded", "true");
-          for(let temp of this.jsondata.shapes){
-            if (temp.id == d.id){
-              temp.expanded = "true";
-            }
-          }
 
-          currentg.raise();
+          expandShapeTrue.bind(this)(currentg, d);
 
-          let textArray = JSON.stringify(d.shape_extra, null, '\t').split('\n');
-
-          currentg.select("rect")
-          .attr("height", 10 + 20*textArray.length)
-
-          currentg.select("text").text("");
-
-          let prevIndent = 0;
-          for (let textX of textArray){
-            let indent = (textX.split('\t').length -1) * 4;
-            currentg.select("text").append('tspan')
-            .text(textX.replace('\t',''))
-            .attr("dy", 20)
-            .attr("dx", indent-prevIndent + 5);
-            prevIndent = indent-prevIndent;
-          }
-
-          currentg.select("text").selectAll("tspan")
-          .attr("x", function(d) {return d.x;})
-
-          currentg.select("rect").attr("width", currentg.node().getBBox().width + 10);
         } else {
           currentg.attr("expanded", "false");
           for(let temp of this.jsondata.shapes){
@@ -565,46 +558,45 @@ export default {
         }
       }
 
+      function expandShapeTrue(currentg, d){
+        for(let temp of this.jsondata.shapes){
+          if (temp.id == d.id){
+            temp.expanded = "true";
+          }
+        }
+
+        currentg.raise();
+
+        let textArray = JSON.stringify(d.shape_extra, null, '\t').split('\n');
+
+        currentg.select("rect")
+        .attr("height", 10 + 20*textArray.length)
+
+        currentg.select("text").text("");
+
+        let prevIndent = 0;
+        for (let textX of textArray){
+          let indent = (textX.split('\t').length -1) * 4;
+          currentg.select("text").append('tspan')
+          .text(textX.replace('\t',''))
+          .attr("dy", 20)
+          .attr("dx", indent-prevIndent + 5);
+          prevIndent = indent-prevIndent;
+        }
+
+        currentg.select("text").selectAll("text, tspan")
+        .attr("x", function(d) {return d.x;})
+
+        currentg.select("rect").attr("width", currentg.node().getBBox().width + 10);
+      }
+
 
       function expandRelationHolder(currentg, d){
         if(currentg.attr("expanded") == "false"){
           currentg.attr("expanded", "true");
-          for(let temp of this.jsondata.relations_holder){
-            if (temp.id == d.id){
-              temp.expanded = "true";
-            }
-          }
 
-          currentg.raise();
+          expandRelationHolderTrue.bind(this)(currentg, d);
 
-          currentg.select("rect")
-          .attr("height", 10 + 20*this.jsondata[d.node_id].length)
-
-          currentg.select("text").text("");
-
-          for (let relX of this.jsondata[d.node_id]){
-            let textX = (relX.type + "").split('#').pop() + ": "
-            for (let v of relX.value){
-              textX += v['@value'] + ", ";
-            }
-            for (let v of relX.path){
-              textX += v['@id']//(v['@id'] + "").split("/").pop();
-            }
-
-            let tempSpan = currentg.select("text").append('tspan')
-            .text(textX)
-            .attr("dy", 20)
-            .attr("x", currentg.select("rect").attr("x"));
-
-            if(relX.node){
-              tempSpan.attr("node_link", relX.node[0]['@id']);
-            }
-
-          }
-
-          currentg.select("text").selectAll("tspan")
-          .attr("x", function(d) {return d.x;})
-          currentg.select("rect").attr("width", currentg.node().getBBox().width + 10);
         } else {
           currentg.attr("expanded", "false");
           for(let temp of this.jsondata.relations_holder){
@@ -620,6 +612,46 @@ export default {
           .attr("height", 30)
           .attr("width", currentg.node().getBBox().width + 10);
         }
+      }
+
+
+      function expandRelationHolderTrue(currentg, d){
+        for(let temp of this.jsondata.relations_holder){
+          if (temp.id == d.id){
+            temp.expanded = "true";
+          }
+        }
+
+        currentg.raise();
+
+        currentg.select("rect")
+        .attr("height", 10 + 20*this.jsondata[d.node_id].length)
+
+        currentg.select("text").text("");
+
+        for (let relX of this.jsondata[d.node_id]){
+          let textX = (relX.type + "").split('#').pop() + ": "
+          for (let v of relX.value){
+            textX += v['@value'] + ", ";
+          }
+          for (let v of relX.path){
+            textX += v['@id']//(v['@id'] + "").split("/").pop();
+          }
+
+          let tempSpan = currentg.select("text").append('tspan')
+          .text(textX)
+          .attr("dy", 20)
+          .attr("x", currentg.select("rect").attr("x"));
+
+          if(relX.node){
+            tempSpan.attr("node_link", relX.node[0]['@id']);
+          }
+
+        }
+
+        currentg.select("text").selectAll("text, tspan")
+        .attr("x", function(d) {return d.x;})
+        currentg.select("rect").attr("width", currentg.node().getBBox().width + 10);
       }
 
 

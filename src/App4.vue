@@ -376,39 +376,15 @@ export default {
       function ticked() {
         console.log("ticked");
 
-        // link.attr('d', function(d) {
-        //   //TODO find a way to make the path go to the center, not the top corner by finding source, target width and height
-        //   var path='M '+d.source.x+' '+d.source.y+' L '+ d.target.x +' '+d.target.y;
-        //   return path;
-        // });
-
-        fixLinks()
-
         d3.selectAll("g")
         .attr("x", function(d) {
-          // console.log((d3.select(this).attr("transform")).slice(10));
-          // if (d3.select(this).attr("transform")){
-          //   console.log((d3.select(this).attr("transform")).slice(10).split(")")[0].split(',')[0]);
-          //   return d.x+Number((d3.select(this).attr("transform")).slice(10).split(")")[0].split(',')[0]);
-          // }
-          // console.log("no transform X");
           return d.x;
         })
         .attr("y", function(d) {
-          // if (d3.select(this).attr("transform")){
-          //   console.log((d3.select(this).attr("transform")).slice(10).split(")")[0].split(',')[1]);
-          //   return d.y+Number((d3.select(this).attr("transform")).slice(10).split(")")[0].split(',')[1]);
-          // }
-          // console.log("no transform Y");
           return d.y;
         })
-        //.attr("transform", function(d){/*console.log("d:");console.log(d);console.log("this:");console.log(this);*/return "translate("+d.x+","+d.y+")"});
 
-        d3.selectAll("rect, text")
-        .attr("x", function(d) {console.log("d");console.log(d3.select(this)._groups[0][0].parentNode);return d.x;})
-        .attr("y", function(d) {return d.y;});
-
-        console.log(d3.selectAll('g'));
+        fixGroupChildren()
 
         fixLinks()
 
@@ -421,7 +397,15 @@ export default {
           var path='M '+d.source.x+' '+d.source.y+' L '+ d.target.x +' '+d.target.y;
           return path;
         });
+      }
 
+      function fixGroupChildren(){
+        d3.selectAll("rect, text")
+        .attr("x", function(d) {return d.x;})
+        .attr("y", function(d) {return d.y;});
+
+        d3.selectAll("tspan")
+        .attr("x", function(d) {return d.x;})
       }
 
 
@@ -442,8 +426,9 @@ export default {
         console.log(d3.selectAll('g'));
       }
 
-      //const inner = svg.selectAll("g");
 
+
+      //The event.transform does not change during session, it simply get added onto every time
       svg.attr("prevTX", 0).attr("prevTY", 0);
 
       const zoom = d3.zoom()
@@ -466,26 +451,11 @@ export default {
 
       svg.attr("prevTX", e.transform.x).attr("prevTY", e.transform.y).attr("scaleAll", e.transform.k);
 
-      d3.selectAll("rect, text")
-      .attr("x", function(d) {return d.x;})
-      .attr("y", function(d) {return d.y;});
+      fixGroupChildren()
 
       fixLinks();
 
       });
-
-
-
-      // const zoom = d3.zoom();
-      // zoom.on("wheel", function(e){
-      //   console.log("wheel:");
-      //   console.log(e.targetEvent);
-      // });
-      //
-      // zoom.on("mousemove", function(e){
-      //   console.log("mousemove:");
-      //   console.log(e.targetEvent);
-      // });
 
       svg.call(zoom);
 
@@ -532,7 +502,7 @@ export default {
               let tempSpan = currentg.select("text").append('tspan')
               .text(textX)
               .attr("dy", 20)
-              .attr("x", 0);
+              .attr("x", currentg.select("rect").attr("x"));
 
               if(relX.node){
                 tempSpan.attr("node_link", relX.node[0]['@id']);

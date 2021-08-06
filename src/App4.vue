@@ -102,14 +102,14 @@ export default {
 
             if (this.jsondata.collection.length == 0){
 
-              this.jsondata.collection.push({"id":collectionId, "name":collectionObj['@id'], "type":"collection", "vocab":collectionObj['@context']["@vocab"]});
+              this.jsondata.collection.push({"id":collectionId, "name":collectionObj['@id'], "type":"collection", "vocab":collectionObj['@context']["@vocab"], "expanded": "false"});
 
               //TODO shape is an array, fix this with a for loop and make sure id's are different
               if (metadata.collections.get(collectionId).shape){
                 var count = 0;
                 for (var shapeNode of collectionObj.shape){
-                  this.jsondata.shapes.push({"id":collectionId+"shape"+count, "type":"shape", "shape_extra":shapeNode});
-                  this.jsondata.links.push({"source":collectionId, "target":collectionId+"shape"+count, "name":"shape_TOBECHANGED"});
+                  this.jsondata.shapes.push({"id":collectionId+"shape"+count, "type":"shape", "shape_extra":shapeNode, "expanded": "false"});
+                  this.jsondata.links.push({"source":collectionId, "target":collectionId+"shape"+count, "name":"shape"});
                   count++;
                 }
 
@@ -134,9 +134,9 @@ export default {
                 }
 
                 if (!double){
-                  this.jsondata.nodes.push({"id":viewNode['@id']+"_node", "type":"Node", "name":viewNode['@id'], "relation_count":metadata.nodes.get(viewNode['@id']).relation.length});
+                  this.jsondata.nodes.push({"id":viewNode['@id']+"_node", "type":"Node", "name":viewNode['@id'], "relation_count":metadata.nodes.get(viewNode['@id']).relation.length, "offsetX": this.jsondata.nodes.length, "expanded": "false"});
                   this.jsondata.links.push({"source":collectionId, "target":viewNode['@id']+"_node", "name":"view"});
-                  this.jsondata.relations_holder.push({"id":viewNode['@id']+"_relation_holder", "node_id":viewNode['@id']+"_node", "relation_count":metadata.nodes.get(viewNode['@id']).relation.length})
+                  this.jsondata.relations_holder.push({"id":viewNode['@id']+"_relation_holder", "node_id":viewNode['@id']+"_node", "relation_count":metadata.nodes.get(viewNode['@id']).relation.length, "offsetX": this.jsondata.relations_holder.length, "expanded": "false"})
                   this.jsondata.links.push({"source":viewNode['@id']+"_node", "target":viewNode['@id']+"_relation_holder", "name":"relation_holder"});
                 }
               }
@@ -157,7 +157,7 @@ export default {
             //console.log(this.jsondata.nodes);
             //console.log(nodeObj.relation.length);
             for (var relation of nodeObj.relation){
-              this.jsondata[nodeId+"_node"].push({"id":relation['@id'], "node_id":nodeId+"_node", "name":relation['@id'], "type":"relation"});
+              this.jsondata[nodeId+"_node"].push({"id":relation['@id'], "node_id":nodeId+"_node", "name":relation['@id'], "type":"relation", "expanded": "false"});
               //Don't forget to add _node to the source id, else all relations will be linked to the collection not the node
               //this.jsondata.links.push({"source":nodeId+"_node", "target":relation['@id'], "name":"relation"});
             }
@@ -279,12 +279,14 @@ export default {
       .data(this.jsondata.shapes)
       .join("g")
       .attr("class", "shape_g")
-      .attr("expanded", "false")
+      .attr("expanded", function(d){return d.expanded;})
       .on("click", clickShape.bind(this))
       .call(d3.drag()
       .on("start", dragstartX)
       .on("end", dragendX)
       .on("drag", dragX));
+
+      console.log(shape);
 
       shape.append("rect")
       .attr("class", "shape_rect")
@@ -333,7 +335,7 @@ export default {
       .data(this.jsondata.relations_holder)
       .join("g")
       .attr("class", "relation_holder_g")
-      .attr("expanded", "false")
+      .attr("expanded", function(d){return d.expanded;})
       .on("click", clickRelationHolder.bind(this))
       .call(d3.drag()
       .on("start", dragstartX)
@@ -363,15 +365,30 @@ export default {
       .distance(200)
       )
       .alphaDecay(this.alpha_decay_rate)
-      .on("tick", ticked);
+      //.on("tick", ticked);
 
 
+      //TODO change this to collection fixed top left
+      //shape to the right off collection
+      //node beneath collection, every next node should be moved somewhat to the right
+      //relation underneath the connected node
+      // use "offsetX" from the json.nodes / relations_holder and multiply with 100?
       d3.forceSimulation(all)
-      //.force("center", d3.forceCenter(width / 2, height / 2))
+      .force("center", d3.forceCenter(width / 2, height / 2))
       .force("charge", d3.forceManyBody().strength(-800))
       .alphaDecay(this.alpha_decay_rate)
-      .on("tick", ticked);
+      .on("tick", firstTick.bind(this));
 
+
+      function firstTick(){
+        for(let tempG of shape){
+          expandShape.bind(this)(d3.select(tempG), tempG['__data__']);
+        }
+        for(let tempG of relation_holder){
+          expandRelationHolder.bind(this)(d3.select(tempG), tempG['__data__']);
+        }
+        ticked();
+      }
 
       function ticked() {
         console.log("ticked");
@@ -423,13 +440,13 @@ export default {
         d3.select(this).attr("stroke", null);
         ticked();
 
-        console.log(d3.selectAll('g'));
+        //console.log(d3.selectAll('g'));
       }
 
 
 
       //The event.transform does not change during session, it simply get added onto every time
-      svg.attr("prevTX", 0).attr("prevTY", 0);
+      svg.attr("prevTX", 0).attr("prevTY", 0).attr("scaleAll", 1);
 
       const zoom = d3.zoom()
 
@@ -461,9 +478,6 @@ export default {
 
 
       function clickRelationHolder(event, d){
-
-
-
         if (event.ctrlKey) {
           //TODO what if node data is wrong, multiple urls, etc?
           console.log(d3.select(event.target).attr("node_link"));
@@ -480,45 +494,7 @@ export default {
             currentg = d3.select(currentg._groups.pop().pop().parentNode);
           }
 
-          if(currentg.attr("expanded") == "false"){
-            currentg.attr("expanded", "true");
-
-            currentg.raise();
-
-            currentg.select("rect")
-            .attr("height", 10 + 20*this.jsondata[d.node_id].length)
-
-            currentg.select("text").text("");
-
-            for (let relX of this.jsondata[d.node_id]){
-              let textX = (relX.type + "").split('#').pop() + ": "
-              for (let v of relX.value){
-                textX += v['@value'] + ", ";
-              }
-              for (let v of relX.path){
-                textX += v['@id']//(v['@id'] + "").split("/").pop();
-              }
-
-              let tempSpan = currentg.select("text").append('tspan')
-              .text(textX)
-              .attr("dy", 20)
-              .attr("x", currentg.select("rect").attr("x"));
-
-              if(relX.node){
-                tempSpan.attr("node_link", relX.node[0]['@id']);
-              }
-
-            }
-
-            currentg.select("rect").attr("width", currentg.node().getBBox().width + 10);
-          } else {
-            currentg.attr("expanded", "false");
-            currentg.select("text").text("relations: " + d.relation_count)
-            currentg.select("rect").attr("width", 1);
-            currentg.select("rect")
-            .attr("height", 30)
-            .attr("width", currentg.node().getBBox().width + 10);
-          }
+          expandRelationHolder.bind(this)(currentg, d);
 
           ticked();
         }
@@ -532,8 +508,20 @@ export default {
           currentg = d3.select(currentg._groups.pop().pop().parentNode);
         }
 
+        expandShape.bind(this)(currentg, d);
+
+        ticked();
+      }
+
+
+      function expandShape(currentg, d){
         if(currentg.attr("expanded") == "false"){
           currentg.attr("expanded", "true");
+          for(let temp of this.jsondata.shapes){
+            if (temp.id == d.id){
+              temp.expanded = "true";
+            }
+          }
 
           currentg.raise();
 
@@ -544,27 +532,98 @@ export default {
 
           currentg.select("text").text("");
 
+          let prevIndent = 0;
           for (let textX of textArray){
             let indent = (textX.split('\t').length -1) * 4;
             currentg.select("text").append('tspan')
-            .text(textX)
+            .text(textX.replace('\t',''))
             .attr("dy", 20)
-            .attr("x", indent);
+            .attr("dx", indent-prevIndent + 5);
+            prevIndent = indent-prevIndent;
           }
+
+          currentg.select("text").selectAll("tspan")
+          .attr("x", function(d) {return d.x;})
 
           currentg.select("rect").attr("width", currentg.node().getBBox().width + 10);
         } else {
           currentg.attr("expanded", "false");
+          for(let temp of this.jsondata.shapes){
+            if (temp.id == d.id){
+              temp.expanded = "false";
+            }
+          }
           currentg.select("text").text((d.type + "").split('#').pop())
           currentg.select("rect").attr("width", 1);
+
+          currentg.select("text").selectAll("tspan")
+          .attr("x", function(d) {return d.x;})
+
           currentg.select("rect")
           .attr("height", 30)
           .attr("width", currentg.node().getBBox().width + 10);
         }
-
-        ticked();
-
       }
+
+
+      function expandRelationHolder(currentg, d){
+        if(currentg.attr("expanded") == "false"){
+          currentg.attr("expanded", "true");
+          for(let temp of this.jsondata.relations_holder){
+            if (temp.id == d.id){
+              temp.expanded = "true";
+            }
+          }
+
+          currentg.raise();
+
+          currentg.select("rect")
+          .attr("height", 10 + 20*this.jsondata[d.node_id].length)
+
+          currentg.select("text").text("");
+
+          for (let relX of this.jsondata[d.node_id]){
+            let textX = (relX.type + "").split('#').pop() + ": "
+            for (let v of relX.value){
+              textX += v['@value'] + ", ";
+            }
+            for (let v of relX.path){
+              textX += v['@id']//(v['@id'] + "").split("/").pop();
+            }
+
+            let tempSpan = currentg.select("text").append('tspan')
+            .text(textX)
+            .attr("dy", 20)
+            .attr("x", currentg.select("rect").attr("x"));
+
+            if(relX.node){
+              tempSpan.attr("node_link", relX.node[0]['@id']);
+            }
+
+          }
+
+          currentg.select("text").selectAll("tspan")
+          .attr("x", function(d) {return d.x;})
+          currentg.select("rect").attr("width", currentg.node().getBBox().width + 10);
+        } else {
+          currentg.attr("expanded", "false");
+          for(let temp of this.jsondata.relations_holder){
+            if (temp.id == d.id){
+              temp.expanded = "false";
+            }
+          }
+          currentg.select("text").text("relations: " + d.relation_count)
+          currentg.select("rect").attr("width", 1);
+          currentg.select("text").selectAll("tspan")
+          .attr("x", function(d) {return d.x;})
+          currentg.select("rect")
+          .attr("height", 30)
+          .attr("width", currentg.node().getBBox().width + 10);
+        }
+      }
+
+
+
 
     }
 

@@ -215,6 +215,7 @@ export default {
       .append("svg")
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom)
+      .attr("pointer-events", "all");
 
 
 
@@ -359,13 +360,14 @@ export default {
       .force("link", d3.forceLink()
       .id(function(d) { return d.id; })
       .links(this.jsondata.links)
-      .distance(200))
+      .distance(200)
+      )
       .alphaDecay(this.alpha_decay_rate)
       .on("tick", ticked);
 
 
       d3.forceSimulation(all)
-      .force("center", d3.forceCenter(width / 2, height / 2))
+      //.force("center", d3.forceCenter(width / 2, height / 2))
       .force("charge", d3.forceManyBody().strength(-800))
       .alphaDecay(this.alpha_decay_rate)
       .on("tick", ticked);
@@ -374,16 +376,51 @@ export default {
       function ticked() {
         console.log("ticked");
 
+        // link.attr('d', function(d) {
+        //   //TODO find a way to make the path go to the center, not the top corner by finding source, target width and height
+        //   var path='M '+d.source.x+' '+d.source.y+' L '+ d.target.x +' '+d.target.y;
+        //   return path;
+        // });
+
+        fixLinks()
+
+        d3.selectAll("g")
+        .attr("x", function(d) {
+          // console.log((d3.select(this).attr("transform")).slice(10));
+          // if (d3.select(this).attr("transform")){
+          //   console.log((d3.select(this).attr("transform")).slice(10).split(")")[0].split(',')[0]);
+          //   return d.x+Number((d3.select(this).attr("transform")).slice(10).split(")")[0].split(',')[0]);
+          // }
+          // console.log("no transform X");
+          return d.x;
+        })
+        .attr("y", function(d) {
+          // if (d3.select(this).attr("transform")){
+          //   console.log((d3.select(this).attr("transform")).slice(10).split(")")[0].split(',')[1]);
+          //   return d.y+Number((d3.select(this).attr("transform")).slice(10).split(")")[0].split(',')[1]);
+          // }
+          // console.log("no transform Y");
+          return d.y;
+        })
+        //.attr("transform", function(d){/*console.log("d:");console.log(d);console.log("this:");console.log(this);*/return "translate("+d.x+","+d.y+")"});
+
+        d3.selectAll("rect, text")
+        .attr("x", function(d) {console.log("d");console.log(d3.select(this)._groups[0][0].parentNode);return d.x;})
+        .attr("y", function(d) {return d.y;});
+
+        console.log(d3.selectAll('g'));
+
+        fixLinks()
+
+      }
+
+      function fixLinks(){
+        link.attr("transform", "scale("+d3.select("svg").attr("scaleAll")+")");
         link.attr('d', function(d) {
           //TODO find a way to make the path go to the center, not the top corner by finding source, target width and height
           var path='M '+d.source.x+' '+d.source.y+' L '+ d.target.x +' '+d.target.y;
           return path;
         });
-
-        d3.selectAll(".collection_g, .shape_g, .node_g, .relation_holder_g")
-        .attr("x", function(d) { return d.x })
-        .attr("y", function(d) { return d.y })
-        .attr("transform", function(d){return "translate("+d.x+","+d.y+")"});
 
       }
 
@@ -393,15 +430,64 @@ export default {
         d3.select(this).attr("stroke", "black");
       }
 
-      function dragX(event, d) {
-        d3.select(this).attr("x", d.x = event.x).attr("y", d.y = event.y);
+      function dragX(e, d) {
+        d3.select(this).attr("x", d.x = e.x).attr("y", d.y = e.y);
         ticked();
       }
 
       function dragendX() {
         d3.select(this).attr("stroke", null);
         ticked();
+
+        console.log(d3.selectAll('g'));
       }
+
+      //const inner = svg.selectAll("g");
+
+      svg.attr("prevTX", 0).attr("prevTY", 0);
+
+      const zoom = d3.zoom()
+
+      zoom.on("zoom", function(e) {
+        d3.selectAll("g")
+        .attr("transform", function(){return "translate("+(e.transform.x- d3.select("svg").attr("prevTX"))+","+(e.transform.y- d3.select("svg").attr("prevTY"))+")scale("+e.transform.k+")"});
+
+        fixLinks();
+        link.attr("transform", function(){return "translate("+(e.transform.x- d3.select("svg").attr("prevTX"))+","+(e.transform.y- d3.select("svg").attr("prevTY"))+")scale("+e.transform.k+")"});
+      });
+
+      zoom.on("end", function(e) {
+
+      d3.selectAll("g")
+
+      .attr("transform", function(){return "scale("+e.transform.k+")"})
+      .attr("x", function(d) { d.x += e.transform.x - d3.select("svg").attr("prevTX")})
+      .attr("y", function(d) { d.y += e.transform.y - d3.select("svg").attr("prevTY")})
+
+      svg.attr("prevTX", e.transform.x).attr("prevTY", e.transform.y).attr("scaleAll", e.transform.k);
+
+      d3.selectAll("rect, text")
+      .attr("x", function(d) {return d.x;})
+      .attr("y", function(d) {return d.y;});
+
+      fixLinks();
+
+      });
+
+
+
+      // const zoom = d3.zoom();
+      // zoom.on("wheel", function(e){
+      //   console.log("wheel:");
+      //   console.log(e.targetEvent);
+      // });
+      //
+      // zoom.on("mousemove", function(e){
+      //   console.log("mousemove:");
+      //   console.log(e.targetEvent);
+      // });
+
+      svg.call(zoom);
 
 
       function clickRelationHolder(event, d){

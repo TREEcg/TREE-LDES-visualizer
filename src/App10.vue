@@ -139,9 +139,9 @@ export default {
                 if (!double){
                   this.jsondata.nodes.push({"id":viewNode['@id']+"_node", "type":"Node", "name":viewNode['@id'], "relation_count":metadata.nodes.get(viewNode['@id']).relation.length, "offsetX": this.jsondata.nodes.length});
                   // this.jsondata.links.push({"source":collectionId, "target":viewNode['@id']+"_node", "name":"view"});
-                  this.jsondata.relations_holder.push({"id":viewNode['@id']+"_relation_holder", "node_id":viewNode['@id']+"_node", "name":viewNode['@id'], "relation_count":metadata.nodes.get(viewNode['@id']).relation.length, "offsetX": this.jsondata.relations_holder.length})
+                  this.jsondata.relations_holder.push({"id":viewNode['@id']+"_node", "node_id":viewNode['@id']+"_node", "name":viewNode['@id'], "relation_count":metadata.nodes.get(viewNode['@id']).relation.length, "offsetX": this.jsondata.relations_holder.length})
                   // this.jsondata.links.push({"source":viewNode['@id']+"_node", "target":viewNode['@id']+"_relation_holder", "name":"relation_holder"});
-                  this.jsondata.links.push({"source":collectionId, "target":viewNode['@id']+"_relation_holder", "name":"relation_holder"});
+                  this.jsondata.links.push({"source":collectionId, "target":viewNode['@id']+"_node", "name":"relation_holder"});
                 }
               }
             }
@@ -167,18 +167,36 @@ export default {
             }
           }
 
-          for (let relationNode of this.jsondata.nodes){
+          //console.log("jsondata:");
+          //console.log(this.jsondata);
+
+          for (let relationNode of this.jsondata.relations_holder){
             //console.log("tst: ", relationNode.id);
             //console.log(this.jsondata[relationNode.id])
+            let tempN = [];
             for (var relationJson of this.jsondata[relationNode.id]){
               if (metadata.relations.get(relationJson.id)){
 
-              var relationObj = metadata.relations.get(relationJson.id);
-              relationJson.type = relationObj['@type'];
-              relationJson.node = relationObj.node;
-              relationJson.path = relationObj.path;
-              relationJson.value = relationObj.value;
-              relationJson.remainingItems = relationObj.remainingItems;
+                tempN.push(relationNode.id);
+
+                var relationObj = metadata.relations.get(relationJson.id);
+                this.jsondata.relations.push({"source":relationNode.id, "target":relationObj.node[0]['@id']+"_node"});
+                relationJson.type = relationObj['@type'];
+                relationJson.node = relationObj.node;
+                relationJson.path = relationObj.path;
+                relationJson.value = relationObj.value;
+                relationJson.remainingItems = relationObj.remainingItems;
+
+                if(this.jsondata[relationObj.node[0]['@id']+"_node"]){
+                  this.jsondata.links.push({"source":relationNode.id, "target":relationObj.node[0]['@id']+"_node"});
+                }
+
+              }
+            }
+
+            for (let tempR of this.jsondata.relations){
+              if (tempN.includes(tempR.target)){
+                this.jsondata.links.push(tempR);
               }
             }
 

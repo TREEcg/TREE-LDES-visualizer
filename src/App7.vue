@@ -259,14 +259,14 @@ export default {
       .on("drag", dragX));
 
       collection.append("rect")
-      .attr("class", "collection_rect")
+      .attr("class", "collection_rect main_rect")
       .attr("width", 80)
       .attr("height", 30)
       .style("fill", "#5fd145");
 
       collection.append("text")
       .attr("text-anchor", "start")
-      .attr("class", "collection_text")
+      .attr("class", "collection_text main_text")
       .attr("dy",20)
       .text(function(d) {
         return (d.type + "").split('#').pop()
@@ -287,14 +287,14 @@ export default {
       .on("drag", dragX));
 
       shape.append("rect")
-      .attr("class", "shape_rect")
+      .attr("class", "shape_rect main_rect")
       .attr("width", 80)
       .attr("height", 30)
       .style("fill", "#5e915a")
 
       shape.append("text")
       .attr("text-anchor", "start")
-      .attr("class", "shape_text")
+      .attr("class", "shape_text main_text")
       .attr("dy",20)
       .text(function(d) {
         return (d.type + "").split('#').pop()
@@ -313,14 +313,14 @@ export default {
       .on("drag", dragX));
 
       node.append("rect")
-      .attr("class", "node_rect")
+      .attr("class", "node_rect main_rect")
       .attr("width", 80)
       .attr("height", 30)
       .style("fill", "#69b3a2")
 
       node.append("text")
       .attr("text-anchor", "start")
-      .attr("class", "node_text")
+      .attr("class", "node_text main_text")
       .attr("dy",20)
       .text(function(d) {
         return (d.type + "").split('#').pop()
@@ -341,14 +341,14 @@ export default {
       .on("drag", dragX));
 
       relation_holder.append("rect")
-      .attr("class", "relation_holder_rect")
+      .attr("class", "relation_holder_rect main_rect")
       .attr("width", 120)
       .attr("height", 30)
       .style("fill", "#6562cc")
 
       relation_holder.append("text")
       .attr("text-anchor", "start")
-      .attr("class", "relation_holder_text")
+      .attr("class", "relation_holder_text main_text")
       .attr("dy",20)
       .text(function(d) {
         return "relations: " + d.relation_count
@@ -363,7 +363,7 @@ export default {
       //.distance(200)
       )
       .alphaDecay(this.alpha_decay_rate)
-      .on("tick", firstTick.bind(this));
+      .on("end", firstTick.bind(this));
 
 
       //TODO change this to collection fixed top left
@@ -386,6 +386,7 @@ export default {
 
 
       function firstTick(){
+        console.log("firstticked");
         for(let tempG of shape){
           if(d3.select(tempG).attr("expanded") == "true"){
             expandShapeTrue.bind(this)(d3.select(tempG), tempG['__data__']);
@@ -411,17 +412,17 @@ export default {
       function ticked() {
         console.log("ticked");
 
-        d3.selectAll(".main_g")
+        d3.selectAll(".maing_g")
         .attr("x", function(d) {
           return d.x;
         })
         .attr("y", function(d) {
           return d.y;
-        })
+        });
 
-        fixGroupChildren()
+        fixGroupChildren();
 
-        fixLinks()
+        fixLinks();
 
       }
 
@@ -435,12 +436,16 @@ export default {
       }
 
       function fixGroupChildren(){
-        d3.selectAll("rect, text")
-        .attr("x", function(d) {return d.x;})
+        d3.selectAll(".main_text, .main_rect")
+        .attr("x", function(d) {/*console.log("d: ", d, "this: ", this);*/return d.x;})
         .attr("y", function(d) {return d.y;});
 
         d3.selectAll("tspan")
         .attr("x", function(d) {return d.x;})
+
+        d3.selectAll(".relation_text, .relation_rect")
+        .attr("x", function(d) {return d.x;})
+        .attr("y", function(d) {return d.y + d3.select(this).attr("sortIndex")*25 + 30})
       }
 
 
@@ -457,8 +462,6 @@ export default {
       function dragendX() {
         d3.select(this).attr("stroke", null);
         ticked();
-
-        //console.log(d3.selectAll('g'));
       }
 
 
@@ -480,7 +483,6 @@ export default {
       zoom.on("end", function(e) {
 
       d3.selectAll(".main_g")
-
       .attr("transform", function(){return "scale("+e.transform.k+")"})
       .attr("x", function(d) { d.x += e.transform.x - d3.select("svg").attr("prevTX")})
       .attr("y", function(d) { d.y += e.transform.y - d3.select("svg").attr("prevTY")})
@@ -499,6 +501,7 @@ export default {
       function clickRelationHolder(event, d){
         if (event.ctrlKey) {
           //TODO what if node data is wrong, multiple urls, etc?
+          console.log("clicked w ctrl");
           console.log(d3.select(event.target).attr("node_link"));
 
           //console.log(metadata.relations.get(i.id).node[0]['@id']);
@@ -510,13 +513,13 @@ export default {
           let currentg = d3.select(event.target.parentNode);
           //currentg could be tspan parent = text and not the group
           if (!currentg.classed("relation_holder_g")){
-            currentg = d3.select(currentg._groups.pop().pop().parentNode);
+            currentg = d3.select(currentg._groups[0][0].parentNode);
           }
-          console.log(currentg);
 
           expandRelationHolder.bind(this)(currentg, d);
 
           ticked();
+
         }
 
       }
@@ -612,6 +615,9 @@ export default {
           currentg.select("rect").attr("width", 1);
           currentg.select("text").selectAll("tspan")
           .attr("x", function(d) {return d.x;})
+
+          currentg.selectAll(".relation_g").remove();
+
           currentg.select("rect")
           .attr("height", 30)
           .attr("width", currentg.node().getBBox().width + 10);
@@ -626,39 +632,149 @@ export default {
           }
         }
 
-        currentg.raise();
-
-        currentg.select("rect")
-        .attr("height", 10 + 20*this.jsondata[d.node_id].length)
-
-        currentg.select("text").text("");
-
-        let sortIndex = 0;
+        let sortIndex = -1;
+        let offsetY = Number(currentg.select("rect").attr("height"));
+        let colors = ["#706ec4", "#7977d9"]
         for (let relX of this.jsondata[d.node_id]){
-          let textX = (relX.type + "").split('#').pop() + ": "
-          for (let v of relX.value){
-            textX += v['@value'] + ", ";
-          }
-          for (let v of relX.path){
-            textX += v['@id']//(v['@id'] + "").split("/").pop();
-          }
-
-          let tempSpan = currentg.select("text").append('tspan')
-          .text(textX)
-          .attr("dy", 20)
-          .attr("x", currentg.select("rect").attr("x"))
-          .attr("sortIndex", sortIndex);
           sortIndex++;
+          let innerg = currentg.append("g")
+          .attr("sortIndex", sortIndex)
+          .attr("x", function(d){d.x = currentg.attr("x"); return d.x})
+          //.attr("y", function(d){d.y = Number(currentg.attr("y")) + sortIndex*22;return d.y})
+          .attr("class", "relation_g");
+
+          let innerText = innerg.append("text")
+          .attr("text-anchor", "start")
+          .attr("class", "relation_text inner_text")
+          .attr("x", function(d){d.x=currentg.select("rect").attr("x"); return d.x})
+          //.attr("y", function(d){d.y = Number(currentg.attr("y")) + sortIndex*22;return d.y})
+          .attr("sortIndex", sortIndex)
+          .text("")
+          .raise();
+
+            let textX = (relX.type + "").split('#').pop() + ": "
+            for (let v of relX.value){
+              textX += v['@value'] + ", ";
+            }
+            for (let v of relX.path){
+              textX += v['@id']//(v['@id'] + "").split("/").pop();
+            }
+
+            let itspan = innerText.append('tspan')
+            .text(textX)
+            .attr("dy", 20)
+            .attr("x", currentg.select("rect").attr("x"))
+            .attr("sortIndex", sortIndex);
+
+          // innerText.append("tspan").text("type: " + relX.type)
+          //
+          // for (let v of relX.value){
+          //   innerText.append("tspan").text("value: " + v['@value'])
+          // }
+          //
+          // for (let v of relX.path){
+          //   innerText.append("tspan").text("path: " + v['@id'])
+          // }
+
+          // innerText.selectAll("tspan")
+          // //.attr("dy", 20)
+          // //.attr("x", function(d){d.x=currentg.select("rect").attr("x"); return d.x})
+          // .attr("sortIndex", sortIndex);
+
+          //console.log(innerText._groups[0][0].childNodes.length*20);
+          //console.log(Number(currentg.attr("y")) + sortIndex*22 + innerg.node().getBBox().height);
+
+          // innerText.attr("y", function(d){d.y = Number(currentg.attr("y")) + sortIndex*25 + offsetY;return d.y});
+          // innerg.attr("y", function(d){d.y = Number(currentg.attr("y")) + sortIndex*25 + offsetY;return d.y});
+
+          innerText.attr("y", function(){return Number(currentg.attr("y")) + sortIndex*25 + offsetY});
+          innerg.attr("y", function(){return Number(currentg.attr("y")) + sortIndex*25 + offsetY});
+
+          innerg.append("rect")
+          .attr("class", "relation_rect inner_rect")
+          .attr("sortIndex", sortIndex)
+          .attr("width", innerText.node().getBBox().width + 10)
+          .attr("height", 25)
+          .attr("x", currentg.select("rect").attr("x"))
+          .attr("y", function(){return Number(currentg.attr("y")) + sortIndex*25 + offsetY})
+          .style("fill", colors[sortIndex%2])
+          .lower();
 
           if(relX.node){
-            tempSpan.attr("node_link", relX.node[0]['@id']);
+            innerg.attr("node_link", relX.node[0]['@id']);
+            innerText.attr("node_link", relX.node[0]['@id']);
+            itspan.attr("node_link", relX.node[0]['@id']);
           }
+
+
+          innerg.on("click", function(e){
+            console.log("BLUPBLUPBLUP");
+            if (!e.ctrlKey){
+              e.stopPropagation();
+
+            }
+
+          });
+
+
+          //offsetY += Number(innerg.node().getBBox().height);
+
+
+          // let textX = (relX.type + "").split('#').pop() + ": "
+          // for (let v of relX.value){
+          //   textX += v['@value'] + ", ";
+          // }
+          // for (let v of relX.path){
+          //   textX += v['@id']//(v['@id'] + "").split("/").pop();
+          // }
+
 
         }
 
-        currentg.select("text").selectAll("text, tspan")
-        .attr("x", function(d) {return d.x;})
-        currentg.select("rect").attr("width", currentg.node().getBBox().width + 10);
+        //console.log(currentg.node().getBBox().width);
+        currentg.selectAll("rect").attr("width", currentg.node().getBBox().width)
+
+
+
+
+
+
+
+
+
+        // currentg.raise();
+        //
+        // currentg.select("rect")
+        // .attr("height", 10 + 20*this.jsondata[d.node_id].length)
+        //
+        // currentg.select("text").text("");
+        //
+        // let sortIndex = 0;
+        // for (let relX of this.jsondata[d.node_id]){
+        //   let textX = (relX.type + "").split('#').pop() + ": "
+        //   for (let v of relX.value){
+        //     textX += v['@value'] + ", ";
+        //   }
+        //   for (let v of relX.path){
+        //     textX += v['@id']//(v['@id'] + "").split("/").pop();
+        //   }
+        //
+        //   let tempSpan = currentg.select("text").append('tspan')
+        //   .text(textX)
+        //   .attr("dy", 20)
+        //   .attr("x", currentg.select("rect").attr("x"))
+        //   .attr("sortIndex", sortIndex);
+        //   sortIndex++;
+        //
+        //   if(relX.node){
+        //     tempSpan.attr("node_link", relX.node[0]['@id']);
+        //   }
+        //
+        // }
+        //
+        // currentg.select("text").selectAll("text, tspan")
+        // .attr("x", function(d) {return d.x;})
+        // currentg.select("rect").attr("width", currentg.node().getBBox().width + 10);
       }
 
 

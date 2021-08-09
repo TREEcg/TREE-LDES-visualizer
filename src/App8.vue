@@ -19,6 +19,8 @@
 
   <div id="my_dataviz" style="overflow:scroll"></div>
 
+  <div id="extra" style="overflow:scroll"></div>
+
   <p>{{jsondata}}</p>
 
 </template>
@@ -41,8 +43,8 @@ export default {
       jsondata: {"collection":[], "nodes":[], "relations":[], "links":[], "shapes":[], "relations_holder":[]},
       next_url: "",
       checked_shape: false,
-      graph_height: 2000,
-      graph_width: 2000,
+      graph_height: 600,
+      graph_width: 1000,
       data_url: null,
       alpha_decay_rate: 0.5//1 - Math.pow(0.001, 1 / 300)
     }
@@ -217,6 +219,16 @@ export default {
       .attr("height", height + margin.top + margin.bottom)
       .attr("pointer-events", "all");
 
+      const svgE = d3.select("#extra")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("svg")
+      //.attr("width", width + margin.left + margin.right)
+      //.attr("height", height + margin.top + margin.bottom)
+      .attr("pointer-events", "all");
+
+      const svgEG = svgE.append("g").attr("items", 0);
+
 
 
       //TODO find a way to make the arrowhead placed dynamically instead of using refX
@@ -259,14 +271,14 @@ export default {
       .on("drag", dragX));
 
       collection.append("rect")
-      .attr("class", "collection_rect")
+      .attr("class", "collection_rect main_rect")
       .attr("width", 80)
       .attr("height", 30)
       .style("fill", "#5fd145");
 
       collection.append("text")
       .attr("text-anchor", "start")
-      .attr("class", "collection_text")
+      .attr("class", "collection_text main_text")
       .attr("dy",20)
       .text(function(d) {
         return (d.type + "").split('#').pop()
@@ -287,14 +299,14 @@ export default {
       .on("drag", dragX));
 
       shape.append("rect")
-      .attr("class", "shape_rect")
+      .attr("class", "shape_rect main_rect")
       .attr("width", 80)
       .attr("height", 30)
       .style("fill", "#5e915a")
 
       shape.append("text")
       .attr("text-anchor", "start")
-      .attr("class", "shape_text")
+      .attr("class", "shape_text main_text")
       .attr("dy",20)
       .text(function(d) {
         return (d.type + "").split('#').pop()
@@ -313,14 +325,14 @@ export default {
       .on("drag", dragX));
 
       node.append("rect")
-      .attr("class", "node_rect")
+      .attr("class", "node_rect main_rect")
       .attr("width", 80)
       .attr("height", 30)
       .style("fill", "#69b3a2")
 
       node.append("text")
       .attr("text-anchor", "start")
-      .attr("class", "node_text")
+      .attr("class", "node_text main_text")
       .attr("dy",20)
       .text(function(d) {
         return (d.type + "").split('#').pop()
@@ -341,14 +353,14 @@ export default {
       .on("drag", dragX));
 
       relation_holder.append("rect")
-      .attr("class", "relation_holder_rect")
+      .attr("class", "relation_holder_rect main_rect")
       .attr("width", 120)
       .attr("height", 30)
       .style("fill", "#6562cc")
 
       relation_holder.append("text")
       .attr("text-anchor", "start")
-      .attr("class", "relation_holder_text")
+      .attr("class", "relation_holder_text main_text")
       .attr("dy",20)
       .text(function(d) {
         return "relations: " + d.relation_count
@@ -363,7 +375,7 @@ export default {
       //.distance(200)
       )
       .alphaDecay(this.alpha_decay_rate)
-      .on("tick", firstTick.bind(this));
+      .on("end", firstTick.bind(this));
 
 
       //TODO change this to collection fixed top left
@@ -386,6 +398,7 @@ export default {
 
 
       function firstTick(){
+        console.log("firstticked");
         for(let tempG of shape){
           if(d3.select(tempG).attr("expanded") == "true"){
             expandShapeTrue.bind(this)(d3.select(tempG), tempG['__data__']);
@@ -411,17 +424,17 @@ export default {
       function ticked() {
         console.log("ticked");
 
-        d3.selectAll(".main_g")
+        d3.selectAll(".maing_g")
         .attr("x", function(d) {
           return d.x;
         })
         .attr("y", function(d) {
           return d.y;
-        })
+        });
 
-        fixGroupChildren()
+        fixGroupChildren();
 
-        fixLinks()
+        fixLinks();
 
       }
 
@@ -435,12 +448,16 @@ export default {
       }
 
       function fixGroupChildren(){
-        d3.selectAll("rect, text")
-        .attr("x", function(d) {return d.x;})
+        d3.selectAll(".main_text, .main_rect")
+        .attr("x", function(d) {/*console.log("d: ", d, "this: ", this);*/return d.x;})
         .attr("y", function(d) {return d.y;});
 
-        d3.selectAll("tspan")
+        svg.selectAll("tspan")
         .attr("x", function(d) {return d.x;})
+
+        // d3.selectAll(".relation_text, .relation_rect")
+        // .attr("x", function(d) {return d.x;})
+        // .attr("y", function(d) {return d.y + d3.select(this).attr("sortIndex")*25 + 30})
       }
 
 
@@ -457,8 +474,6 @@ export default {
       function dragendX() {
         d3.select(this).attr("stroke", null);
         ticked();
-
-        //console.log(d3.selectAll('g'));
       }
 
 
@@ -480,7 +495,6 @@ export default {
       zoom.on("end", function(e) {
 
       d3.selectAll(".main_g")
-
       .attr("transform", function(){return "scale("+e.transform.k+")"})
       .attr("x", function(d) { d.x += e.transform.x - d3.select("svg").attr("prevTX")})
       .attr("y", function(d) { d.y += e.transform.y - d3.select("svg").attr("prevTY")})
@@ -499,6 +513,7 @@ export default {
       function clickRelationHolder(event, d){
         if (event.ctrlKey) {
           //TODO what if node data is wrong, multiple urls, etc?
+          console.log("clicked w ctrl");
           console.log(d3.select(event.target).attr("node_link"));
 
           //console.log(metadata.relations.get(i.id).node[0]['@id']);
@@ -510,13 +525,13 @@ export default {
           let currentg = d3.select(event.target.parentNode);
           //currentg could be tspan parent = text and not the group
           if (!currentg.classed("relation_holder_g")){
-            currentg = d3.select(currentg._groups.pop().pop().parentNode);
+            currentg = d3.select(currentg._groups[0][0].parentNode);
           }
-          console.log(currentg);
 
           expandRelationHolder.bind(this)(currentg, d);
 
           ticked();
+
         }
 
       }
@@ -608,13 +623,20 @@ export default {
               temp.expanded = "false";
             }
           }
-          currentg.select("text").text("relations: " + d.relation_count)
-          currentg.select("rect").attr("width", 1);
-          currentg.select("text").selectAll("tspan")
-          .attr("x", function(d) {return d.x;})
-          currentg.select("rect")
-          .attr("height", 30)
-          .attr("width", currentg.node().getBBox().width + 10);
+          // currentg.select("text").text("relations: " + d.relation_count)
+          // currentg.select("rect").attr("width", 1);
+          // currentg.select("text").selectAll("tspan")
+          // .attr("x", function(d) {return d.x;})
+          //
+          // currentg.selectAll(".relation_g").remove();
+          //
+          // currentg.select("rect")
+          // .attr("height", 30)
+          // .attr("width", currentg.node().getBBox().width + 10);
+
+
+          svgEG.attr("items", Number(svgEG.attr("items"))-1)
+          d3.selectAll(".new_g"+(d.id.replaceAll('.','').replaceAll(':','').replaceAll('/',''))).remove();
         }
       }
 
@@ -626,39 +648,198 @@ export default {
           }
         }
 
-        currentg.raise();
+        let sortIndex = -1;
+        let offsetY = Number(currentg.select("rect").attr("height"));
+        //let offsetX = svgEG.node().getBBox().width;
+        let colors = ["#706ec4", "#7977d9"]
 
-        currentg.select("rect")
-        .attr("height", 10 + 20*this.jsondata[d.node_id].length)
+        let newG = svgEG.append("g").attr("class", "new_g new_g"+(d.id.replaceAll('.','').replaceAll(':','').replaceAll('/','')))
+        .attr("x", d.offsetX)
+        .attr("node_id", d.node_id);
 
-        currentg.select("text").text("");
-
-        let sortIndex = 0;
         for (let relX of this.jsondata[d.node_id]){
-          let textX = (relX.type + "").split('#').pop() + ": "
-          for (let v of relX.value){
-            textX += v['@value'] + ", ";
-          }
-          for (let v of relX.path){
-            textX += v['@id']//(v['@id'] + "").split("/").pop();
-          }
-
-          let tempSpan = currentg.select("text").append('tspan')
-          .text(textX)
-          .attr("dy", 20)
-          .attr("x", currentg.select("rect").attr("x"))
-          .attr("sortIndex", sortIndex);
           sortIndex++;
+          let innerg = newG.append("g")
+          .attr("sortIndex", sortIndex)
+          .attr("x", 50)
+          //.attr("y", function(d){d.y = Number(currentg.attr("y")) + sortIndex*22;return d.y})
+          .attr("class", "relation_g")
+          .attr("info", JSON.stringify(relX))
+          .attr("expanded", "false");
+
+          let innerText = innerg.append("text")
+          .attr("text-anchor", "start")
+          .attr("class", "relation_text inner_text")
+          .attr("x", 50)
+          //.attr("y", function(d){d.y = Number(currentg.attr("y")) + sortIndex*22;return d.y})
+          .attr("sortIndex", sortIndex)
+          .text("")
+          .raise();
+
+            let textX = (relX.type + "").split('#').pop() + ": "
+            for (let v of relX.value){
+              textX += v['@value'] + ", ";
+            }
+            for (let v of relX.path){
+              textX += v['@id']//(v['@id'] + "").split("/").pop();
+            }
+
+            let itspan = innerText.append('tspan')
+            .text(textX)
+            .attr("dy", 20)
+            .attr("x", svgEG.attr("items")*500)
+            .attr("sortIndex", sortIndex);
+            //.attr("info", JSON.stringify(relX));
+
+          // innerText.append("tspan").text("type: " + relX.type)
+          //
+          // for (let v of relX.value){
+          //   innerText.append("tspan").text("value: " + v['@value'])
+          // }
+          //
+          // for (let v of relX.path){
+          //   innerText.append("tspan").text("path: " + v['@id'])
+          // }
+
+          // innerText.selectAll("tspan")
+          // //.attr("dy", 20)
+          // //.attr("x", function(d){d.x=currentg.select("rect").attr("x"); return d.x})
+          // .attr("sortIndex", sortIndex);
+
+          //console.log(innerText._groups[0][0].childNodes.length*20);
+          //console.log(Number(currentg.attr("y")) + sortIndex*22 + innerg.node().getBBox().height);
+
+          // innerText.attr("y", function(d){d.y = Number(currentg.attr("y")) + sortIndex*25 + offsetY;return d.y});
+          // innerg.attr("y", function(d){d.y = Number(currentg.attr("y")) + sortIndex*25 + offsetY;return d.y});
+
+          innerText.attr("y", function(){return sortIndex*25 + offsetY});
+          innerg.attr("y", function(){return sortIndex*25 + offsetY});
+
+          innerg.append("rect")
+          .attr("class", "relation_rect inner_rect")
+          .attr("sortIndex", sortIndex)
+          //.attr("info", JSON.stringify(relX))
+          //.attr("width", innerText.node().getBBox().width + 10)
+          .attr("height", 25)
+          .attr("x", svgEG.attr("items")*500)
+          .attr("y", function(){return sortIndex*25 + offsetY})
+          .style("fill", colors[sortIndex%2])
+          .lower();
 
           if(relX.node){
-            tempSpan.attr("node_link", relX.node[0]['@id']);
+            innerg.attr("node_link", relX.node[0]['@id']);
+            innerText.attr("node_link", relX.node[0]['@id']);
+            itspan.attr("node_link", relX.node[0]['@id']);
           }
 
-        }
 
-        currentg.select("text").selectAll("text, tspan")
-        .attr("x", function(d) {return d.x;})
-        currentg.select("rect").attr("width", currentg.node().getBBox().width + 10);
+          innerg.on("click", next.bind(this));
+
+        }
+        svgEG.selectAll("rect").attr("width", newG.node().getBBox().width)
+
+        let bbox = svgEG.node().getBBox();
+        svgE.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
+        .attr("width", (bbox.width+bbox.x))
+        .attr("height", (bbox.height+bbox.y));
+
+        //TODO add some kind off ordering by d.offsetX
+        svgEG.attr("items", Number(svgEG.attr("items"))+1)
+      }
+
+
+      function next(e){
+        if (!e.ctrlKey){
+          e.stopPropagation();
+
+          let currentg = e.target;
+          while(!d3.select(currentg).classed("relation_g")){
+            currentg = currentg.parentNode;
+          }
+
+          let heightStart = d3.select(currentg).node().getBBox().height;
+          let tspanX = d3.select(currentg).select("tspan").attr("x");
+          if(d3.select(currentg).attr("expanded")=="false"){
+            d3.select(currentg).attr("expanded", "true");
+            d3.select(currentg).raise();
+
+            d3.select(currentg).selectAll("rect, text, tspan").style("visibility", "hidden");
+
+
+            let tt = d3.select(currentg).append("text").text("")
+            .attr("text-anchor", "start")
+            .attr("class", "pop_up")
+            .attr("x", d3.select(currentg).select(".inner_text").attr("x"))
+            .attr("y", d3.select(currentg).select(".inner_text").attr("y"));
+
+            let relX = JSON.parse(d3.select(currentg).attr("info"));
+            tt.append("tspan").text("type: " + relX.type);
+
+            for (let v of relX.value){
+              tt.append("tspan").text("value: " + v['@value']);
+            }
+
+            for (let v of relX.path){
+              tt.append("tspan").text("path: " + v['@id']);
+            }
+            for (let v of relX.node){
+              tt.append("tspan").text("node: " + v['@id']);
+            }
+            for (let v of relX.remainingItems){
+              tt.append("tspan").text("remainingItems: " + v['@value']);
+              if(v['@type']){
+                tt.append("tspan").text("remainingItemsType: " + v['@type']);
+              }
+            }
+
+            tt.selectAll("tspan").attr("dy", 20).attr("x", tspanX);
+            tt.selectAll("tspan").raise();
+
+
+            let trect = d3.select(currentg).append("rect").style("fill", "#d4c957")
+            .attr("class", "pop_up")
+            .attr("x", d3.select(currentg).select(".inner_rect").attr("x"))
+            .attr("y", d3.select(currentg).select(".inner_rect").attr("y"))
+            .attr("width", d3.select(currentg).node().getBBox().width)
+            .attr("height", d3.select(currentg).node().getBBox().height)
+            .lower();
+
+
+
+            if(relX.node){
+              tt.attr("node_link", relX.node[0]['@id']);
+              trect.attr("node_link", relX.node[0]['@id']);
+              tt.selectAll("tspan").attr("node_link", relX.node[0]['@id']);
+            }
+
+
+          } else {
+            d3.select(currentg).attr("expanded", "false");
+            d3.select(currentg).selectAll(".pop_up").remove();
+            d3.select(currentg).selectAll("rect, text, tspan").style("visibility", "visible");
+          }
+
+          let heightNew = Number(d3.select(currentg).node().getBBox().height) - heightStart
+
+          for(let tn of d3.select(currentg.parentNode).selectAll(".relation_g")){
+            if (Number(d3.select(tn).attr("sortIndex")) > Number(d3.select(currentg).attr("sortIndex"))){
+              d3.select(tn).attr("y", heightNew + Number(d3.select(tn).attr("y")));
+              d3.select(tn).selectAll("text, rect").attr("y", d3.select(tn).attr("y"));
+
+            }
+          }
+
+          let bbox = svgEG.node().getBBox();
+          svgE.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
+          .attr("width", (bbox.width+bbox.x))
+          .attr("height", (bbox.height+bbox.y));
+
+        } else {
+          console.log(d3.select(e.target).attr("node_link"));
+          this.data_url = d3.select(e.target).attr("node_link");
+          //d3.selectAll(".tooltip").remove();
+          this.getData();
+        }
       }
 
 

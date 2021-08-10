@@ -87,6 +87,7 @@ export default {
 
       //var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/a.nt';
       var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/.root.nt'
+      standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a.nt';
 
       if(url){
         standardURL = url;

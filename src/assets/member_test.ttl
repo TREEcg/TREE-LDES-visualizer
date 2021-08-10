@@ -1,0 +1,10 @@
+<https://data.delijn.be/stops/306117> <http://www.w3.org/2003/01/geo/wgs84_pos#lat> "50.8377";
+a <http://vocab.gtfs.org/terms#Stop>;
+<http://vocab.gtfs.org/terms#code> "306117";
+<http://schema.org/name> "Anderlecht Westland Shopping";
+<http://www.w3.org/2003/01/geo/wgs84_pos#long> "4.28415".
+
+<https://data.delijn.be/stops/306175> <http://www.w3.org/2003/01/geo/wgs84_pos#lat> "50.8676";
+a <http://vocab.gtfs.org/terms#Stop>;
+<http://vocab.gtfs.org/terms#code> "306175";
+<http://www.w3.org/2003/01/geo/wgs84_pos#long> "4.64047".

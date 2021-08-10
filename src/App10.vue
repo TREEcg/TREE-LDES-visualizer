@@ -38,6 +38,12 @@ import rdfSerializer from "rdf-serialize";
 const streamifyArray = require('streamify-array');
 const stringifyStream = require('stream-to-string');
 
+// const fs = require('fs');
+const fs = require('fs');
+const factory = require('rdf-ext');
+const ParserN3 = require('@rdfjs/parser-n3');
+const SHACLValidator = require('rdf-validate-shacl');
+
 
 export default {
   name: 'App',
@@ -62,21 +68,8 @@ export default {
   },
   methods : {
     async extractId(store, id) {
-      //const object = {"id": id}
       const quadsWithSubj = store.getQuads(id, null, null, null) // get all quads with subject
-      //console.log(quadsWithSubj);
       const textStream = rdfSerializer.serialize(streamifyArray(quadsWithSubj), { contentType: 'text/turtle' });
-      // console.log(await stringifyStream(textStream));
-      // for (let quad of quadsWithSubj) {
-      //   // bij named of blank nodes zoek recursively
-      //   if (quad.object.termType === "NamedNode" || quad.object.termType === "BlankNode") {
-      //     object[quad.predicate.id] = this.extractId(store, quad.object.id);
-      //   } else {
-      //     object[quad.predicate.id] = quad.object
-      //   }
-      // }
-      //
-      // console.log(JSON.stringify(object));
       return await stringifyStream(textStream);
     },
 
@@ -85,8 +78,15 @@ export default {
       return this.extractId(store, memberId)
     },
 
+    // async extractShape(store, id) {
+    //   const quadsWithSubj = store.getQuads(id, null, null, null) // get all quads with subject
+    //   const textStream = rdfSerializer.serialize(streamifyArray(quadsWithSubj), { contentType: 'text/turtle' });
+    //   return await stringifyStream(textStream);
+    // },
+
     //TODO add import, importStream, conditionalImport, totalItems
     async getData(url) {
+      console.log(fs);
       //TODO is it possible to keep all quads, extract all metadata and then not have to check for doubles?
       //Simply by removing all doubles from the saved quads?
 
@@ -116,13 +116,82 @@ export default {
 
       //console.log("standardURL: ", standardURL);
       const {quads} = await rdfDereferencer.dereference(standardURL);//'https://treecg.github.io/demo_data/stops.nt');//'http://dbpedia.org/page/12_Monkeys');
-      quads.on('data', (quad) => {this.qtext.push(quad); /*console.log(quad)*/})
+      quads.on('data', (quad) => {this.qtext.push(quad); console.log(quad)})
       .on('error', (error) => console.error(error))
       .on('end', () => {
         //console.log('All done!');
         // quads is an array of RDF Quads (RDF.Quad[])
         extractMetadata(this.qtext).then(metadata => {
           console.log(metadata);
+          let store = new N3.Store(this.qtext)
+          // console.log(store.getQuads(null, 'https://w3id.org/tree#shape', null, null).map(quad => quad.object.id));
+          // console.log(store.getQuads(null, 'http://www.w3.org/ns/shapetrees#validatedBy', null, null));
+
+          var shapeIds = [];
+          shapeIds = shapeIds.concat(store.getQuads(null, 'https://w3id.org/tree#shape', null, null).map(quad => quad.object));
+          shapeIds = shapeIds.concat(store.getQuads(null, 'http://www.w3.org/ns/shapetrees#validatedBy', null, null).map(quad => quad.object));
+          console.log(shapeIds);
+          // for (let tempS of shapeIds){
+          //   console.log(this.extractMember(tempS));
+          // }
+
+          //let shapeT = "_:BshapeX5Fnode\n sh:targetClass <http://vocab.gtfs.org/terms#Stop> ;\n sh:property [\n  sh:path <http://schema.org/name> ;\n  sh:minCount 1 ;\n ] .";
+
+
+          async function loadDatasetX (stream) {
+            //console.log("stream: ", fs.createReadStream(filePath));
+            //const stream = fs.createReadStream(filePath);
+            //return stream;
+            const parser = new ParserN3({ factory });
+            return factory.dataset().import(parser.import(await stream));
+          }
+
+          const testq = store.getQuads(shapeIds[0], null, null, null)
+          //rdfSerializer.serialize(streamifyArray(testq), { contentType: 'text/turtle' });
+          // const shapes = await loadDataset('my-shapes.ttl')
+          // const data = await loadDataset('my-data.ttl')
+
+          // const shapesX = streamifyArray(testq);
+          // const dataX = streamifyArray(testq);
+
+          const shapesX = rdfSerializer.serialize(streamifyArray(testq), { contentType: 'text/turtle' });
+          const dataX = rdfSerializer.serialize(streamifyArray(testq), { contentType: 'text/turtle' });
+
+          //console.log(typeof(shapesX))
+
+          // console.log(loadDatasetX('./assets/shape_test.ttl'));
+
+          // rdfSerializer.serialize(streamifyArray(testq), { contentType: 'text/turtle' }).then(shapes => {
+            // rdfSerializer.serialize(streamifyArray(testq), { contentType: 'text/turtle' }).then(data => {
+            loadDatasetX(shapesX).then(shapes => {
+              loadDatasetX(dataX).then(data => {
+              const validator = new SHACLValidator(shapes, { factory })
+              const report = validator.validate(data)
+
+              //validator.validate(data).then(report => {
+                // Check conformance: `true` or `false`
+                console.log(report.conforms)
+
+                for (const result of report.results) {
+                  // See https://www.w3.org/TR/shacl/#results-validation-result for details
+                  // about each property
+                  console.log(result.message)
+                  console.log(result.path)
+                  console.log(result.focusNode)
+                  console.log(result.severity)
+                  console.log(result.sourceConstraintComponent)
+                  console.log(result.sourceShape)
+                }
+
+                // Validation report as RDF dataset
+                console.log(report.dataset)
+              //})
+
+
+            })
+          })
+
+
 
           if (metadata.collections.size > 1){
             let errorText = "";
@@ -710,27 +779,20 @@ export default {
 
       function expandMember(d){
         svgMG.selectAll("g").remove();
-        console.log(d);
-
-        console.log("test");
-        console.log(this.members['https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a.nt']);
 
         let newG = svgMG.append("g").attr("class", "new_g")
         .attr("node_id", d.node_id);
 
-        // let textArray = JSON.stringify(this.members['https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a.nt'], null, '\t').split('\n');
-        // console.log(textArray);
-
         let textArray = [];
         for (let tempA of this.members['https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a.nt']){
-          //textArray.concat(tempA.split('\n'));
-          //console.log(tempA.split('\n'));
-          for (let tempB of tempA.split('\n')){
-            textArray.push(tempB);
+          if (tempA.includes('\n')){
+            for (let tempB of tempA.split('\n')){
+              textArray.push(tempB);
+            }
+          } else {
+            textArray.push(tempA);
           }
         }
-
-
 
         newG.append("text").text("");
 

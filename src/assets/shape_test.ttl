@@ -1,0 +1,7 @@
+schema:StopShape
+ a sh:NodeShape ;
+ sh:targetClass <http://vocab.gtfs.org/terms#Stop> ;
+ sh:property [
+  sh:path <http://schema.org/name> ;
+  sh:minCount 1 ;
+ ] .

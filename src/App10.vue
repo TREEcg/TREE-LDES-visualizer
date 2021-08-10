@@ -20,7 +20,7 @@
 
   <div id="my_dataviz" style="overflow:scroll"></div>
 
-  <div id="extra" style="overflow:scroll"></div>
+  <div id="extra"></div>
 
   <p>{{jsondata}}</p>
 
@@ -43,8 +43,9 @@ export default {
     return {
       qtext: [],
       //easier to clear jsondata in functions without having to copy paste this
-      empty : {"collection":[], "nodes":[], "relations":[], "links":[], "shapes":[], "relations_holder":[], "members":[]},
+      empty : {"collection":[], "nodes":[], "relations":[], "links":[], "shapes":[], "relations_holder":[]},
       jsondata: null, //this will be set to empty on start
+      members: {},
       svgHolder: null,
       remarks: "",
       next_url: "",
@@ -76,7 +77,6 @@ export default {
     },
 
     //TODO add import, importStream, conditionalImport, totalItems
-    //TODO what if no metadata is extracted?
     async getData(url) {
       //TODO is it possible to keep all quads, extract all metadata and then not have to check for doubles?
       //Simply by removing all doubles from the saved quads?
@@ -88,6 +88,7 @@ export default {
       //var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/a.nt';
       var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/.root.nt'
       standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a.nt';
+      //standardURL = 'https://github.com/Mikxox/visualizer/blob/main/src/assets/stops_a.nt';
 
       if(url){
         standardURL = url;
@@ -103,7 +104,6 @@ export default {
         d3.select("#extra").selectAll("g").remove();
         this.svgHolder = null;
       }
-      this.jsondata.members=[];
 
       //console.log("standardURL: ", standardURL);
       const {quads} = await rdfDereferencer.dereference(standardURL);//'https://treecg.github.io/demo_data/stops.nt');//'http://dbpedia.org/page/12_Monkeys');
@@ -117,8 +117,11 @@ export default {
 
           if (metadata.collections.size > 1){
             let errorText = "";
-            errorText += "ERROR: found multiple collection! This is not allowed.";
-            errorText += metadata.collections.keys();
+            errorText += "ERROR: found multiple collections! This is not allowed.\n";
+            errorText += JSON.stringify(metadata.collections, null, '/t');
+            errorText += "\nPossible causes: \nmembers/shape are linked not to the collection but the node.";
+            errorText += "\ncheck tree:view, hydra:view, void:subset, dct:isPartOf, as:partOf.";
+            errorText += "\ncheck tree:member, hydra:member, as:items, ldp:contains.";
             alert(errorText);
           }
 
@@ -140,6 +143,7 @@ export default {
           }
 
           for (var collectionId of metadata.collections.keys()) {
+            this.members[standardURL] = [];
             var collectionObj = metadata.collections.get(collectionId);
 
             let double = true;
@@ -204,9 +208,10 @@ export default {
 
 
             //TODO add member visualisation
+            //TODO check what happens when as:items comes from a node not the collection
             if (collectionObj.member){
               for (var memb of collectionObj.member){
-                this.jsondata.members.push(this.extractMember(memb['@id']));
+                this.members[standardURL].push(this.extractMember(memb['@id']));
               }
             } else {
               this.remarks += "Found no members for " + standardURL + ".\n";
@@ -289,6 +294,9 @@ export default {
           console.log("jsondata:");
           console.log(this.jsondata);
 
+          console.log("members:");
+          console.log(this.members);
+
           this.drawing(metadata);
 
         })
@@ -326,16 +334,20 @@ export default {
       // This gets cleared in getData if we change collections
       if (!this.svgHolder){
         this.svgHolder = d3.select("#extra")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
+        // .attr("width", width + margin.left + margin.right)
+        // .attr("height", height + margin.top + margin.bottom)
         .append("svg")
         .attr("pointer-events", "all");
       }
       const svgE = this.svgHolder;
 
-
-
       const svgEG = svgE.append("g");
+
+      const svgM = d3.select("#extra")
+      .append("svg")
+      .attr("pointer-events", "all");
+
+      const svgMG = svgM.append("g");
 
 
 
@@ -588,27 +600,8 @@ export default {
       // connect the zoom function to the main svg element
       svg.call(zoom);
 
-
-      function clickRelationHolder(event, d){
-        if(d.relation_count && d.relation_count > 0){
-          let currentg = d3.select(event.target.parentNode);
-          //currentg could be tspan parent = text and not the group
-          if (!currentg.classed("relation_holder_g")){
-            currentg = d3.select(currentg._groups[0][0].parentNode);
-          }
-
-          expandRelationHolder.bind(this)(currentg, d);
-
-          ticked();
-        } else {
-          svgEG.selectAll("g").remove();
-        }
-
-      }
-
-
-      function clickShape(event, d){
-        let currentg = d3.select(event.target.parentNode);
+      function clickShape(e, d){
+        let currentg = d3.select(e.target.parentNode);
         if (!currentg.classed("shape_g")){
           currentg = d3.select(currentg._groups.pop().pop().parentNode);
         }
@@ -678,22 +671,82 @@ export default {
       }
 
 
-      function expandRelationHolder(currentg, d){
-        svgEG.selectAll("g").remove();
+      function clickRelationHolder(e, d){
+        if (d.relation_count && d.relation_count > 0){
+          let currentg = d3.select(e.target.parentNode);
+          //currentg could be tspan parent = text and not the group
+          if (!currentg.classed("relation_holder_g")){
+            currentg = d3.select(currentg._groups[0][0].parentNode);
+          }
 
-        expandRelationHolderTrue.bind(this)(currentg, d);
+          expandRelationHolder.bind(this)(currentg, d);
+
+          ticked();
+        } else {
+          svgEG.selectAll("g").remove();
+        }
+
+        // if(this.members[d.name]){
+        //   expandMember.bind(this)(d);
+        // }
+
+        if (this.members['https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a.nt']){
+          expandMember.bind(this)(d);
+        }
+      }
+
+      function expandMember(d){
+        svgMG.selectAll("g").remove();
+        console.log(d);
+
+        let newG = svgMG.append("g").attr("class", "new_g")
+        .attr("node_id", d.node_id);
+
+        let textArray = JSON.stringify(this.members['https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a.nt'], null, '\t').split('\n');
+
+        newG.append("text").text("");
+
+        for (let textX of textArray){
+          let indent = (textX.split('\t').length -1) * 20;
+          newG.select("text").append('tspan')
+          .text(textX)
+          .attr("dy", 20)
+          .attr("dx", indent + 5)
+          .attr("x", 0);
+        }
+
+        newG.append("rect").attr("x", 0).attr("y", 0).attr("height", 10 + 20*textArray.length).attr("width",0).style("fill", "#5e915a");
+        newG.select("rect").attr("width", newG.node().getBBox().width + 10).lower();
+
+        let bbox = svgMG.node().getBBox();
+        svgM.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
+        .attr("width", (bbox.width+bbox.x))
+        .attr("height", (bbox.height+bbox.y));
+
+        bbox = svgEG.node().getBBox();
+        svgE.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
+        .attr("width", (bbox.width+bbox.x))
+        .attr("height", (bbox.height+bbox.y));
       }
 
 
-      function expandRelationHolderTrue(currentg, d){
+      // function expandRelationHolder(currentg, d){
+      //   svgEG.selectAll("g").remove();
+      //
+      //   expandRelationHolderTrue.bind(this)(currentg, d);
+      // }
+
+
+      function expandRelationHolder(currentg, d){
+
+        svgEG.selectAll("g").remove();
 
         let sortIndex = -1;
         let offsetY = Number(currentg.select("rect").attr("height"));
 
         let colors = ["#706ec4", "#7977d9"]
 
-        let newG = svgEG.append("g").attr("class", "new_g new_g"+(d.id.replaceAll('.','').replaceAll(':','').replaceAll('/','')))
-        .attr("x", d.offsetX)
+        let newG = svgEG.append("g").attr("class", "new_g")
         .attr("node_id", d.node_id);
 
         for (let relX of this.jsondata[d.node_id]){
@@ -916,6 +969,11 @@ export default {
           .attr("width", (bbox.width+bbox.x))
           .attr("height", (bbox.height+bbox.y));
 
+          bbox = svgMG.node().getBBox();
+          svgM.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
+          .attr("width", (bbox.width+bbox.x))
+          .attr("height", (bbox.height+bbox.y));
+
         //if ctrl was pressed, add new node
         } else {
           console.log(d3.select(e.target).attr("node_link"));
@@ -942,14 +1000,15 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+}
+
+#extra {
+  width:100%;
+  height:600px;
+  overflow: scroll;
 }
 
 svg{
-  overflow: scroll;
-}
-
-g{
-  overflow: scroll;
+  vertical-align: top;
 }
 </style>

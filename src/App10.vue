@@ -15,7 +15,7 @@
   <label for="url">Enter URL: </label>
   <input type="url" v-model="data_url" placeholder="URL" name="url"><br>
 
-  <button v-on:click="getData">Draw Graph</button><br>
+  <button v-on:click="getData(undefined)">Draw Graph</button><br>
 
   <div id="my_dataviz" style="overflow:scroll"></div>
 
@@ -51,7 +51,7 @@ export default {
     }
   },
   methods : {
-    async getData() {
+    async getData(url) {
       //TODO is it possible to keep all quads, extract all metadata and then not have to check for doubles?
       //Simply by removing all doubles from the saved quads?
 
@@ -64,8 +64,15 @@ export default {
       //console.log("TESTING:");
       //var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/a.nt';
       var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/.root.nt'
-      if (this.data_url){
+      // if (this.data_url){
+      //   standardURL = this.data_url;
+      // }
+      if(url){
+        standardURL = url;
+      } else if (this.data_url){
         standardURL = this.data_url;
+        // This means user gave an url for a new collection so we need to clear whatever data we already had
+        this.jsondata = {"collection":[], "nodes":[], "relations":[], "links":[], "shapes":[], "relations_holder":[]};
       }
       //console.log("standardURL: ", standardURL);
       const {quads} = await rdfDereferencer.dereference(standardURL);//'https://treecg.github.io/demo_data/stops.nt');//'http://dbpedia.org/page/12_Monkeys');
@@ -579,9 +586,9 @@ export default {
           console.log(d3.select(event.target).attr("node_link"));
 
           //console.log(metadata.relations.get(i.id).node[0]['@id']);
-          this.data_url = d3.select(event.target).attr("node_link");
+          //this.data_url = d3.select(event.target).attr("node_link");
           //d3.selectAll(".tooltip").remove();
-          this.getData();
+          this.getData(d3.select(event.target).attr("node_link"));
         } else {
 
           let currentg = d3.select(event.target.parentNode);
@@ -744,7 +751,11 @@ export default {
               textX += v['@value'] + ", ";
             }
             for (let v of relX.path){
-              textX += v['@id']//(v['@id'] + "").split("/").pop();
+              if(!v['@id']){
+                textX += 'Object'
+              } else {
+                textX += v['@id']//(v['@id'] + "").split("/").pop();
+              }
             }
 
             let itspan = innerText.append('tspan')
@@ -867,15 +878,46 @@ export default {
             tt.append("tspan").text("type: " + relX.type);
 
             for (let v of relX.value){
-              tt.append("tspan").text("value: " + v['@value']);
+              if(!v['@value']){
+                tt.append("tspan").text("value: ");
+                let textArray = JSON.stringify(v, null, '\t').split('\n');
+                //tt.append("tspan").text("path: " + JSON.stringify(v));
+                let prevIndent = 0;
+                for (let textX of textArray){
+                  let indent = (textX.split('\t').length -1) * 4;
+                  tt.append('tspan')
+                  .text(textX.replace('\t',''))
+                  .attr("dy", 20)
+                  .attr("dx", indent-prevIndent + 10);
+                  prevIndent = indent-prevIndent;
+                }
+              } else {
+                tt.append("tspan").text("value: " + v['@value']);
+              }
             }
 
             for (let v of relX.path){
-              tt.append("tspan").text("path: " + v['@id']);
+              if(!v['@id']){
+                tt.append("tspan").text("path: ");
+                let textArray = JSON.stringify(v, null, '\t').split('\n');
+                let prevIndent = 0;
+                for (let textX of textArray){
+                  let indent = (textX.split('\t').length -1) * 4;
+                  tt.append('tspan')
+                  .text(textX.replace('\t',''))
+                  .attr("dy", 20)
+                  .attr("dx", indent-prevIndent + 10);
+                  prevIndent = indent-prevIndent;
+                }
+              } else {
+                tt.append("tspan").text("path: " + v['@id']);
+              }
             }
+
             for (let v of relX.node){
               tt.append("tspan").text("node: " + v['@id']);
             }
+
             for (let v of relX.remainingItems){
               tt.append("tspan").text("remainingItems: " + v['@value']);
               if(v['@type']){
@@ -949,9 +991,9 @@ export default {
 
         } else {
           console.log(d3.select(e.target).attr("node_link"));
-          this.data_url = d3.select(e.target).attr("node_link");
+          //this.data_url = d3.select(e.target).attr("node_link");
           //d3.selectAll(".tooltip").remove();
-          this.getData();
+          this.getData(d3.select(e.target).attr("node_link"));
         }
       }
 

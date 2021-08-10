@@ -102,6 +102,8 @@ export default {
         d3.select("#extra").selectAll("g").remove();
         this.svgHolder = null;
       }
+      this.jsondata.members=[];
+
       //console.log("standardURL: ", standardURL);
       const {quads} = await rdfDereferencer.dereference(standardURL);//'https://treecg.github.io/demo_data/stops.nt');//'http://dbpedia.org/page/12_Monkeys');
       quads.on('data', (quad) => {this.qtext.push(quad); /*console.log(quad)*/})
@@ -119,10 +121,6 @@ export default {
             alert(errorText);
           }
 
-          console.log("keys: ", JSON.stringify(metadata.collections.entries()));
-          console.log("col: ", metadata.collections.size);
-          console.log("get: ", metadata.collections.keys(metadata.collections.keys()));
-
           if (metadata.collections.size == 0){
 
             if (this.jsondata.collection.length == 0){
@@ -135,18 +133,12 @@ export default {
 
               alert("no collection metadata found at " + standardURL + ".\nWill add an empty node for this URL.");
               this.jsondata.nodes.push({"id":standardURL+"_node", "type":"Node", "name":standardURL, "relation_count":0, "offsetX": this.jsondata.nodes.length});
-              // this.jsondata.links.push({"source":collectionId, "target":viewNode['@id']+"_node", "name":"view"});
               this.jsondata.relations_holder.push({"id":standardURL+"_node", "node_id":standardURL+"_node", "name":standardURL, "relation_count":0, "offsetX": this.jsondata.relations_holder.length})
-              // this.jsondata.links.push({"source":viewNode['@id']+"_node", "target":viewNode['@id']+"_relation_holder", "name":"relation_holder"});
               this.jsondata.links.push({"source":this.jsondata.collection[0].id, "target":standardURL+"_node", "name":"relation_holder"});
             }
           }
 
-          // console.log("keyslength: ", metadata.collections.keys().length);
-          // console.log("get", metadata.collections.get(metadata.collections.keys()))
-
           for (var collectionId of metadata.collections.keys()) {
-            console.log("collectionId: ", collectionId);
             var collectionObj = metadata.collections.get(collectionId);
 
             let double = true;
@@ -209,9 +201,8 @@ export default {
               alert("Did not find any nodes linked to this url\n" + standardURL);
             }
 
-            //TODO add member check and visualisation
-            //TODO don't forget to remove old members on adding new ones?
 
+            //TODO add member visualisation
             if (collectionObj.member){
               for (var memb of collectionObj.member){
                 this.jsondata.members.push(this.extractMember(memb['@id']));

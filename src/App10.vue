@@ -34,6 +34,10 @@ import 'setimmediate';
 import * as d3 from "d3";
 const extractMetadata = require('@treecg/tree-metadata-extraction').extractMetadata
 import * as N3 from 'n3';
+import rdfSerializer from "rdf-serialize";
+const streamifyArray = require('streamify-array');
+const stringifyStream = require('stream-to-string');
+
 
 export default {
   name: 'App',
@@ -57,18 +61,23 @@ export default {
     }
   },
   methods : {
-    extractId(store, id) {
-      const object = {"id": id}
+    async extractId(store, id) {
+      //const object = {"id": id}
       const quadsWithSubj = store.getQuads(id, null, null, null) // get all quads with subject
-      for (let quad of quadsWithSubj) {
-        // bij named of blank nodes zoek recursively
-        if (quad.object.termType === "NamedNode" || quad.object.termType === "BlankNode") {
-          object[quad.predicate.id] = this.extractId(store, quad.object.id);
-        } else {
-          object[quad.predicate.id] = quad.object
-        }
-      }
-      return object;
+      //console.log(quadsWithSubj);
+      const textStream = rdfSerializer.serialize(streamifyArray(quadsWithSubj), { contentType: 'text/turtle' });
+      // console.log(await stringifyStream(textStream));
+      // for (let quad of quadsWithSubj) {
+      //   // bij named of blank nodes zoek recursively
+      //   if (quad.object.termType === "NamedNode" || quad.object.termType === "BlankNode") {
+      //     object[quad.predicate.id] = this.extractId(store, quad.object.id);
+      //   } else {
+      //     object[quad.predicate.id] = quad.object
+      //   }
+      // }
+      //
+      // console.log(JSON.stringify(object));
+      return await stringifyStream(textStream);
     },
 
     extractMember(memberId) {
@@ -211,7 +220,9 @@ export default {
             //TODO check what happens when as:items comes from a node not the collection
             if (collectionObj.member){
               for (var memb of collectionObj.member){
-                this.members[standardURL].push(this.extractMember(memb['@id']));
+                this.extractMember(memb['@id']).then(mtemp => this.members[standardURL].push(mtemp));
+                //let mtemp = await this.extractMember(memb['@id']);
+                //this.members[standardURL].push(this.extractMember(memb['@id']));
               }
             } else {
               this.remarks += "Found no members for " + standardURL + ".\n";
@@ -296,6 +307,8 @@ export default {
 
           console.log("members:");
           console.log(this.members);
+
+          //console.log(JSON.stringify(this.members));
 
           this.drawing(metadata);
 
@@ -699,17 +712,32 @@ export default {
         svgMG.selectAll("g").remove();
         console.log(d);
 
+        console.log("test");
+        console.log(this.members['https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a.nt']);
+
         let newG = svgMG.append("g").attr("class", "new_g")
         .attr("node_id", d.node_id);
 
-        let textArray = JSON.stringify(this.members['https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a.nt'], null, '\t').split('\n');
+        // let textArray = JSON.stringify(this.members['https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a.nt'], null, '\t').split('\n');
+        // console.log(textArray);
+
+        let textArray = [];
+        for (let tempA of this.members['https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a.nt']){
+          //textArray.concat(tempA.split('\n'));
+          //console.log(tempA.split('\n'));
+          for (let tempB of tempA.split('\n')){
+            textArray.push(tempB);
+          }
+        }
+
+
 
         newG.append("text").text("");
 
         for (let textX of textArray){
           let indent = (textX.split('\t').length -1) * 20;
           newG.select("text").append('tspan')
-          .text(textX)
+          .text(" " + textX)
           .attr("dy", 20)
           .attr("dx", indent + 5)
           .attr("x", 0);

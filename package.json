@@ -17,8 +17,10 @@
     "fs": "^0.0.1-security",
     "rdf-dereference": "^1.8.0",
     "rdf-ext": "^1.3.5",
+    "rdf-serialize": "^1.1.0",
     "rdf-validate-shacl": "^0.3.2",
     "setimmediate": "^1.0.5",
+    "streamify-array": "^1.0.1",
     "vue": "^3.0.0"
   },
   "devDependencies": {

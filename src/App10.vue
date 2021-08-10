@@ -58,8 +58,6 @@ export default {
       //Need to clear the data before redrawing
       this.qtext = [];
 
-      //this.jsondata = {"collection":[], "nodes":[], "relations":[], "links":[], "shapes":[], "relations_holder":[]};
-
 
       //console.log("TESTING:");
       //var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/a.nt';
@@ -73,10 +71,12 @@ export default {
         standardURL = this.data_url;
         // This means user gave an url for a new collection so we need to clear whatever data we already had
         this.jsondata = {"collection":[], "nodes":[], "relations":[], "links":[], "shapes":[], "relations_holder":[]};
+        d3.select("#extra").selectAll("g").remove();
+        this.svgHolder = null;
       }
       //console.log("standardURL: ", standardURL);
       const {quads} = await rdfDereferencer.dereference(standardURL);//'https://treecg.github.io/demo_data/stops.nt');//'http://dbpedia.org/page/12_Monkeys');
-      quads.on('data', (quad) => {this.qtext.push(quad); console.log(quad)})
+      quads.on('data', (quad) => {this.qtext.push(quad); /*console.log(quad)*/})
       .on('error', (error) => console.error(error))
       .on('end', () => {
         //console.log('All done!');
@@ -85,8 +85,10 @@ export default {
           console.log(metadata);
 
           if (metadata.collections.keys().length > 1){
-            console.log("ERROR: found multiple collection! This is not allowed.");
-            console.log(metadata.collections.keys());
+            let errorText = "";
+            errorText += "ERROR: found multiple collection! This is not allowed.";
+            errorText += metadata.collections.keys();
+            alert(errorText);
           }
           for (var collectionId of metadata.collections.keys()) {
             var collectionObj = metadata.collections.get(collectionId);
@@ -114,7 +116,6 @@ export default {
 
               this.jsondata.collection.push({"id":collectionId, "name":collectionObj['@id'], "type":"collection", "vocab":collectionObj['@context']["@vocab"]});
 
-              //TODO shape is an array, fix this with a for loop and make sure id's are different
               if (metadata.collections.get(collectionId).shape){
                 var count = 0;
                 for (var shapeNode of collectionObj.shape){
@@ -122,9 +123,6 @@ export default {
                   this.jsondata.links.push({"source":collectionId, "target":collectionId+"shape"+count, "name":"shape"});
                   count++;
                 }
-
-                // TODO Need to find a way to show actual shape data later
-                // Maybe allow user to click on shape buble and simply show shape in text form in a new screen?
 
               }
 
@@ -151,6 +149,8 @@ export default {
                   this.jsondata.links.push({"source":collectionId, "target":viewNode['@id']+"_node", "name":"relation_holder"});
                 }
               }
+            } else {
+              alert("Did not find any nodes linked to this url");
             }
 
             //TODO add member check and visualisation
@@ -164,9 +164,6 @@ export default {
           for (var nodeId of metadata.nodes.keys()){
             var nodeObj = metadata.nodes.get(nodeId);
             this.jsondata[nodeId+"_node"] = [];
-            //console.log(nodeId);
-            //console.log(this.jsondata.nodes);
-            //console.log(nodeObj.relation.length);
             for (var relation of nodeObj.relation){
               this.jsondata[nodeId+"_node"].push({"id":relation['@id'], "node_id":nodeId+"_node", "name":relation['@id'], "type":"relation"});
               //Don't forget to add _node to the source id, else all relations will be linked to the collection not the node
@@ -174,17 +171,14 @@ export default {
             }
           }
 
-          //console.log("jsondata:");
-          //console.log(this.jsondata);
-
+          let tempN = [];
           for (let relationNode of this.jsondata.relations_holder){
-            //console.log("tst: ", relationNode.id);
-            //console.log(this.jsondata[relationNode.id])
-            let tempN = [];
+            //This will hold all newly added nodes to later check if they confirm to any already existing relations
+            tempN.push(relationNode.id);
             for (var relationJson of this.jsondata[relationNode.id]){
               if (metadata.relations.get(relationJson.id)){
 
-                tempN.push(relationNode.id);
+
 
                 var relationObj = metadata.relations.get(relationJson.id);
                 this.jsondata.relations.push({"source":relationNode.id, "target":relationObj.node[0]['@id']+"_node"});
@@ -194,6 +188,7 @@ export default {
                 relationJson.value = relationObj.value;
                 relationJson.remainingItems = relationObj.remainingItems;
 
+                //This checks if the node this relation links to already exists in the graph
                 if(this.jsondata[relationObj.node[0]['@id']+"_node"]){
                   this.jsondata.links.push({"source":relationNode.id, "target":relationObj.node[0]['@id']+"_node"});
                 }
@@ -201,6 +196,7 @@ export default {
               }
             }
 
+            //This checks if any of the newly added nodes are the target of a relation already on the graph
             for (let tempR of this.jsondata.relations){
               if (tempN.includes(tempR.target)){
                 this.jsondata.links.push(tempR);
@@ -230,13 +226,11 @@ export default {
       const width = this.graph_width - margin.left - margin.right;
       const height = this.graph_height - margin.top - margin.bottom;
 
+      //clear the graph on redrawing
       d3.select("#my_dataviz").selectAll("svg").remove();
 
-      //var all = this.jsondata.nodes.concat(this.jsondata.relations.concat(this.jsondata.collection.concat(this.jsondata.shapes)));
       var all = this.jsondata.collection.concat(this.jsondata.shapes.concat(this.jsondata.relations_holder));
 
-
-      //TODO fix scrolling, zoom,
       // append the svg object to the body of the page
       const svg = d3.select("#my_dataviz")
       .attr("width", width + margin.left + margin.right)
@@ -247,28 +241,25 @@ export default {
       .attr("pointer-events", "all");
 
 
-
+      // check if the extra info svg exists, if not create it
+      // This gets cleared in getData if we change collections
       if (!this.svgHolder){
         this.svgHolder = d3.select("#extra")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
         .append("svg")
-        //.attr("width", width + margin.left + margin.right)
-        //.attr("height", height + margin.top + margin.bottom)
         .attr("pointer-events", "all");
       }
       const svgE = this.svgHolder;
 
 
 
-      const svgEG = svgE.append("g");//.attr("items", 0);
+      const svgEG = svgE.append("g");
 
 
 
       //TODO find a way to make the arrowhead placed dynamically instead of using refX
-      //var marker=
       svg.append("marker")
-      //.attr("id", function(d) { return d; })
       .attr("id", "arrow")
       //.attr("markerUnits","strokeWidth")//The arrow set to strokeWidth will change with the thickness of the line
       .attr("markerUnits","userSpaceOnUse")
@@ -353,38 +344,12 @@ export default {
       .lower();
 
 
-      // const node = svg
-      // .selectAll("gnode")
-      // .data(this.jsondata.nodes)
-      // .join("g")
-      // .attr("class", "node_g main_g")
-      // .call(d3.drag()
-      // .on("start", dragstartX)
-      // .on("end", dragendX)
-      // .on("drag", dragX));
-      //
-      // node.append("rect")
-      // .attr("class", "node_rect main_rect")
-      // .attr("width", 80)
-      // .attr("height", 30)
-      // .style("fill", "#69b3a2")
-      //
-      // node.append("text")
-      // .attr("text-anchor", "start")
-      // .attr("class", "node_text main_text")
-      // .attr("dy",20)
-      // .text(function(d) {
-      //   return (d.type + "").split('#').pop()
-      // })
-      // .raise();
-
 
       const relation_holder = svg
       .selectAll("grelation_holder")
       .data(this.jsondata.relations_holder)
       .join("g")
       .attr("class", "relation_holder_g main_g")
-      //.attr("expanded", function(d){return d.expanded;})
       .on("click", clickRelationHolder.bind(this))
       .call(d3.drag()
       .on("start", dragstartX)
@@ -425,17 +390,6 @@ export default {
         .lower();
       }
 
-      // relation_holder.selectAll("text")
-      // .append("tspan").text(function(d){return d.name}).attr("dy", 20);
-      // relation_holder.selectAll("text")
-      // .append("tspan").text(function(d){return "relations: " + d.relation_count}).attr("dy", 20);
-      //
-      // relation_holder.append("rect")
-      // .attr("class", "relation_holder_rect main_rect")
-      // .attr("width", 120)
-      // .attr("height", 30)
-      // .style("fill", "#6562cc")
-
 
       d3.forceSimulation(all)
       .force("link", d3.forceLink()
@@ -447,37 +401,8 @@ export default {
       .on("end", firstTick.bind(this));
 
 
-      //TODO change this to collection fixed top left
-      //shape to the right off collection
-      //node beneath collection, every next node should be moved somewhat to the right
-      //relation underneath the connected node
-      // use "offsetX" from the json.nodes / relations_holder and multiply with 100?
-
-      // d3.forceSimulation(all)
-      // .force("center", d3.forceCenter(width / 2, height / 2))
-      // .force("charge", d3.forceManyBody().strength(-800))
-      // .alphaDecay(this.alpha_decay_rate)
-      // .on("tick", firstTick.bind(this));
-
-
-      //console.log("testing:")
-      //console.log(d3.select(collection).node())
-
-      //shape.attr("x", d3.select(collection).node().getBBox().width + 60).attr("y", 20)
-
-
       function firstTick(){
         console.log("firstticked");
-        // for(let tempG of shape){
-        //   if(d3.select(tempG).attr("expanded") == "true"){
-        //     expandShapeTrue.bind(this)(d3.select(tempG), tempG['__data__']);
-        //   }
-        // }
-        // for(let tempG of relation_holder){
-        //   if(d3.select(tempG).attr("expanded") == "true"){
-        //     expandRelationHolderTrue.bind(this)(d3.select(tempG), tempG['__data__']);
-        //   }
-        // }
         ticked();
 
         //TODO make this dynamic
@@ -493,6 +418,7 @@ export default {
       function ticked() {
         console.log("ticked");
 
+        // This simply sets the attribute to the given (parent) data x and y
         d3.selectAll(".maing_g")
         .attr("x", function(d) {
           return d.x;
@@ -518,15 +444,11 @@ export default {
 
       function fixGroupChildren(){
         d3.selectAll(".main_text, .main_rect")
-        .attr("x", function(d) {/*console.log("d: ", d, "this: ", this);*/return d.x;})
+        .attr("x", function(d) {return d.x;})
         .attr("y", function(d) {return d.y;});
 
         svg.selectAll("tspan")
         .attr("x", function(d) {return d.x;})
-
-        // d3.selectAll(".relation_text, .relation_rect")
-        // .attr("x", function(d) {return d.x;})
-        // .attr("y", function(d) {return d.y + d3.select(this).attr("sortIndex")*25 + 30})
       }
 
 
@@ -547,12 +469,15 @@ export default {
 
 
 
-      //The event.transform does not change during session, it simply gets added onto every time
-      //So just safe the value on the main svg so we can use it in calculations
+      // The event.transform does not change during session, it simply gets added onto every time
+      // So just safe the value on the main svg so we can use it in calculations
+      // We can't use this with transform directly because links depend on actual x and y data, not the translated attributes
       svg.attr("prevTX", 0).attr("prevTY", 0).attr("scaleAll", 1);
 
+      // d3 sees zooming and panning as the same thing, strange design choice
       const zoom = d3.zoom()
 
+      //while panning links wont move because we use translate instead of changing x and y
       zoom.on("zoom", function(e) {
         d3.selectAll(".main_g")
         .attr("transform", function(){return "translate("+(e.transform.x- d3.select("svg").attr("prevTX"))+","+(e.transform.y- d3.select("svg").attr("prevTY"))+")scale("+e.transform.k+")"});
@@ -561,21 +486,23 @@ export default {
         link.attr("transform", function(){return "translate("+(e.transform.x- d3.select("svg").attr("prevTX"))+","+(e.transform.y- d3.select("svg").attr("prevTY"))+")scale("+e.transform.k+")"});
       });
 
+      // At the end of a zoom we only keep scale attribute and calculate the correct x and y attributes based of the translation
       zoom.on("end", function(e) {
 
-      d3.selectAll(".main_g")
-      .attr("transform", function(){return "scale("+e.transform.k+")"})
-      .attr("x", function(d) { d.x += e.transform.x - d3.select("svg").attr("prevTX")})
-      .attr("y", function(d) { d.y += e.transform.y - d3.select("svg").attr("prevTY")})
+        d3.selectAll(".main_g")
+        .attr("transform", function(){return "scale("+e.transform.k+")"})
+        .attr("x", function(d) { d.x += e.transform.x - d3.select("svg").attr("prevTX")})
+        .attr("y", function(d) { d.y += e.transform.y - d3.select("svg").attr("prevTY")})
 
-      svg.attr("prevTX", e.transform.x).attr("prevTY", e.transform.y).attr("scaleAll", e.transform.k);
+        svg.attr("prevTX", e.transform.x).attr("prevTY", e.transform.y).attr("scaleAll", e.transform.k);
 
-      fixGroupChildren()
+        fixGroupChildren()
 
-      fixLinks();
+        fixLinks();
 
       });
 
+      // connect the zoom function to the main svg element
       svg.call(zoom);
 
 
@@ -584,10 +511,6 @@ export default {
           //TODO what if node data is wrong, multiple urls, etc?
           console.log("clicked w ctrl");
           console.log(d3.select(event.target).attr("node_link"));
-
-          //console.log(metadata.relations.get(i.id).node[0]['@id']);
-          //this.data_url = d3.select(event.target).attr("node_link");
-          //d3.selectAll(".tooltip").remove();
           this.getData(d3.select(event.target).attr("node_link"));
         } else {
 
@@ -681,46 +604,16 @@ export default {
 
       function expandRelationHolder(currentg, d){
         svgEG.selectAll("g").remove();
-        // if(currentg.attr("expanded") == "false"){
-        //   currentg.attr("expanded", "true");
 
-          expandRelationHolderTrue.bind(this)(currentg, d);
-
-        // } else {
-        //   currentg.attr("expanded", "false");
-        //   for(let temp of this.jsondata.relations_holder){
-        //     if (temp.id == d.id){
-        //       temp.expanded = "false";
-        //     }
-        //   }
-        //   // currentg.select("text").text("relations: " + d.relation_count)
-        //   // currentg.select("rect").attr("width", 1);
-        //   // currentg.select("text").selectAll("tspan")
-        //   // .attr("x", function(d) {return d.x;})
-        //   //
-        //   // currentg.selectAll(".relation_g").remove();
-        //   //
-        //   // currentg.select("rect")
-        //   // .attr("height", 30)
-        //   // .attr("width", currentg.node().getBBox().width + 10);
-        //
-        //
-        //   //svgEG.attr("items", Number(svgEG.attr("items"))-1)
-        //   d3.selectAll(".new_g"+(d.id.replaceAll('.','').replaceAll(':','').replaceAll('/',''))).remove();
-        // }
+        expandRelationHolderTrue.bind(this)(currentg, d);
       }
 
 
       function expandRelationHolderTrue(currentg, d){
-        // for(let temp of this.jsondata.relations_holder){
-        //   if (temp.id == d.id){
-        //     temp.expanded = "true";
-        //   }
-        // }
 
         let sortIndex = -1;
         let offsetY = Number(currentg.select("rect").attr("height"));
-        //let offsetX = svgEG.node().getBBox().width;
+
         let colors = ["#706ec4", "#7977d9"]
 
         let newG = svgEG.append("g").attr("class", "new_g new_g"+(d.id.replaceAll('.','').replaceAll(':','').replaceAll('/','')))
@@ -732,7 +625,6 @@ export default {
           let innerg = newG.append("g")
           .attr("sortIndex", sortIndex)
           .attr("x", 50)
-          //.attr("y", function(d){d.y = Number(currentg.attr("y")) + sortIndex*22;return d.y})
           .attr("class", "relation_g")
           .attr("info", JSON.stringify(relX))
           .attr("expanded", "false");
@@ -741,50 +633,27 @@ export default {
           .attr("text-anchor", "start")
           .attr("class", "relation_text inner_text")
           .attr("x", 50)
-          //.attr("y", function(d){d.y = Number(currentg.attr("y")) + sortIndex*22;return d.y})
           .attr("sortIndex", sortIndex)
           .text("")
           .raise();
 
-            let textX = (relX.type + "").split('#').pop() + ": "
-            for (let v of relX.value){
-              textX += v['@value'] + ", ";
+          let textX = (relX.type + "").split('#').pop() + ": "
+          for (let v of relX.value){
+            textX += v['@value'] + ", ";
+          }
+          for (let v of relX.path){
+            if(!v['@id']){
+              textX += 'Object'
+            } else {
+              textX += v['@id']//(v['@id'] + "").split("/").pop();
             }
-            for (let v of relX.path){
-              if(!v['@id']){
-                textX += 'Object'
-              } else {
-                textX += v['@id']//(v['@id'] + "").split("/").pop();
-              }
-            }
+          }
 
-            let itspan = innerText.append('tspan')
-            .text(textX)
-            .attr("dy", 20)
-            .attr("x", 35)
-            .attr("sortIndex", sortIndex);
-            //.attr("info", JSON.stringify(relX));
-
-          // innerText.append("tspan").text("type: " + relX.type)
-          //
-          // for (let v of relX.value){
-          //   innerText.append("tspan").text("value: " + v['@value'])
-          // }
-          //
-          // for (let v of relX.path){
-          //   innerText.append("tspan").text("path: " + v['@id'])
-          // }
-
-          // innerText.selectAll("tspan")
-          // //.attr("dy", 20)
-          // //.attr("x", function(d){d.x=currentg.select("rect").attr("x"); return d.x})
-          // .attr("sortIndex", sortIndex);
-
-          //console.log(innerText._groups[0][0].childNodes.length*20);
-          //console.log(Number(currentg.attr("y")) + sortIndex*22 + innerg.node().getBBox().height);
-
-          // innerText.attr("y", function(d){d.y = Number(currentg.attr("y")) + sortIndex*25 + offsetY;return d.y});
-          // innerg.attr("y", function(d){d.y = Number(currentg.attr("y")) + sortIndex*25 + offsetY;return d.y});
+          let itspan = innerText.append('tspan')
+          .text(textX)
+          .attr("dy", 20)
+          .attr("x", 35)
+          .attr("sortIndex", sortIndex);
 
           innerText.attr("y", function(){return sortIndex*25 + offsetY});
           innerg.attr("y", function(){return sortIndex*25 + offsetY});
@@ -792,8 +661,6 @@ export default {
           innerg.append("rect")
           .attr("class", "relation_rect inner_rect")
           .attr("sortIndex", sortIndex)
-          //.attr("info", JSON.stringify(relX))
-          //.attr("width", innerText.node().getBBox().width + 10)
           .attr("height", 25)
           .attr("x", 30)
           .attr("y", function(){return sortIndex*25 + offsetY})
@@ -806,28 +673,23 @@ export default {
             itspan.attr("node_link", relX.node[0]['@id']);
           }
 
-
-          innerg.on("click", next.bind(this));
-
+          innerg.on("click", expandRelation.bind(this));
         }
 
-        newG.selectAll(".inner_rect").attr("width", newG.node().getBBox().width+10)
+        newG.selectAll(".inner_rect").attr("width", newG.node().getBBox().width+10);
 
         let tt = newG.append("text");
 
-        tt
-        .append("tspan").text("Node")
+        tt.append("tspan").text("Node")
         .attr("dy", 22)
         .attr("dx",5);
 
-        tt
-        .append("tspan").text(d.name)
+        tt.append("tspan").text(d.name)
         .attr("dy", 22)
         .attr("x",0)
         .attr("dx",5);
 
-        tt
-        .append("tspan").text("relations: " + d.relation_count)
+        tt.append("tspan").text("relations: " + d.relation_count)
         .attr("dy", 22)
         .attr("x",0)
         .attr("dx",15);
@@ -839,18 +701,15 @@ export default {
         .lower();
 
 
-
+        // Make the main svg holding this large enough to show everything
         let bbox = svgEG.node().getBBox();
         svgE.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
         .attr("width", (bbox.width+bbox.x))
         .attr("height", (bbox.height+bbox.y));
-
-        //TODO add some kind off ordering by d.offsetX
-        //svgEG.attr("items", Number(svgEG.attr("items"))+1)
       }
 
 
-      function next(e){
+      function expandRelation(e){
         if (!e.ctrlKey){
           e.stopPropagation();
 
@@ -858,6 +717,8 @@ export default {
           while(!d3.select(currentg).classed("relation_g")){
             currentg = currentg.parentNode;
           }
+
+          console.log(d3.select(currentg).attr("sortIndex"));
 
           let heightStart = d3.select(currentg).node().getBBox().height;
           let tspanX = d3.select(currentg).select("tspan").attr("x");
@@ -881,7 +742,6 @@ export default {
               if(!v['@value']){
                 tt.append("tspan").text("value: ");
                 let textArray = JSON.stringify(v, null, '\t').split('\n');
-                //tt.append("tspan").text("path: " + JSON.stringify(v));
                 let prevIndent = 0;
                 for (let textX of textArray){
                   let indent = (textX.split('\t').length -1) * 4;
@@ -928,8 +788,8 @@ export default {
             tt.selectAll("tspan").attr("dy", 20).attr("x", 5+Number(tspanX));
             tt.selectAll("tspan").raise();
 
-
-            let trect = d3.select(currentg).append("rect").style("fill", "#d4c957")
+            let colors = ["#c4b727", "#d4c957"];
+            let trect = d3.select(currentg).append("rect").style("fill", colors[Number(d3.select(currentg).attr("sortIndex"))%2])
             .attr("class", "pop_up")
             .attr("x", d3.select(currentg).select(".inner_rect").attr("x"))
             .attr("y", d3.select(currentg).select(".inner_rect").attr("y"))
@@ -945,13 +805,14 @@ export default {
               tt.selectAll("tspan").attr("node_link", relX.node[0]['@id']);
             }
 
-
+          // If was already expanded
           } else {
             d3.select(currentg).attr("expanded", "false");
             d3.select(currentg).selectAll(".pop_up").remove();
             d3.select(currentg).selectAll("rect, text, tspan").style("visibility", "visible");
           }
 
+          // Fix all rectangle sizes and move lower items downwards
           let heightNew = Number(d3.select(currentg).node().getBBox().height) - heightStart
 
           for(let tn of d3.select(currentg.parentNode).selectAll(".relation_g")){
@@ -962,23 +823,13 @@ export default {
             }
           }
 
+          // First make the rectangles size 0 so they do not already expand the main viewbox we then use to set their attributes
           d3.select(currentg.parentNode).selectAll(".inner_rect").attr("width", 0);
           d3.select(currentg.parentNode).selectAll(".outer_rect").attr("width", 0).attr("height", 0);
 
-
-          //console.log(d3.select(currentg.parentNode).select("rect.pop_up").node().getBBox().width);
-
-          // d3.select(currentg.parentNode).selectAll(".inner_rect")
-          // .attr("width", d3.select(currentg).select("rect.pop_up").node().getBBox().width);
-
-          if (d3.select(currentg).attr("expanded")=="false"){
-            d3.select(currentg.parentNode).selectAll(".inner_rect")
-            .attr("width", d3.select(currentg.parentNode).node().getBBox().width-25);
-          } else {
-            d3.select(currentg.parentNode).selectAll(".inner_rect")
-            .attr("width", d3.select(currentg.parentNode).node().getBBox().width-25);
-          }
-
+          // The 25 here is because tspan already moves 5 to the right so 30-5 = 25
+          d3.select(currentg.parentNode).selectAll(".inner_rect")
+          .attr("width", d3.select(currentg.parentNode).node().getBBox().width-25);
 
           d3.select(currentg.parentNode).selectAll(".outer_rect")
           .attr("width", d3.select(currentg.parentNode).node().getBBox().width+30)
@@ -989,10 +840,9 @@ export default {
           .attr("width", (bbox.width+bbox.x))
           .attr("height", (bbox.height+bbox.y));
 
+        //if ctrl was pressed, add new node
         } else {
           console.log(d3.select(e.target).attr("node_link"));
-          //this.data_url = d3.select(e.target).attr("node_link");
-          //d3.selectAll(".tooltip").remove();
           this.getData(d3.select(e.target).attr("node_link"));
         }
       }

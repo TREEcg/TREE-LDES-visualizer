@@ -2,6 +2,7 @@
 
   <p>Click a bubble to show all attributes</p>
   <p>ctrl+click a relation to navigate to the node</p>
+  <p>shift+mousewheel / shift+pan to zoom or pan</p>
 
   <label for="adecay">Enter graph convergence speed, between 0 and 1</label>
   <input type="number" v-model="alpha_decay_rate" placeholder="0.023" name="adecay"><br>
@@ -32,6 +33,7 @@ import rdfDereferencer from "rdf-dereference";
 import 'setimmediate';
 import * as d3 from "d3";
 const extractMetadata = require('@treecg/tree-metadata-extraction').extractMetadata
+import * as N3 from 'n3';
 
 export default {
   name: 'App',
@@ -40,8 +42,11 @@ export default {
   data(){
     return {
       qtext: [],
-      jsondata: {"collection":[], "nodes":[], "relations":[], "links":[], "shapes":[], "relations_holder":[]},
+      //easier to clear jsondata in functions without having to copy paste this
+      empty : {"collection":[], "nodes":[], "relations":[], "links":[], "shapes":[], "relations_holder":[], "members":[]},
+      jsondata: null, //this will be set to empty on start
       svgHolder: null,
+      remarks: "",
       next_url: "",
       checked_shape: false,
       graph_height: 600,
@@ -51,26 +56,49 @@ export default {
     }
   },
   methods : {
+    extractId(store, id) {
+      const object = {"id": id}
+      const quadsWithSubj = store.getQuads(id, null, null, null) // get all quads with subject
+      for (let quad of quadsWithSubj) {
+        // bij named of blank nodes zoek recursively
+        if (quad.object.termType === "NamedNode" || quad.object.termType === "BlankNode") {
+          object[quad.predicate.id] = this.extractId(store, quad.object.id);
+        } else {
+          object[quad.predicate.id] = quad.object
+        }
+      }
+      return object;
+    },
+
+    extractMember(memberId) {
+      let store = new N3.Store(this.qtext)
+      return this.extractId(store, memberId)
+    },
+
+    //TODO add import, importStream, conditionalImport, totalItems
+    //TODO what if no metadata is extracted?
     async getData(url) {
       //TODO is it possible to keep all quads, extract all metadata and then not have to check for doubles?
       //Simply by removing all doubles from the saved quads?
 
       //Need to clear the data before redrawing
       this.qtext = [];
+      this.remarks = "";
 
-
-      //console.log("TESTING:");
       //var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/a.nt';
       var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/.root.nt'
-      // if (this.data_url){
-      //   standardURL = this.data_url;
-      // }
+
       if(url){
         standardURL = url;
       } else if (this.data_url){
         standardURL = this.data_url;
         // This means user gave an url for a new collection so we need to clear whatever data we already had
-        this.jsondata = {"collection":[], "nodes":[], "relations":[], "links":[], "shapes":[], "relations_holder":[]};
+        this.jsondata = this.empty;
+        d3.select("#extra").selectAll("g").remove();
+        this.svgHolder = null;
+      } else {
+        //Fallback
+        this.jsondata = this.empty;
         d3.select("#extra").selectAll("g").remove();
         this.svgHolder = null;
       }
@@ -84,13 +112,41 @@ export default {
         extractMetadata(this.qtext).then(metadata => {
           console.log(metadata);
 
-          if (metadata.collections.keys().length > 1){
+          if (metadata.collections.size > 1){
             let errorText = "";
             errorText += "ERROR: found multiple collection! This is not allowed.";
             errorText += metadata.collections.keys();
             alert(errorText);
           }
+
+          console.log("keys: ", JSON.stringify(metadata.collections.entries()));
+          console.log("col: ", metadata.collections.size);
+          console.log("get: ", metadata.collections.keys(metadata.collections.keys()));
+
+          if (metadata.collections.size == 0){
+
+            if (this.jsondata.collection.length == 0){
+              alert("No collection pre-defined and no collection found on " + standardURL + ".\nPlease provide a different starting URL.");
+              return;
+            }
+
+            if (!this.jsondata[standardURL+"_node"]){
+              this.jsondata[standardURL+"_node"] = [];
+
+              alert("no collection metadata found at " + standardURL + ".\nWill add an empty node for this URL.");
+              this.jsondata.nodes.push({"id":standardURL+"_node", "type":"Node", "name":standardURL, "relation_count":0, "offsetX": this.jsondata.nodes.length});
+              // this.jsondata.links.push({"source":collectionId, "target":viewNode['@id']+"_node", "name":"view"});
+              this.jsondata.relations_holder.push({"id":standardURL+"_node", "node_id":standardURL+"_node", "name":standardURL, "relation_count":0, "offsetX": this.jsondata.relations_holder.length})
+              // this.jsondata.links.push({"source":viewNode['@id']+"_node", "target":viewNode['@id']+"_relation_holder", "name":"relation_holder"});
+              this.jsondata.links.push({"source":this.jsondata.collection[0].id, "target":standardURL+"_node", "name":"relation_holder"});
+            }
+          }
+
+          // console.log("keyslength: ", metadata.collections.keys().length);
+          // console.log("get", metadata.collections.get(metadata.collections.keys()))
+
           for (var collectionId of metadata.collections.keys()) {
+            console.log("collectionId: ", collectionId);
             var collectionObj = metadata.collections.get(collectionId);
 
             let double = true;
@@ -150,14 +206,20 @@ export default {
                 }
               }
             } else {
-              alert("Did not find any nodes linked to this url");
+              alert("Did not find any nodes linked to this url\n" + standardURL);
             }
 
             //TODO add member check and visualisation
             //TODO don't forget to remove old members on adding new ones?
 
+            if (collectionObj.member){
+              for (var memb of collectionObj.member){
+                this.jsondata.members.push(this.extractMember(memb['@id']));
+              }
+            } else {
+              this.remarks += "Found no members for " + standardURL + ".\n";
+            }
           }
-
 
           //This does not need a duplicate check since old node relations won't be included in the new metadata
           //or they will just overwrite with the exact same data as was already present
@@ -178,15 +240,37 @@ export default {
             for (var relationJson of this.jsondata[relationNode.id]){
               if (metadata.relations.get(relationJson.id)){
 
-
-
                 var relationObj = metadata.relations.get(relationJson.id);
-                this.jsondata.relations.push({"source":relationNode.id, "target":relationObj.node[0]['@id']+"_node"});
-                relationJson.type = relationObj['@type'];
+                if (!relationObj.node || !relationObj.node[0]['@id']){
+                  alert("Error: relation from " + relationNode.id + " has no node defined!\nThis is not allowed!\nRelation: " + JSON.stringify(relationObj, null, '\t'));
+                  break;
+                }
                 relationJson.node = relationObj.node;
-                relationJson.path = relationObj.path;
-                relationJson.value = relationObj.value;
-                relationJson.remainingItems = relationObj.remainingItems;
+
+                this.jsondata.relations.push({"source":relationNode.id, "target":relationObj.node[0]['@id']+"_node"});
+                if(!relationObj['@type']){
+                  this.remarks += "relation from " + relationNode.id + " to " + relationObj.node[0]['@id'] + " has no type defined\n";
+                } else {
+                  relationJson.type = relationObj['@type'];
+                }
+
+                if(!relationObj.path){
+                  this.remarks += "relation from " + relationNode.id + " to " + relationObj.node[0]['@id'] + " has no path defined\n";
+                } else {
+                  relationJson.path = relationObj.path;
+                }
+
+                if(!relationObj.value){
+                  this.remarks += "relation from " + relationNode.id + " to " + relationObj.node[0]['@id'] + " has no value defined\n";
+                } else {
+                  relationJson.value = relationObj.value;
+                }
+
+                if(!relationObj.remainingItems){
+                  this.remarks += "relation from " + relationNode.id + " to " + relationObj.node[0]['@id'] + " has no remainingItems defined\n";
+                } else {
+                  relationJson.remainingItems = relationObj.remainingItems;
+                }
 
                 //This checks if the node this relation links to already exists in the graph
                 if(this.jsondata[relationObj.node[0]['@id']+"_node"]){
@@ -203,6 +287,11 @@ export default {
               }
             }
 
+          }
+
+          if (this.remarks != ""){
+            //alert(this.remarks);
+            console.log(this.remarks);
           }
 
           console.log("jsondata:");
@@ -479,27 +568,29 @@ export default {
 
       //while panning links wont move because we use translate instead of changing x and y
       zoom.on("zoom", function(e) {
-        d3.selectAll(".main_g")
-        .attr("transform", function(){return "translate("+(e.transform.x- d3.select("svg").attr("prevTX"))+","+(e.transform.y- d3.select("svg").attr("prevTY"))+")scale("+e.transform.k+")"});
+        if (e.sourceEvent.shiftKey){
+          d3.selectAll(".main_g")
+          .attr("transform", function(){return "translate("+(e.transform.x- d3.select("svg").attr("prevTX"))+","+(e.transform.y- d3.select("svg").attr("prevTY"))+")scale("+e.transform.k+")"});
 
-        fixLinks();
-        link.attr("transform", function(){return "translate("+(e.transform.x- d3.select("svg").attr("prevTX"))+","+(e.transform.y- d3.select("svg").attr("prevTY"))+")scale("+e.transform.k+")"});
+          fixLinks();
+          link.attr("transform", function(){return "translate("+(e.transform.x- d3.select("svg").attr("prevTX"))+","+(e.transform.y- d3.select("svg").attr("prevTY"))+")scale("+e.transform.k+")"});
+        }
       });
 
       // At the end of a zoom we only keep scale attribute and calculate the correct x and y attributes based of the translation
       zoom.on("end", function(e) {
+        if (e.sourceEvent.shiftKey){
+          d3.selectAll(".main_g")
+          .attr("transform", function(){return "scale("+e.transform.k+")"})
+          .attr("x", function(d) { d.x += e.transform.x - d3.select("svg").attr("prevTX")})
+          .attr("y", function(d) { d.y += e.transform.y - d3.select("svg").attr("prevTY")})
 
-        d3.selectAll(".main_g")
-        .attr("transform", function(){return "scale("+e.transform.k+")"})
-        .attr("x", function(d) { d.x += e.transform.x - d3.select("svg").attr("prevTX")})
-        .attr("y", function(d) { d.y += e.transform.y - d3.select("svg").attr("prevTY")})
+          svg.attr("prevTX", e.transform.x).attr("prevTY", e.transform.y).attr("scaleAll", e.transform.k);
 
-        svg.attr("prevTX", e.transform.x).attr("prevTY", e.transform.y).attr("scaleAll", e.transform.k);
+          fixGroupChildren()
 
-        fixGroupChildren()
-
-        fixLinks();
-
+          fixLinks();
+        }
       });
 
       // connect the zoom function to the main svg element
@@ -507,13 +598,7 @@ export default {
 
 
       function clickRelationHolder(event, d){
-        if (event.ctrlKey) {
-          //TODO what if node data is wrong, multiple urls, etc?
-          console.log("clicked w ctrl");
-          console.log(d3.select(event.target).attr("node_link"));
-          this.getData(d3.select(event.target).attr("node_link"));
-        } else {
-
+        if(d.relation_count && d.relation_count > 0){
           let currentg = d3.select(event.target.parentNode);
           //currentg could be tspan parent = text and not the group
           if (!currentg.classed("relation_holder_g")){
@@ -523,7 +608,8 @@ export default {
           expandRelationHolder.bind(this)(currentg, d);
 
           ticked();
-
+        } else {
+          svgEG.selectAll("g").remove();
         }
 
       }
@@ -582,16 +668,14 @@ export default {
 
         currentg.select("text").text("");
 
-        let prevIndent = 0;
         let sortIndex = 0;
         for (let textX of textArray){
-          let indent = (textX.split('\t').length -1) * 4;
+          let indent = (textX.split('\t').length -1) * 20;
           currentg.select("text").append('tspan')
           .text(textX.replace('\t',''))
           .attr("dy", 20)
-          .attr("dx", indent-prevIndent + 5)
+          .attr("dx", indent + 5)
           .attr("sortIndex", sortIndex);
-          prevIndent = indent-prevIndent;
           sortIndex++;
         }
 
@@ -660,6 +744,7 @@ export default {
 
           innerg.append("rect")
           .attr("class", "relation_rect inner_rect")
+          .attr("node_link", relX.node[0]['@id'])
           .attr("sortIndex", sortIndex)
           .attr("height", 25)
           .attr("x", 30)
@@ -710,15 +795,14 @@ export default {
 
 
       function expandRelation(e){
+        e.stopPropagation();
         if (!e.ctrlKey){
-          e.stopPropagation();
+
 
           let currentg = e.target;
           while(!d3.select(currentg).classed("relation_g")){
             currentg = currentg.parentNode;
           }
-
-          console.log(d3.select(currentg).attr("sortIndex"));
 
           let heightStart = d3.select(currentg).node().getBBox().height;
           let tspanX = d3.select(currentg).select("tspan").attr("x");

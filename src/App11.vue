@@ -46,8 +46,8 @@ const SHACLValidator = require('rdf-validate-shacl');
 
 const Readable = require('stream').Readable
 
-// const { DataFactory } = N3;
-// const { blankNode } = DataFactory;
+const { DataFactory } = N3;
+const { blankNode, namedNode, defaultGraph } = DataFactory;
 
 
 export default {
@@ -97,7 +97,7 @@ export default {
       return quadsWithSubj;
     },
 
-    extractShape(store, id){
+    async extractShape(store, id){
       // store.addQuad(
       //   blankNode(id),
       //   blankNode('<https://www.w3.org/ns/shacl#targetClass>'),
@@ -107,16 +107,83 @@ export default {
       console.log("quads: ", store.getQuads(id, null, null, null));
       var quadsWithSubj = this.extractShapeHelp(store, id);
 
-      // const quadsWithSubj = store.getQuads(id, null, null, null);
+      const store2 = new N3.Store();
+      store2.addQuads(quadsWithSubj);
+      var targetQuads = [];
+      //TODO add a check for implicit targetting, when shacl shape is both a class and sh:NodeShape then the identifier is a class and thus is the target
+      const shapeTargets = ['targetClass', 'targetNode', 'targetSubjectsOf', 'targetObjectsOf']
+      for (let tempTarget of shapeTargets){
+        targetQuads = targetQuads.concat(store2.getQuads(null, 'http://www.w3.org/ns/shacl#'+tempTarget, null, null))
+      }
+      console.log("targetQuads: ", targetQuads);
+
+      if (targetQuads.length == 0){
+        // this.addShapeTarget(store, id);
+
+        // quadsWithSubj = this.extractShapeHelp(store3, id);
+        // console.log("targetQuadsNew: ", store3.getQuads('_:BpropertyX5Fnode', null, null, null));
+        // console.log("targetstore: ", store3);
+        console.log(id);
+        console.log(blankNode);
+        store2.addQuad(
+          namedNode(id),
+          namedNode('http://www.w3.org/ns/shacl#targetObjectsOf'),
+          namedNode('https://w3id.org/tree#member'),
+          defaultGraph()
+        );
+        console.log("targetQuadsNew: ", store2.getQuads(null, 'http://www.w3.org/ns/shacl#targetObjectsOf', null, null));
+        console.log("targetstore: ", store2);
+        quadsWithSubj = this.extractShapeHelp(store2, id);
+      }
+
       console.log("shape: ", JSON.parse(JSON.stringify(quadsWithSubj)));
       return rdfSerializer.serialize(streamifyArray(quadsWithSubj), { contentType: 'text/turtle' });
+
+
+
+
+      // const quadsWithSubj = store.getQuads(id, null, null, null);
+
     },
+
+    // addShapeTarget(store, id){
+    //   console.log(id);
+    //   const parser = new N3.Parser();
+    //   parser.parse(
+    //     `_:BpropertyX5Fnode <http://www.w3.org/ns/shacl#targetObjectsOf> <https://w3id.org/tree#member> .`,
+    //     (error, quad, prefixes) => {
+    //       if (quad){
+    //         console.log("added quad: ", JSON.parse(JSON.stringify(quad)));
+    //         store.addQuad(quad);
+    //
+    //       } else {
+    //         console.log("done adding ", error, prefixes);
+    //         return rdfSerializer.serialize(streamifyArray(this.extractShapeHelp(store, id)), { contentType: 'text/turtle' });
+    //       }
+    //     });
+    //     // console.log("appended: ", JSON.parse(JSON.stringify(store)));
+    //     // return store;
+    //
+    //   // parser.parse(
+    //   //   `_:BpropertyX5Fnode <http://www.w3.org/ns/shacl#targetObjectsOf> <https://w3id.org/tree#member> .`,
+    //   // ).then((error, quad, prefixes) => {
+    //   //   if (quad){
+    //   //     console.log("added quad: ", JSON.parse(JSON.stringify(quad)));
+    //   //     store.addQuad(quad);
+    //   //     return store;
+    //   //   } else {
+    //   //     console.log("done adding ", error, prefixes);
+    //   //   }
+    //   // })
+    // },
 
     extractShapeMembers(store, ids){
       var quadsWithSubj = [];
       for (let id of ids){
         quadsWithSubj = quadsWithSubj.concat(store.getQuads(id, null, null, null));
+        quadsWithSubj = quadsWithSubj.concat(store.getQuads(null, null, id, null));
       }
+
       console.log("data: ", JSON.parse(JSON.stringify(quadsWithSubj)));
       return rdfSerializer.serialize(streamifyArray(quadsWithSubj), { contentType: 'text/turtle' });
     },
@@ -133,7 +200,8 @@ export default {
 
       //var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/a.nt';
       var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/.root.nt'
-      standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a4.nt';
+      standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a2.nt';
+      standardURL = 'https://treecg.github.io/demo_data/cht.ttl';
       //standardURL = 'https://github.com/Mikxox/visualizer/blob/main/src/assets/stops_a.nt';
 
       if(url){
@@ -363,8 +431,8 @@ export default {
       // console.log(store.getQuads(null, 'http://www.w3.org/ns/shapetrees#validatedBy', null, null));
 
       var shapeIds = [];
-      shapeIds = shapeIds.concat(store.getQuads(null, 'https://w3id.org/tree#shape', null, null).map(quad => quad.object));
-      shapeIds = shapeIds.concat(store.getQuads(null, 'http://www.w3.org/ns/shapetrees#validatedBy', null, null).map(quad => quad.object));
+      shapeIds = shapeIds.concat(store.getQuads(null, 'https://w3id.org/tree#shape', null, null).map(quad => quad.object.id));
+      shapeIds = shapeIds.concat(store.getQuads(null, 'http://www.w3.org/ns/shapetrees#validatedBy', null, null).map(quad => quad.object.id));
 
       if (shapeIds.size > 1){
         alert("ERROR: found multiple shapes " + JSON.stringify(shapeIds));
@@ -406,13 +474,14 @@ export default {
       // const shapesX = streamifyArray(testq);
       // const dataX = streamifyArray(testq);
 
-      const shapesX = this.extractShape(store, shapeIds[0]);
+      var shapesX = this.extractShape(store, shapeIds[0]);
+      //console.log("ShapesStreamString: ", stringifyStream(shapesX));
       const dataX = this.extractShapeMembers(store, membIds);
 
       console.log(Readable);
 
 /*
-      const shapesX = new Readable({
+      shapesX = new Readable({
         read: () => {
           shapesX.push(`
             @prefix dash: <http://datashapes.org/dash#> .
@@ -423,7 +492,7 @@ export default {
             @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
             schema:StopShape
-              <http://www.w3.org/ns/shacl#targetClass> <http://vocab.gtfs.org/terms#Stop> ;
+              <http://www.w3.org/ns/shacl#targetObjectsOf> <https://w3id.org/tree#member> ;
               <http://www.w3.org/ns/shacl#property> [
                 <http://www.w3.org/ns/shacl#path> <http://schema.org/name> ;
                 <http://www.w3.org/ns/shacl#minCount> 1 ;

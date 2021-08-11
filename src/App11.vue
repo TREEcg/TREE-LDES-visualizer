@@ -406,12 +406,12 @@ export default {
       // const shapesX = streamifyArray(testq);
       // const dataX = streamifyArray(testq);
 
-      // const shapesX = this.extractShape(store, shapeIds[0]);
+      const shapesX = this.extractShape(store, shapeIds[0]);
       const dataX = this.extractShapeMembers(store, membIds);
 
       console.log(Readable);
 
-
+/*
       const shapesX = new Readable({
         read: () => {
           shapesX.push(`

@@ -202,6 +202,7 @@ export default {
       var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/.root.nt'
       standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a2.nt';
       standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/cht_1_2.ttl';
+      standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/marine1'
       //standardURL = 'https://github.com/Mikxox/visualizer/blob/main/src/assets/stops_a.nt';
 
       if(url){
@@ -948,11 +949,7 @@ export default {
           svgEG.selectAll("g").remove();
         }
 
-        // if(this.members[d.name]){
-        //   expandMember.bind(this)(d);
-        // }
-
-        if (this.members['https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a.nt']){
+        if (this.members[d.name]){
           expandMember.bind(this)(d);
         }
       }
@@ -964,7 +961,7 @@ export default {
         .attr("node_id", d.node_id);
 
         let textArray = [];
-        for (let tempA of this.members['https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a.nt']){
+        for (let tempA of this.members[d.name]){
           if (tempA.includes('\n')){
             for (let tempB of tempA.split('\n')){
               textArray.push(tempB);
@@ -998,13 +995,6 @@ export default {
         .attr("width", (bbox.width+bbox.x))
         .attr("height", (bbox.height+bbox.y));
       }
-
-
-      // function expandRelationHolder(currentg, d){
-      //   svgEG.selectAll("g").remove();
-      //
-      //   expandRelationHolderTrue.bind(this)(currentg, d);
-      // }
 
 
       function expandRelationHolder(currentg, d){

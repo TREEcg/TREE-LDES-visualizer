@@ -68,7 +68,7 @@ export default {
   },
   methods : {
     async extractId(store, id) {
-      const quadsWithSubj = store.getQuads(id, null, null, null) // get all quads with subject
+      const quadsWithSubj = store.getQuads(id, null, null, null);
       const textStream = rdfSerializer.serialize(streamifyArray(quadsWithSubj), { contentType: 'text/turtle' });
       return await stringifyStream(textStream);
     },
@@ -78,11 +78,33 @@ export default {
       return this.extractId(store, memberId)
     },
 
-    // async extractShape(store, id) {
-    //   const quadsWithSubj = store.getQuads(id, null, null, null) // get all quads with subject
-    //   const textStream = rdfSerializer.serialize(streamifyArray(quadsWithSubj), { contentType: 'text/turtle' });
-    //   return await stringifyStream(textStream);
-    // },
+    extractShapeHelp(store, id, checked = []) {
+      var quadsWithSubj = store.getQuads(id, null, null, null);
+      for (let quad of quadsWithSubj){
+        if (quad.object.termType === "NamedNode" || quad.object.termType === "BlankNode") {
+          if (quad.object.id && !checked.includes(quad.object.id)){
+            checked.push(quad.object.id);
+            quadsWithSubj = quadsWithSubj.concat(this.extractShapeHelp(store, quad.object.id, checked));
+          }
+        }
+      }
+      return quadsWithSubj;
+    },
+
+    extractShape(store, id){
+      const quadsWithSubj = this.extractShapeHelp(store, id);
+      console.log("shape: ", JSON.stringify(quadsWithSubj));
+      return rdfSerializer.serialize(streamifyArray(quadsWithSubj), { contentType: 'text/turtle' });
+    },
+
+    extractShapeMembers(store, ids){
+      var quadsWithSubj = [];
+      for (let id of ids){
+        quadsWithSubj = quadsWithSubj.concat(store.getQuads(id, null, null, null));
+      }
+      console.log("data: ", JSON.stringify(quadsWithSubj));
+      return rdfSerializer.serialize(streamifyArray(quadsWithSubj), { contentType: 'text/turtle' });
+    },
 
     //TODO add import, importStream, conditionalImport, totalItems
     async getData(url) {
@@ -96,14 +118,14 @@ export default {
 
       //var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/a.nt';
       var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/.root.nt'
-      standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a.nt';
+      standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a2.nt';
       //standardURL = 'https://github.com/Mikxox/visualizer/blob/main/src/assets/stops_a.nt';
 
       if(url){
         standardURL = url;
       } else if (this.data_url){
         standardURL = this.data_url;
-        // This means user gave an url for a new collection so we need to clear whatever data we already had
+        // This means user gave a url for a new collection so we need to clear whatever data we already had
         this.jsondata = this.empty;
         d3.select("#extra").selectAll("g").remove();
         this.svgHolder = null;
@@ -123,75 +145,6 @@ export default {
         // quads is an array of RDF Quads (RDF.Quad[])
         extractMetadata(this.qtext).then(metadata => {
           console.log(metadata);
-          let store = new N3.Store(this.qtext)
-          // console.log(store.getQuads(null, 'https://w3id.org/tree#shape', null, null).map(quad => quad.object.id));
-          // console.log(store.getQuads(null, 'http://www.w3.org/ns/shapetrees#validatedBy', null, null));
-
-          var shapeIds = [];
-          shapeIds = shapeIds.concat(store.getQuads(null, 'https://w3id.org/tree#shape', null, null).map(quad => quad.object));
-          shapeIds = shapeIds.concat(store.getQuads(null, 'http://www.w3.org/ns/shapetrees#validatedBy', null, null).map(quad => quad.object));
-          console.log(shapeIds);
-          // for (let tempS of shapeIds){
-          //   console.log(this.extractMember(tempS));
-          // }
-
-          //let shapeT = "_:BshapeX5Fnode\n sh:targetClass <http://vocab.gtfs.org/terms#Stop> ;\n sh:property [\n  sh:path <http://schema.org/name> ;\n  sh:minCount 1 ;\n ] .";
-
-
-          async function loadDatasetX (stream) {
-            //console.log("stream: ", fs.createReadStream(filePath));
-            //const stream = fs.createReadStream(filePath);
-            //return stream;
-            const parser = new ParserN3({ factory });
-            return factory.dataset().import(parser.import(await stream));
-          }
-
-          const testq = store.getQuads(shapeIds[0], null, null, null)
-          //rdfSerializer.serialize(streamifyArray(testq), { contentType: 'text/turtle' });
-          // const shapes = await loadDataset('my-shapes.ttl')
-          // const data = await loadDataset('my-data.ttl')
-
-          // const shapesX = streamifyArray(testq);
-          // const dataX = streamifyArray(testq);
-
-          const shapesX = rdfSerializer.serialize(streamifyArray(testq), { contentType: 'text/turtle' });
-          const dataX = rdfSerializer.serialize(streamifyArray(testq), { contentType: 'text/turtle' });
-
-          //console.log(typeof(shapesX))
-
-          // console.log(loadDatasetX('./assets/shape_test.ttl'));
-
-          // rdfSerializer.serialize(streamifyArray(testq), { contentType: 'text/turtle' }).then(shapes => {
-            // rdfSerializer.serialize(streamifyArray(testq), { contentType: 'text/turtle' }).then(data => {
-            loadDatasetX(shapesX).then(shapes => {
-              loadDatasetX(dataX).then(data => {
-              const validator = new SHACLValidator(shapes, { factory })
-              const report = validator.validate(data)
-
-              //validator.validate(data).then(report => {
-                // Check conformance: `true` or `false`
-                console.log(report.conforms)
-
-                for (const result of report.results) {
-                  // See https://www.w3.org/TR/shacl/#results-validation-result for details
-                  // about each property
-                  console.log(result.message)
-                  console.log(result.path)
-                  console.log(result.focusNode)
-                  console.log(result.severity)
-                  console.log(result.sourceConstraintComponent)
-                  console.log(result.sourceShape)
-                }
-
-                // Validation report as RDF dataset
-                console.log(report.dataset)
-              //})
-
-
-            })
-          })
-
-
 
           if (metadata.collections.size > 1){
             let errorText = "";
@@ -288,11 +241,14 @@ export default {
             //TODO add member visualisation
             //TODO check what happens when as:items comes from a node not the collection
             if (collectionObj.member){
+              let membIds = [];
               for (var memb of collectionObj.member){
+                membIds.push(memb['@id']);
                 this.extractMember(memb['@id']).then(mtemp => this.members[standardURL].push(mtemp));
                 //let mtemp = await this.extractMember(memb['@id']);
                 //this.members[standardURL].push(this.extractMember(memb['@id']));
               }
+              this.validateShape(membIds);
             } else {
               this.remarks += "Found no members for " + standardURL + ".\n";
             }
@@ -383,6 +339,95 @@ export default {
 
         })
       });
+    },
+
+    validateShape(membIds){
+      let store = new N3.Store(this.qtext)
+      // console.log(store.getQuads(null, 'https://w3id.org/tree#shape', null, null).map(quad => quad.object.id));
+      // console.log(store.getQuads(null, 'http://www.w3.org/ns/shapetrees#validatedBy', null, null));
+
+      var shapeIds = [];
+      shapeIds = shapeIds.concat(store.getQuads(null, 'https://w3id.org/tree#shape', null, null).map(quad => quad.object));
+      shapeIds = shapeIds.concat(store.getQuads(null, 'http://www.w3.org/ns/shapetrees#validatedBy', null, null).map(quad => quad.object));
+
+      if (shapeIds.size > 1){
+        alert("ERROR: found multiple shapes " + JSON.stringify(shapeIds));
+      }
+      if (shapeIds.size == 0){
+        this.remarks += "URL did not include a shacl shape given via tree:shape or st:validatedBy.\n"
+      }
+
+      // console.log(shapeIds);
+      // for(let shapeId of shapeIds){
+      //   console.log("all:? ", this.extractShape(store, shapeId));
+      // }
+      // for (let tempS of shapeIds){
+      //   console.log(this.extractMember(tempS));
+      // }
+
+      //let shapeT = "_:BshapeX5Fnode\n sh:targetClass <http://vocab.gtfs.org/terms#Stop> ;\n sh:property [\n  sh:path <http://schema.org/name> ;\n  sh:minCount 1 ;\n ] .";
+
+
+      async function loadDatasetX (stream) {
+        //console.log("stream: ", fs.createReadStream(filePath));
+        //const stream = fs.createReadStream(filePath);
+        //return stream;
+        const parser = new ParserN3({ factory });
+        return factory.dataset().import(parser.import(await stream));
+      }
+
+      //const testq = store.getQuads(shapeIds[0], null, null, null)
+      //rdfSerializer.serialize(streamifyArray(testq), { contentType: 'text/turtle' });
+      // const shapes = await loadDataset('my-shapes.ttl')
+      // const data = await loadDataset('my-data.ttl')
+
+      // const shapesX = streamifyArray(testq);
+      // const dataX = streamifyArray(testq);
+
+      const shapesX = this.extractShape(store, shapeIds[0]);
+      const dataX = this.extractShapeMembers(store, membIds);
+
+      // console.log("shape: ", shapesX);
+      // console.log("data", dataX);
+
+      //const shapesX = rdfSerializer.serialize(streamifyArray(testq), { contentType: 'text/turtle' });
+      //const dataX = rdfSerializer.serialize(streamifyArray(testq), { contentType: 'text/turtle' });
+
+      //console.log(typeof(shapesX))
+
+      // console.log(loadDatasetX('./assets/shape_test.ttl'));
+
+      // rdfSerializer.serialize(streamifyArray(testq), { contentType: 'text/turtle' }).then(shapes => {
+        // rdfSerializer.serialize(streamifyArray(testq), { contentType: 'text/turtle' }).then(data => {
+        loadDatasetX(shapesX).then(shapes => {
+          loadDatasetX(dataX).then(data => {
+            console.log("shapes: ", shapes);
+            console.log("data: ", data);
+          const validator = new SHACLValidator(shapes, { factory })
+          const report = validator.validate(data)
+
+          //validator.validate(data).then(report => {
+            // Check conformance: `true` or `false`
+            console.log(report.conforms)
+
+            for (const result of report.results) {
+              // See https://www.w3.org/TR/shacl/#results-validation-result for details
+              // about each property
+              console.log(result.message)
+              console.log(result.path)
+              console.log(result.focusNode)
+              console.log(result.severity)
+              console.log(result.sourceConstraintComponent)
+              console.log(result.sourceShape)
+            }
+
+            // Validation report as RDF dataset
+            console.log(report.dataset)
+          //})
+
+
+        })
+      })
     },
 
     drawing(metadata) {

@@ -1,0 +1,796 @@
+<https://data.cultureelerfgoed.nl/term/id/cht/213b8f8a-1760-419a-a07c-635f02598a1d>
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "Ablebond 342-1"@en ;
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "Ablebond 342-1"@nl ;
+        <http://www.w3.org/2004/02/skos/core#altLabel>  "Ablebond (342-1)"@en ;
+        <http://www.w3.org/2004/02/skos/core#altLabel>  "Ablebond (342-1)"@nl .
+
+<https://data.cultureelerfgoed.nl/term/id/cht/e0758b74-c147-40b1-b818-95caf93d60e7>
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "Europees Terrestrisch Referentiesysteem 1989"@nl ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
+        <http://www.w3.org/2004/02/skos/core#altLabel>  "Europese Terrestrische Referentie Systeem 1989"@nl ;
+        <http://www.w3.org/2004/02/skos/core#altLabel>  "European Terrestrial Reference System 1989"@nl ;
+        <http://www.w3.org/2004/02/skos/core#altLabel>  "ETRS89"@nl ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/cht#CHTconcept> ;
+        <http://www.w3.org/2004/02/skos/core#altLabel>  "Europese Terrestrische Referentiesysteem 1989"@nl .
+
+<https://data.cultureelerfgoed.nl/term/id/cht/84f4a908-deba-4f90-b4a6-61d4b234ed46>
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "gewelfde voet met hol geprofileerde rand, de sterk geprofileerde / schacht eerst concaaf, dan wijd-klokvormig 1 concaafkomvormig, hyperboloïdisch"@nl .
+
+<https://data.cultureelerfgoed.nl/term/id/cht/4dec44e6-2164-401c-95d0-6a2701f9674f>
+        <http://www.w3.org/2004/02/skos/core#altLabel>  "1d"@nl .
+
+<https://data.cultureelerfgoed.nl/term/id/cht/65da09fa-7564-417c-a889-7ca8f7657e80>
+        <http://www.w3.org/2004/02/skos/core#altLabel>  "C-14-datering"@nl ;
+        <http://www.w3.org/2004/02/skos/core#altLabel>  "Koolstof14-datering"@nl ;
+        <http://www.w3.org/2004/02/skos/core#altLabel>  "Koolstof-14-datering"@nl ;
+        <http://www.w3.org/2004/02/skos/core#altLabel>  "Koolstof-14-methode"@nl ;
+        <http://www.w3.org/2004/02/skos/core#altLabel>  "Koolstof-14 datering"@nl ;
+        <http://www.w3.org/2004/02/skos/core#altLabel>  "Radiocarbondatering"@nl ;
+        <http://www.w3.org/2004/02/skos/core#altLabel>  "C14-methode"@nl ;
+        <http://www.w3.org/2004/02/skos/core#altLabel>  "koolstof 14 datering"@nl ;
+        <http://www.w3.org/2004/02/skos/core#altLabel>  "koolstof 14-datering"@nl .
+
+<https://data.cultureelerfgoed.nl/term/id/cht/0106f2dd-6552-4667-88e6-f7dc382f466f>
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/ad7cf63a-fb98-4dc3-85b0-2f32e1427ef1> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/rce#Source> ;
+        <http://purl.org/dc/terms/created>  "2017-03-01T08:32:15Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/e2e47a22-fe85-4697-8e8e-ba0e5628f4ea> ;
+        <http://schema.semantic-web.at/ppt/inSubtree>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/d62a2380-485e-44d8-a762-aefe23e47a78> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/2ccbf890-cb19-46ee-bd0c-99a6ca55fa27> ;
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/moutp> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/aad68581-3960-4faf-9758-8ff6d65810d3> ;
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/7ca1a6b4-85ce-4244-a097-0ad177b5575c> ;
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "Flevobericht 404 (1996)"@nl .
+<https://data.cultureelerfgoed.nl/term/id/cht/015b8c18-d42f-4d82-9703-c87879f45ae3>
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "DDM-1 rijtuigen"@nl ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasSource>  <https://data.cultureelerfgoed.nl/term/id/cht/e2d3784f-38c0-4af2-b22a-ac6315a6c932> ;
+        <http://purl.org/dc/terms/created>  "2016-10-27T14:20:34Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/45c7511d-182a-476b-b1f6-d8ce740b9fc3> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/cht#hasObjectTypeCategory>  <https://data.cultureelerfgoed.nl/term/id/cht/d7a6f7e8-e16d-480c-b04e-618b19986d78> ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/moutp> ;
+        <http://www.w3.org/2004/02/skos/core#altLabel>  "DDM-1 rijtuig"@nl ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/superadmin> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/cht#CHTconcept> ;
+        <http://www.w3.org/2004/02/skos/core#scopeNote>  "Om aan de toenemende vraag te kunnen voldoen van reizigers uit Noord Holland naar Amsterdam is begin jaren ’80 uitgekeken naar een manier om aan deze vraag te kunnen voldoen, zonder het verlengen van perrons. De oplossing werd gevonden in het aanschaffen van dubbeldeksrijtuigen (Dubbel Deks Materieel)."@nl ;
+        <http://schema.semantic-web.at/ppt/inSubtree>  <https://data.cultureelerfgoed.nl/term/id/cht/bece25a6-eb64-46e8-85a8-2a7991f02a2c> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/b532325c-dc08-49db-b4f1-15e53b037ec3> .
+
+<https://data.cultureelerfgoed.nl/term/id/cht/0372905c-5528-4a3d-89bd-a45fff58c760>
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/7ca1a6b4-85ce-4244-a097-0ad177b5575c> ;
+        <http://purl.org/dc/terms/created>  "2016-09-29T11:47:01Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/moutp> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/rce#Source> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "Uithangborden en uitsteektekens : Dordtse gevelreclame in vroeger tijd / M. Barnhoorn, Dordrecht 1988"@nl ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
+        <http://schema.semantic-web.at/ppt/inSubtree>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> .
+<https://data.cultureelerfgoed.nl/term/id/cht/0d75740f-adcc-4903-928a-35a2be03eb39>
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/7ca1a6b4-85ce-4244-a097-0ad177b5575c> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "Holten en strubben in het stroomdal van de Drentse Aa / Smeenge, H. 2006.  De Levende Natuur 107"@nl .
+
+<https://data.cultureelerfgoed.nl/term/id/cht/0df7d850-6626-4691-9ae3-237fc2866652>
+        <http://purl.org/dc/terms/created>  "2016-09-29T11:46:57Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/7ca1a6b4-85ce-4244-a097-0ad177b5575c> ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/moutp> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/rce#Source> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
+        <http://schema.semantic-web.at/ppt/inSubtree>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "De zon als klok: zonnewijzers / J.A.F de Rijk, Utrecht 1983"@nl .
+
+<https://data.cultureelerfgoed.nl/term/id/cht/0e28cc8c-5b56-4568-b437-436a8d410f4a>
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/7ca1a6b4-85ce-4244-a097-0ad177b5575c> ;
+        <http://purl.org/dc/terms/created>  "2016-09-29T11:46:59Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/moutp> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/rce#Source> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
+        <http://schema.semantic-web.at/ppt/inSubtree>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "Jurriaan Andriessen (1742-1819) 'behangselschilder' / Richard Harmanni, 2006"@nl .
+
+<https://data.cultureelerfgoed.nl/term/id/cht/0e5d5d36-cf07-4ba2-b4d3-a82f46ce5321>
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/1f536af0-1dd4-49af-957f-026d4794dde8> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/4b63f1b7-63bb-48fd-8cfb-81d4e2775d9a> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/426e6df1-7c8c-446f-925b-368d2b6fc26b> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "Grenspalen in Nederland / T. Brouwer, Zutphen 1978"@nl .
+
+<https://data.cultureelerfgoed.nl/term/id/cht/0f799e88-2dc7-4b61-952f-17740eeb329d>
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/3fa943db-ec0b-4900-8912-900f3105ade2> ;
+        <http://www.w3.org/2004/02/skos/core#altLabel>  "schuilplaats 1918 II"@nl ;
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "schuilplaatsen 1918 II"@nl ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/cht#CHTconcept> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasSourceHolder>  <https://data.cultureelerfgoed.nl/term/id/cht/030cf4e4-16de-450f-9209-82b266c43042> ;
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/b532325c-dc08-49db-b4f1-15e53b037ec3> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> .
+
+<https://data.cultureelerfgoed.nl/term/id/cht/11f197e5-364f-4b85-bb50-46b7ea70511c>
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "Het waagstuk : wegen en waaggebouwen in Nederland / Amsterdam, 1990"@nl ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/5d47c3e3-fa67-4185-bfdc-fb3223d63407> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/4696d9ad-b1fd-43d7-b1a2-9354fee5696f> ;
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/7ca1a6b4-85ce-4244-a097-0ad177b5575c> .
+
+<https://data.cultureelerfgoed.nl/term/id/cht/12ca23f7-9988-4ad1-902b-98fafca44c7f>
+        <http://purl.org/dc/terms/created>  "2016-09-29T11:46:58Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/d89885c9-677d-40f7-8c23-e9cab3fb1223> ;
+        <http://schema.semantic-web.at/ppt/inSubtree>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "Het winkellandschap van Amsterdam : stedelijke structuur en winkelbedrijf in de vroegmoderne en moderne tijd, 1550-2000."@nl ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/moutp> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/91621e05-6710-44e2-a874-e952ee90eab9> ;
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/7ca1a6b4-85ce-4244-a097-0ad177b5575c> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/8870799b-487f-455c-822a-21dc94eaf501> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/rce#Source> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/d3ab881e-dc9b-490e-b57b-2fb5086db401> .
+
+<https://data.cultureelerfgoed.nl/term/id/cht/13627228-30ce-4c0b-827e-53e16d080f43>
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/7ca1a6b4-85ce-4244-a097-0ad177b5575c> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/e0df4f96-8721-4633-b470-5ce883da8d8d> ;
+        <http://purl.org/dc/terms/created>  "2016-09-29T11:46:59Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/moutp> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/rce#Source> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
+        <http://schema.semantic-web.at/ppt/inSubtree>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "Militair woordenboek (2 dln.) / H.M.F. Landolt, A.W. Sijthoff, Leiden 1861"@nl .
+<https://data.cultureelerfgoed.nl/term/id/cht/19e4b0a7-9569-4558-8f02-59aadd2f18da>
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "Ten Cate & Maarleveld 1977"@nl .
+
+<https://data.cultureelerfgoed.nl/term/id/cht/1cc1fc71-e4ec-4943-b991-df649509ad5d>
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "afwerken"@nl ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasSourceHolder>  <https://data.cultureelerfgoed.nl/term/id/cht/1576adc6-1af1-44d0-9d46-593eb6bcad09> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
+        <http://www.w3.org/2004/02/skos/core#altLabel>  "afwerking"@nl ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasSource>  <https://data.cultureelerfgoed.nl/term/id/cht/c41d3b25-4a9a-4a96-b273-79e2312c61a2> ;
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/4b88257a-99a9-48f3-8bf3-a25765587b3e> ;
+        <http://www.w3.org/2004/02/skos/core#scopeNote>  "Het afwerken van een oppervlak is een behandeling om een specifiek effect te bereiken, bijvoorbeeld het polijsten van een aanvulling. Het afwerken is het laatste stadium van een conserveringsbehandeling, bijvoorbeeld het in de was zetten van een oppervlak. Afwerken is de laatste handeling bij metaalbewerking, zoals polijsten of planeren. Een aanvulling afwerken doet men voorafgaande aan het retoucheren, bijvoorbeeld bij de conservering van ceramiek. De afwerking geeft een oppervlak specifieke eigenschappen, bijvoorbeeld glans of impasto."@nl ;
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/b532325c-dc08-49db-b4f1-15e53b037ec3> ;
+        <http://www.w3.org/2004/02/skos/core#altLabel>  "finishing (1)"@en ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/superadmin> ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/moutp> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> .
+<https://data.cultureelerfgoed.nl/term/id/cht/2240b58b-53ab-4392-98d0-9df155627dcc>
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/7ca1a6b4-85ce-4244-a097-0ad177b5575c> ;
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "Handboek restauratieschilderen / Heesters, J.H.P., 1999"@nl ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/moutp> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/rce#Source> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/d14c0e3d-6163-456d-b575-7833840b6981> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
+        <http://schema.semantic-web.at/ppt/inSubtree>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/074ca7c2-30f2-4674-b8c5-51571f50edc8> ;
+        <http://purl.org/dc/terms/created>  "2016-09-29T11:46:58Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> .
+<https://data.cultureelerfgoed.nl/term/id/cht/29ca407a-9fff-4507-80cc-44098c9b841f>
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/f297de93-2525-45de-800c-2ee46036a3cc> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/rce#Source> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/d2da3cec-61ff-4b94-9818-30cf5e142379> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/e7021551-f7d3-4ae3-89de-631eddd04127> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/203a512c-2a95-45df-aadb-f8772b5260b2> ;
+        <http://schema.semantic-web.at/ppt/inSubtree>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "Handboek voor het restaureren van schilderijen / Knut, N., Busch, J., 1999"@nl ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/d5fcbafa-c50b-463f-9998-1be0f2fbc59e> ;
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/9b95e0b4-9b0d-4ae4-bd0b-63efd6e2ebb6> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/ad1675ae-30eb-4f86-bfe2-9c93cea1deac> ;
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/7ca1a6b4-85ce-4244-a097-0ad177b5575c> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/5785f6b8-d378-4fb6-94bd-544f98a0c4d2> .
+
+<https://data.cultureelerfgoed.nl/term/id/cht/2debf7e2-f3a8-401d-8981-8a90e82247f3>
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "De sociologische structuur onzer taal II. L.C.G. Malmberg, Nijmegen 1914"@nl ;
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/moutp> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/rce#Source> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
+        <http://purl.org/dc/terms/created>  "2016-09-29T11:46:57Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/7ca1a6b4-85ce-4244-a097-0ad177b5575c> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/9e13f07b-2108-421d-9201-8aedd270d93a> ;
+        <http://schema.semantic-web.at/ppt/inSubtree>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> .
+
+<https://data.cultureelerfgoed.nl/term/id/cht/2e0b068c-5ad9-421e-acdf-16ae66edf450>
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/43124636-6bba-417b-8524-82be5c5868fb> ;
+        <http://schema.semantic-web.at/ppt/inSubtree>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <http://purl.org/dc/terms/created>  "2016-09-29T11:47:03Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/07bd69bc-80f6-4463-9dc9-33f7678ced82> ;
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/moutp> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/rce#Source> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/7ca1a6b4-85ce-4244-a097-0ad177b5575c> ;
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "Zo goed als oud / Ex, N.,  1993"@nl .
+<https://data.cultureelerfgoed.nl/term/id/cht/332b6d7c-c13d-4ab6-becd-4547d3e4aa08>
+        <http://purl.org/dc/terms/created>  "2016-09-29T11:46:57Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/7ca1a6b4-85ce-4244-a097-0ad177b5575c> ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/moutp> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/rce#Source> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
+        <http://schema.semantic-web.at/ppt/inSubtree>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/89fe2c8d-f285-4b23-aaed-c4a058f5a0a4> ;
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "De vaktaal van de Nederlandse Klompenmakers / J.J.A. Van Bakel, Nijmegen 1958"@nl .
+
+<https://data.cultureelerfgoed.nl/term/id/cht/34d7f857-d048-4606-bb0f-9bb841ee7fb6>
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
+        <http://www.w3.org/2004/02/skos/core#scopeNote>  "Primal WS is een acrylaathars in een waterige dispersie. Het wordt gebruikt als verstevigingsmiddel voor muurschilderingen en opgegraven materiaal, ook voor glas. Het is met name geschikt voor kwetsbare, doordrenkte materialen, wegens de oplosbaarheid in water en neutrale pH. Er zijn twijfels geuit over de stabiliteit op lange termijn."@nl ;
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/b532325c-dc08-49db-b4f1-15e53b037ec3> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasSource>  <https://data.cultureelerfgoed.nl/term/id/cht/c41d3b25-4a9a-4a96-b273-79e2312c61a2> ;
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "Primal WS (-12,24,or 50)"@en ;
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "Primal WS (-12,24,or 50)"@nl ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasSourceHolder>  <https://data.cultureelerfgoed.nl/term/id/cht/1576adc6-1af1-44d0-9d46-593eb6bcad09> .
+
+<https://data.cultureelerfgoed.nl/term/id/cht/360534d3-4f27-4b76-bcf3-cbd10a8a19f5>
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/rce#Source> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/7a9d0a8f-6021-4a6f-aee0-d1860d49760c> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/ea241b5d-f8f8-4998-9614-a056aae7396d> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/e5387fb6-31ef-49de-80e9-a206519eba3c> ;
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "Historische houtconstructies in Nederland / G. Behrends, 1996"@nl ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/d655b63b-6a4c-4fcb-a0ca-a78dab9c2028> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/cfbe30e9-bd83-44ae-b6d3-9117c83a4af0> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/d4703f66-a9d2-4121-ac40-8cbda2b2fb19> ;
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/7ca1a6b4-85ce-4244-a097-0ad177b5575c> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/4ce35e56-0ab7-4479-a015-ae4e04dff749> ;
+        <http://purl.org/dc/terms/created>  "2016-09-29T11:46:58Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/9a49d45f-3ae2-4bc1-b97d-339dd7609640> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/f7668293-7cf0-4c1a-8750-765c5109092e> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/a540da42-ec0a-4261-b6ce-8dc1cdebc028> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/6c78ca3d-807b-4173-9d14-17fc9d113ab5> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/bcfda1e8-c7a1-4582-9908-80ad483ee2ca> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/738a143f-a529-4dc0-a74c-4b66b7174356> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/a0311776-53c0-4478-9b5e-0487d5ddd9c8> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/45be6134-2995-4216-b0c7-675dfbb0deae> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/a741a708-a8c4-436b-b55a-264cd25dcf0a> ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/moutp> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/b3c80195-3d8d-422e-8b72-fb992e34ac8d> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/63a55de7-55fb-427d-af9d-3924aa90f6c1> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/4706ed0e-4eff-4fa6-ac26-94fa06ed8a9a> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/a01fb7e7-b679-4013-937a-a4b57262faf6> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/b4317c99-6cc4-4b75-9bb1-82d1960c2e1b> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/b14c3c40-c2f4-456c-95ea-f68034d101ed> ;
+        <http://schema.semantic-web.at/ppt/inSubtree>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/823c7349-1c45-40bd-8105-95242ca6d6aa> .
+<https://data.cultureelerfgoed.nl/term/id/cht/390ca785-7c5d-4c21-98ca-bd401f159a21>
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/7ca1a6b4-85ce-4244-a097-0ad177b5575c> ;
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "Zonnewijzer / P. Terpstra, Groningen Djakarta, 1953"@nl ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/moutp> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/rce#Source> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <http://purl.org/dc/terms/created>  "2016-09-29T11:47:03Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
+        <http://schema.semantic-web.at/ppt/inSubtree>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/5ea60f2e-ad3f-4f54-94ee-1ea8ddcc7552> .
+<https://data.cultureelerfgoed.nl/term/id/cht/3e1b17af-0b7b-4a47-95fb-2fee8bdb5fad>
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/e4240893-a609-4218-a53a-1d00177de24a> ;
+        <http://purl.org/dc/terms/created>  "2017-03-02T10:56:06Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://schema.semantic-web.at/ppt/inSubtree>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/moutp> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/rce#Source> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/7a322ac3-5545-4dbe-b939-007977458ea6> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/e8e1a86f-e0bd-4c88-a548-587b0ea5a8d8> ;
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/7ca1a6b4-85ce-4244-a097-0ad177b5575c> ;
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "Bouwstoffen / L. Ploos van Amstel jr, 's-Gravenhage-Leiden-Naarden, 1960"@nl .
+
+<https://data.cultureelerfgoed.nl/term/id/cht/3e9a8cb2-78a3-410f-95c1-f6cb763b14d2>
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/2aa37e92-118d-451a-a409-fba79379cb35> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/2ac4ae17-5c4a-4a2d-bb9e-8bb3a295968d> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/1b7fefc0-78f7-49ca-82f3-1a7a0ad3b02d> ;
+        <http://schema.semantic-web.at/ppt/inSubtree>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/b456c798-caad-4a74-ad1e-bfdd4e8429dc> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/690c77b9-0acc-4082-aac6-7f6e9595f1da> ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/superadmin> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/ea29873c-b0dc-4483-aa27-bab212695219> ;
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "Het weke dak: riet- en strobedekkingen / [M. van Hemert, M.W.J. van Rooden, H.Th.D. Dijkstra], RV bijdrage 11, Zeist 1990"@nl ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/14f1211b-5cdb-4922-9cbd-3e6602ead829> ;
+        <http://purl.org/dc/terms/created>  "2016-11-22T14:50:40Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/9ee41d7a-1caa-43f9-b5ba-e00a348ccf8c> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/a871b31f-bdfd-4df5-a917-44e7dd0af877> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/a86488c2-1da1-407d-aa93-e932ede172fe> ;
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/f5c66c34-0229-4684-bdbe-94b1852ca982> ;
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/7ca1a6b4-85ce-4244-a097-0ad177b5575c> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/2b8ef55d-2ac2-4914-88c0-867b11dc4f8a> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/76268eae-7987-41e6-92ff-e3d143ba8a82> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/759a3d64-e422-4d3a-b224-5d391c8c3ab0> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/b3e4eb11-0ef1-41d0-a94e-f9ff3a04d456> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/87c66577-bb54-4b78-8e65-8cb641eb3589> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/c199d7bd-193a-4b69-8c84-e068eb4d0613> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/39d48d19-2798-4167-af89-5e48a92cc821> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/rce#Source> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/9d6c9652-1397-41b8-abb2-c10b35eff1e8> .
+<https://data.cultureelerfgoed.nl/term/id/cht/44d10dbf-ecdf-4fcb-a290-357b236b44d0>
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/4b88257a-99a9-48f3-8bf3-a25765587b3e> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasSource>  <https://data.cultureelerfgoed.nl/term/id/cht/c41d3b25-4a9a-4a96-b273-79e2312c61a2> ;
+        <http://www.w3.org/2004/02/skos/core#scopeNote>  "Verdoeken is het vervangen van eerdere bedoeking van een schilderij door een nieuwe bedoeking. De oude bedoeking en de lijm worden verwijderd en het schilderij wordt met nieuwe lijm gehecht aan een nieuw steundoek."@nl ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasSourceHolder>  <https://data.cultureelerfgoed.nl/term/id/cht/1576adc6-1af1-44d0-9d46-593eb6bcad09> ;
+        <http://www.w3.org/2004/02/skos/core#altLabel>  "transfer (1)"@en ;
+        <http://www.w3.org/2004/02/skos/core#altLabel>  "verdoeking"@nl ;
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "verdoeken"@nl ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/moutp> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/superadmin> ;
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/b532325c-dc08-49db-b4f1-15e53b037ec3> .
+
+<https://data.cultureelerfgoed.nl/term/id/cht/462ed0c6-0a18-41a9-a634-caeca1780d04>
+        <http://schema.semantic-web.at/ppt/inSubtree>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/7f637b58-1630-4d42-b018-188a48872103> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/216f44ec-d382-412f-9c7f-fdde2146784e> ;
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/7ca1a6b4-85ce-4244-a097-0ad177b5575c> ;
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "Flevobericht 140 (1979)"@nl ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/84f15929-1242-4cf7-854b-bab12a4de351> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/aad68581-3960-4faf-9758-8ff6d65810d3> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/e8ab7990-3522-403d-b516-130a3d263b2a> ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/moutp> ;
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/e932f49e-2da6-4fb1-a9a1-0f533533da34> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/fff03a23-2187-4ecd-a641-6d11cd630394> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/6f00e69d-74cb-4dfa-a3bb-90d20642f799> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/24f41ced-e67d-45d7-b795-1f2b84def482> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/6c9a429d-61ef-479c-b95b-36e576822389> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/949a5d5f-a335-4985-a2e2-88d71e433d57> ;
+        <http://purl.org/dc/terms/created>  "2017-03-01T08:11:30Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/62c1250b-bc07-4c34-a4ef-d870573998fd> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/b0c5e4fb-0688-4fe3-bad7-ea641143dc85> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/rce#Source> .
+
+<https://data.cultureelerfgoed.nl/term/id/cht/46509dcb-1501-4eef-b373-a06886f9bd17>
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "Isolatie, isolatie tegen warmte en koude, vochtwering, geluidsisolatie, luchtdoorlaat van bouwmaterialen, en constructieonderdelen  / K. Möller en J. Csiszár, 1937"@nl ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/rce#Source> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/49281a0c-cdcf-4511-930b-b5dfb41d32f3> ;
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/7ca1a6b4-85ce-4244-a097-0ad177b5575c> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/6e59eee8-cb51-43a7-ab02-be741c225ad5> ;
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/moutp> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
+        <http://schema.semantic-web.at/ppt/inSubtree>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/1f918696-d7ae-48f6-98ac-a14f8c505ef7> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/9d976733-c62e-4d0e-a5f3-32952b23ba69> ;
+        <http://purl.org/dc/terms/created>  "2016-09-29T11:46:58Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> .
+
+<https://data.cultureelerfgoed.nl/term/id/cht/46905a2d-cbde-4cea-b65a-7d62c44ab74b>
+        <http://schema.semantic-web.at/ppt/inSubtree>  <https://data.cultureelerfgoed.nl/term/id/cht/bece25a6-eb64-46e8-85a8-2a7991f02a2c> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
+        <http://www.w3.org/2004/02/skos/core#altLabel>  "drieramer (den haag)"@nl ;
+        <http://www.w3.org/2004/02/skos/core#altLabel>  "21-15"@nl ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/superadmin> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/cht#CHTconcept> ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/moutp> .
+<https://data.cultureelerfgoed.nl/term/id/cht/497ec16a-3943-47dd-a9ab-f88520d9bf95>
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
+        <http://schema.semantic-web.at/ppt/inSubtree>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "De schutterij te Haarlem / C. van de Haar, 1974"@nl ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/moutp> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/rce#Source> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <http://purl.org/dc/terms/created>  "2016-09-29T11:46:57Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/7ca1a6b4-85ce-4244-a097-0ad177b5575c> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/26a8d984-7817-4def-abfa-a491918ce0f2> .
+<https://data.cultureelerfgoed.nl/term/id/cht/4e8dc6f1-d124-4ceb-a6cf-981135be49bc>
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/157daa81-445b-45cc-9456-02a093c8cbd1> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/31ff3f53-ded2-49e0-8a36-4bab310504a4> ;
+        <http://schema.semantic-web.at/ppt/inSubtree>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/136f900e-2ff5-4a23-bb3d-ea442824a033> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/2423b778-fd65-43bd-ae31-d084492c17e7> ;
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "Watertorens in Nederland / Henk van der Veen, 1994"@nl ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/aad68581-3960-4faf-9758-8ff6d65810d3> ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/moutp> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/6d3f020b-3f78-4b45-891d-0c84cb7b4436> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/d9b006fd-01e2-4cba-9678-9f5609985273> ;
+        <http://purl.org/dc/terms/created>  "2017-03-01T08:37:01Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/a8e39631-d3d0-46d6-8e25-b74ad4fc70e5> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/43e3f59e-131d-444b-a74b-af5b752a6de7> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/8368dc96-1b05-4e83-8ca8-f07b100e4104> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/4387e61f-94f9-4f45-9177-2df7dc265f04> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/5ade462c-1df1-4329-9453-d47450e1ec86> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/6aad4f03-7474-42b1-987f-242e40e40795> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/d3660432-99f2-490b-9866-f2f1ab7b583a> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/2833d4df-0399-454a-89b5-1a700abbe062> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/920ef599-93d9-49f1-95f3-ec5ed31a30d8> ;
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/7ca1a6b4-85ce-4244-a097-0ad177b5575c> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/890af9d8-e121-4f3a-b01a-c41a370cff24> ;
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/294a5757-a62d-4eb5-b4c8-bab15a55914d> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/1fccfaa6-b387-4869-b3e6-9e5d2f9f4485> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/f022afe0-a035-447b-99e2-8b2159c8f60e> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/7c12f746-9161-43bc-866d-bfe36e17413c> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/bdbc4bba-2509-43ad-867f-961cc3e4bc11> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/rce#Source> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/3bf5e756-b53f-449b-aaf7-aca3eb38a99e> .
+<https://data.cultureelerfgoed.nl/term/id/cht/54273bbe-0f5d-4fa8-bdff-259316842cb6>
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/6d4b6aba-4df5-4895-9cab-9bdb979c5bd2> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/cht#CHTconcept> ;
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/b532325c-dc08-49db-b4f1-15e53b037ec3> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "HXTAL Nyl-1"@en ;
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "HXTAL Nyl-1"@nl ;
+        <http://www.w3.org/2004/02/skos/core#scopeNote>  "Hxtal is een epoxyhars gemaakt uit de diglycidylether van bisfenol A en triethyleendiamine."@nl ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasSourceHolder>  <https://data.cultureelerfgoed.nl/term/id/cht/1576adc6-1af1-44d0-9d46-593eb6bcad09> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasSource>  <https://data.cultureelerfgoed.nl/term/id/cht/c41d3b25-4a9a-4a96-b273-79e2312c61a2> .
+
+<https://data.cultureelerfgoed.nl/term/id/cht/562af8f5-9636-42f5-8c6a-cb75ba5174f2>
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
+        <http://schema.semantic-web.at/ppt/inSubtree>  <https://data.cultureelerfgoed.nl/term/id/cht/bece25a6-eb64-46e8-85a8-2a7991f02a2c> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasSource>  <https://data.cultureelerfgoed.nl/term/id/cht/03d9278c-7753-40c9-9946-4826007255fa> ;
+        <http://www.w3.org/2004/02/skos/core#altLabel>  "twaalfvoetsjol"@nl ;
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/b532325c-dc08-49db-b4f1-15e53b037ec3> ;
+        <http://www.w3.org/2004/02/skos/core#scopeNote>  "Overnaads gebouwde tweemansmiddenzwaardboot, in 1914 ontworpen door de Engelsman George Cockshott; de romp is geheel open; de tuigage bestaat uit een cattuig met een loggerzeil met zeer steile gaffel en boom."@nl ;
+        <http://purl.org/dc/terms/created>  "2016-10-27T14:20:33Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/44003694-5228-42b4-8aff-b20947e930db> ;
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "twaalfvoetsjollen"@nl ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/superadmin> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/cht#CHTconcept> ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/moutp> ;
+        <http://www.w3.org/2004/02/skos/core#altLabel>  "12-voetsjol"@nl ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
+        <http://www.w3.org/2004/02/skos/core#altLabel>  "12-voetsjollen"@nl .
+<https://data.cultureelerfgoed.nl/term/id/cht/5a3ddc8f-1c73-454e-bdcb-2e08c304a1d0>
+        <http://purl.org/dc/terms/created>  "2016-09-29T11:46:57Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/feeb24fe-311b-45bd-bbf5-f8370cb63145> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/rce#Source> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/fb666665-ca6a-4ca0-aa9c-ed28271657a5> ;
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/7ca1a6b4-85ce-4244-a097-0ad177b5575c> ;
+        <http://www.w3.org/2004/02/skos/core#prefLabel>  "Compendium Bruggen, 1994"@nl ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/1c318fe7-d280-4fef-a63c-fbf65b876e40> ;
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/moutp> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
+        <http://schema.semantic-web.at/ppt/inSubtree>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/9e5ffc8d-9ced-471b-9ebf-4dd2db2bfc21> .
+
+<https://data.cultureelerfgoed.nl/term/id/cht/5da627ce-1196-4959-bb8c-b6fb6b1ecf90>
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/6b256033-2edc-4e39-982f-195ad8c5dc54> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/2641ba9b-106f-4536-87a1-ec5946a0d8ba> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/594e0335-69a6-4680-941f-f58edcdf80ee> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/16c2caf9-ce7d-4f60-b634-be2d0f96e0ad> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/223c65b7-264e-4f19-83e8-b5f1f56b1458> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/4248eb67-e677-4b65-8ac5-cf84b2efdc6e> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/39c083ce-bbeb-4edc-8536-8a8704631908> ;
+        <http://schema.semantic-web.at/ppt/inSubtree>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/53197d95-28db-4e07-9e7d-4424c25fc9a1> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/65523a74-4869-46b7-b4c5-5f9b08560e72> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/58deacce-b39b-4d10-be1f-83ec25f8fa80> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/15b0c2ba-a567-4cd3-862a-45639ef6a087> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/17a2a934-2864-404c-8dac-fad647578b62> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/1e7c55fb-0291-4f79-bfbb-b4ed63185a0f> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/2edea5b4-f977-473c-8858-7098cea9641d> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/3628364f-272b-45d5-81fc-d8d63b0b27ad> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/4b9e0a2c-74d8-4e11-bde9-37925aafefd4> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/14e09834-29ea-4c36-ba1d-1d7377cfdb3f> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/2ad12a90-b591-445c-a450-ccd13fcf21be> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/43c2333d-a4c7-47e3-b1e2-23fc9406b05d> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/38c9e7f7-2c97-441a-894a-c255ce73d2c2> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/1a66c459-4c6a-429a-9966-1d739ebf01a8> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/24bc0183-e5a6-4d9b-90a0-d647d0056423> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/35929ee9-fa8f-4ce5-94c7-a982e7727d39> ;
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/7ca1a6b4-85ce-4244-a097-0ad177b5575c> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/1e4e870a-53d8-4bf3-804d-9e0d51a9a719> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/4db89c1d-691b-477a-aa37-1ba42c136860> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/4772d098-8185-44d2-8e4d-292b72f551fa> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/49fc4771-634f-4316-a37d-3849b5910cc7> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/rce#Source> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/216abdfe-23b6-4d63-90ba-a31a89157003> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/5ae31dee-a0e7-414c-a4b6-da779d9f860f> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/07f98235-90fb-402c-ab34-78d19945da24> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/41637344-5f2f-4894-aa74-91502031fb2e> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#isSourceOf>  <https://data.cultureelerfgoed.nl/term/id/cht/6eaadfca-15ae-4a23-8e74-5d12c0f37da9> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> .
+<https://data.cultureelerfgoed.nl/term/id/cht/62dbde09-ad2e-4abb-8f05-68cb4532f6bf>
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/7ca1a6b4-85ce-4244-a097-0ad177b5575c> ;
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/moutp> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/rce#Source> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
+        <http://schema.semantic-web.at/ppt/inSubtree>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
+        <http://purl.org/dc/terms/created>  "2016-09-29T11:46:58Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> .
+
+<https://data.cultureelerfgoed.nl/term/id/cht/63a5bc4e-d815-45fa-af2b-d5d736feacb1>
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/superadmin> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/cht#CHTconcept> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasSourceHolder>  <https://data.cultureelerfgoed.nl/term/id/cht/030cf4e4-16de-450f-9209-82b266c43042> ;
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/b532325c-dc08-49db-b4f1-15e53b037ec3> ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/moutp> ;
+        <http://www.w3.org/2004/02/skos/core#altLabel>  "schuilplaats 1916 II"@nl ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
+        <http://schema.semantic-web.at/ppt/inSubtree>  <https://data.cultureelerfgoed.nl/term/id/cht/bece25a6-eb64-46e8-85a8-2a7991f02a2c> ;
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/3fa943db-ec0b-4900-8912-900f3105ade2> ;
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#member> <https://data.cultureelerfgoed.nl/term/id/cht/63a5bc4e-d815-45fa-af2b-d5d736feacb1> ;
+        <https://w3id.org/tree#member> <https://data.cultureelerfgoed.nl/term/id/cht/62dbde09-ad2e-4abb-8f05-68cb4532f6bf> ;
+        <https://w3id.org/tree#member> <https://data.cultureelerfgoed.nl/term/id/cht/5da627ce-1196-4959-bb8c-b6fb6b1ecf90> ;
+        <http://rdfs.org/ns/void#subset>  <https://treecg.github.io/demo_data/cht/1.ttl> .
+
+_:b0    <http://www.w3.org/1999/02/22-rdf-syntax-ns#first>  <http://www.w3.org/2004/02/skos/core#prefLabel> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>  _:b1 .
+
+_:b1    <http://www.w3.org/1999/02/22-rdf-syntax-ns#first>  <http://www.w3.org/2004/02/skos/core#altLabel> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>  <http://www.w3.org/1999/02/22-rdf-syntax-ns#nil> .
+
+_:b2    <http://www.w3.org/ns/shacl#alternativePath>  _:b0 .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#shape>  _:b3 .
+
+_:b3    <http://www.w3.org/ns/shacl#property>  _:b4 .
+
+_:b4    <http://www.w3.org/ns/shacl#path>  _:b2 ;
+        <http://www.w3.org/ns/shacl#minCount>  "1"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/1.ttl>
+        <https://w3id.org/tree#relation>  _:b5 .
+
+_:b5    <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/10.ttl> ;
+        <https://w3id.org/tree#value>  "10" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "2"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/1.ttl>
+        <https://w3id.org/tree#relation>  _:b6 .
+
+_:b6    <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/12.ttl> ;
+        <https://w3id.org/tree#value>  "12" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "2"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/1.ttl>
+        <https://w3id.org/tree#relation>  _:b7 .
+
+_:b7    <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/13.ttl> ;
+        <https://w3id.org/tree#value>  "13" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "1"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/1.ttl>
+        <https://w3id.org/tree#relation>  _:b8 .
+
+_:b8    <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/14.ttl> ;
+        <https://w3id.org/tree#value>  "14" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "3"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/1.ttl>
+        <https://w3id.org/tree#relation>  _:b9 .
+
+_:b9    <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/15.ttl> ;
+        <https://w3id.org/tree#value>  "15" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "1"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/1.ttl>
+        <https://w3id.org/tree#relation>  _:b10 .
+
+_:b10   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/16.ttl> ;
+        <https://w3id.org/tree#value>  "16" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "5"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/1.ttl>
+        <https://w3id.org/tree#relation>  _:b11 .
+
+_:b11   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/17.ttl> ;
+        <https://w3id.org/tree#value>  "17" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "2"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/1.ttl>
+        <https://w3id.org/tree#relation>  _:b12 .
+
+_:b12   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/18.ttl> ;
+        <https://w3id.org/tree#value>  "18" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "3"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/1.ttl>
+        <https://w3id.org/tree#relation>  _:b13 .
+
+_:b13   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/19.ttl> ;
+        <https://w3id.org/tree#value>  "19" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "43"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/1.ttl>
+        <https://w3id.org/tree#relation>  _:b14 .
+
+_:b14   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/1+2.ttl> ;
+        <https://w3id.org/tree#value>  "1" ;
+        <https://w3id.org/tree#value>  "2" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "1"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/1.ttl>
+        <https://w3id.org/tree#relation>  _:b15 .
+
+_:b15   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/1+a.ttl> ;
+        <https://w3id.org/tree#value>  "1" ;
+        <https://w3id.org/tree#value>  "a" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "1"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/1.ttl>
+        <https://w3id.org/tree#relation>  _:b16 .
+
+_:b16   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/1+b.ttl> ;
+        <https://w3id.org/tree#value>  "1" ;
+        <https://w3id.org/tree#value>  "b" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "1"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/1.ttl>
+        <https://w3id.org/tree#relation>  _:b17 .
+
+_:b17   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/1+c.ttl> ;
+        <https://w3id.org/tree#value>  "1" ;
+        <https://w3id.org/tree#value>  "c" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "1"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/1.ttl>
+        <https://w3id.org/tree#relation>  _:b18 .
+
+_:b18   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/1+d.ttl> ;
+        <https://w3id.org/tree#value>  "1" ;
+        <https://w3id.org/tree#value>  "d" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "1"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/1.ttl>
+        <https://w3id.org/tree#relation>  _:b19 .
+
+_:b19   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/1+e.ttl> ;
+        <https://w3id.org/tree#value>  "1" ;
+        <https://w3id.org/tree#value>  "e" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "1"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/1.ttl>
+        <https://w3id.org/tree#relation>  _:b20 .
+
+_:b20   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/1+g.ttl> ;
+        <https://w3id.org/tree#value>  "1" ;
+        <https://w3id.org/tree#value>  "g" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "1"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/1.ttl>
+        <https://w3id.org/tree#relation>  _:b21 .
+
+_:b21   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/1+j.ttl> ;
+        <https://w3id.org/tree#value>  "1" ;
+        <https://w3id.org/tree#value>  "j" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "1"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/1.ttl>
+        <https://w3id.org/tree#relation>  _:b22 .
+
+_:b22   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/1+n.ttl> ;
+        <https://w3id.org/tree#value>  "1" ;
+        <https://w3id.org/tree#value>  "n" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "1"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/1.ttl>
+        <https://w3id.org/tree#relation>  _:b23 .
+
+_:b23   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/1+p.ttl> ;
+        <https://w3id.org/tree#value>  "1" ;
+        <https://w3id.org/tree#value>  "p" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "1"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/1.ttl>
+        <https://w3id.org/tree#relation>  _:b24 .
+
+_:b24   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/1+r.ttl> ;
+        <https://w3id.org/tree#value>  "1" ;
+        <https://w3id.org/tree#value>  "r" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "3"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/1.ttl>
+        <https://w3id.org/tree#relation>  _:b25 .
+
+_:b25   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/1+w.ttl> ;
+        <https://w3id.org/tree#value>  "1" ;
+        <https://w3id.org/tree#value>  "w" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "1"^^<http://www.w3.org/2001/XMLSchema#int> .

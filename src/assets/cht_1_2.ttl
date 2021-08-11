@@ -528,7 +528,7 @@
         <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
         <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
         <http://schema.semantic-web.at/ppt/inSubtree>  <https://data.cultureelerfgoed.nl/term/id/cht/bece25a6-eb64-46e8-85a8-2a7991f02a2c> ;
-        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/3fa943db-ec0b-4900-8912-900f3105ade2> ;
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/3fa943db-ec0b-4900-8912-900f3105ade2> .
 
 <https://treecg.github.io/demo_data/cht/>
         <https://w3id.org/tree#member> <https://data.cultureelerfgoed.nl/term/id/cht/63a5bc4e-d815-45fa-af2b-d5d736feacb1> ;

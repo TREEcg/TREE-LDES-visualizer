@@ -406,15 +406,15 @@ export default {
       // const shapesX = streamifyArray(testq);
       // const dataX = streamifyArray(testq);
 
-      const shapesX = this.extractShape(store, shapeIds[0]);
+      // const shapesX = this.extractShape(store, shapeIds[0]);
       const dataX = this.extractShapeMembers(store, membIds);
 
       console.log(Readable);
 
-      /*
-      const shapesX2 = new Readable({
+
+      const shapesX = new Readable({
         read: () => {
-          shapesX2.push(`
+          shapesX.push(`
             @prefix dash: <http://datashapes.org/dash#> .
             @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
             @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -423,13 +423,13 @@ export default {
             @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
             schema:StopShape
-              sh:targetClass <http://vocab.gtfs.org/terms#Stop> ;
-              sh:property [
-                sh:path <http://schema.org/name> ;
-                sh:minCount 1 ;
+              <http://www.w3.org/ns/shacl#targetClass> <http://vocab.gtfs.org/terms#Stop> ;
+              <http://www.w3.org/ns/shacl#property> [
+                <http://www.w3.org/ns/shacl#path> <http://schema.org/name> ;
+                <http://www.w3.org/ns/shacl#minCount> 1 ;
               ] .
           `)
-          shapesX2.push(null)
+          shapesX.push(null)
         }
       })
 

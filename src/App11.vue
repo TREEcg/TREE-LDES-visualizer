@@ -38,8 +38,6 @@ import rdfSerializer from "rdf-serialize";
 const streamifyArray = require('streamify-array');
 const stringifyStream = require('stream-to-string');
 
-// const fs = require('fs');
-const fs = require('fs');
 const factory = require('rdf-ext');
 const ParserN3 = require('@rdfjs/parser-n3');
 const SHACLValidator = require('rdf-validate-shacl');
@@ -190,7 +188,6 @@ export default {
 
     //TODO add import, importStream, conditionalImport, totalItems
     async getData(url) {
-      console.log(fs);
       //TODO is it possible to keep all quads, extract all metadata and then not have to check for doubles?
       //Simply by removing all doubles from the saved quads?
 
@@ -202,7 +199,7 @@ export default {
       var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/.root.nt'
       standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a2.nt';
       standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/cht_1_2.ttl';
-      standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/marine1'
+      standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/marine1.jsonld'
       //standardURL = 'https://github.com/Mikxox/visualizer/blob/main/src/assets/stops_a.nt';
 
       if(url){

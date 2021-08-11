@@ -533,8 +533,8 @@
         <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/3fa943db-ec0b-4900-8912-900f3105ade2> ;
         <http://www.w3.org/2004/02/skos/core#prefLabel>  "schuilplaatsen 1916 II"@nl .
 <https://treecg.github.io/demo_data/cht/>
-        <https://w3id.org/tree#member> <https://data.cultureelerfgoed.nl/term/id/cht/63a5bc4e-d815-45fa-af2b-d5d736feacb1>
-        <https://w3id.org/tree#member> <https://data.cultureelerfgoed.nl/term/id/cht/62dbde09-ad2e-4abb-8f05-68cb4532f6bf>
+        <https://w3id.org/tree#member> <https://data.cultureelerfgoed.nl/term/id/cht/63a5bc4e-d815-45fa-af2b-d5d736feacb1> ;
+        <https://w3id.org/tree#member> <https://data.cultureelerfgoed.nl/term/id/cht/62dbde09-ad2e-4abb-8f05-68cb4532f6bf> ;
         <http://rdfs.org/ns/void#subset>  <https://treecg.github.io/demo_data/cht/1.ttl> .
 
 _:b0    <http://www.w3.org/1999/02/22-rdf-syntax-ns#first>  <http://www.w3.org/2004/02/skos/core#prefLabel> ;

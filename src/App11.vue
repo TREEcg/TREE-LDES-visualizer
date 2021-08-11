@@ -201,7 +201,7 @@ export default {
       //var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/a.nt';
       var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/.root.nt'
       standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a2.nt';
-      standardURL = 'https://treecg.github.io/demo_data/cht.ttl';
+      standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/cht_1_1.ttl';
       //standardURL = 'https://github.com/Mikxox/visualizer/blob/main/src/assets/stops_a.nt';
 
       if(url){

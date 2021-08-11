@@ -18,6 +18,20 @@
 
   <button v-on:click="getData(undefined)">Draw Graph</button><br>
 
+  <p>All members conform to shape: {{shape_validation}}</p>
+
+  <label for="checkbox_shape">Show shape validation report</label>
+  <input type="checkbox" id="checkbox_shape" v-model="checked_shape">
+
+  <div v-if="checked_shape" style="text-align:center">
+    <div v-if="shape_report" style="text-align:center">
+      <p>{{shape_report}}</p>
+    </div>
+    <div v-else style="text-align:center">
+      <p>No report available.</p>
+    </div>
+  </div>
+
   <div id="my_dataviz" style="overflow:scroll"></div>
 
   <div id="extra"></div>
@@ -42,10 +56,9 @@ const factory = require('rdf-ext');
 const ParserN3 = require('@rdfjs/parser-n3');
 const SHACLValidator = require('rdf-validate-shacl');
 
-const Readable = require('stream').Readable
 
 const { DataFactory } = N3;
-const { blankNode, namedNode, defaultGraph } = DataFactory;
+const { namedNode, defaultGraph } = DataFactory;
 
 
 export default {
@@ -66,6 +79,8 @@ export default {
       graph_height: 600,
       graph_width: 1000,
       data_url: null,
+      shape_validation: "unknown",
+      shape_report: null,
       alpha_decay_rate: 0.5//1 - Math.pow(0.001, 1 / 300)
     }
   },
@@ -76,9 +91,10 @@ export default {
       return await stringifyStream(textStream);
     },
 
-    extractMember(memberId) {
-      let store = new N3.Store(this.qtext)
-      return this.extractId(store, memberId)
+    async extractShapeId(store, id){
+      const quadsWithSubj =  this.extractShapeHelp(store, id);
+      const textStream = rdfSerializer.serialize(streamifyArray(quadsWithSubj), { contentType: 'text/turtle' });
+      return await stringifyStream(textStream);
     },
 
     extractShapeHelp(store, id, checked = []) {
@@ -96,12 +112,6 @@ export default {
     },
 
     async extractShape(store, id){
-      // store.addQuad(
-      //   blankNode(id),
-      //   blankNode('<https://www.w3.org/ns/shacl#targetClass>'),
-      //   blankNode('<http://vocab.gtfs.org/terms#Stop>')
-      // );
-
       console.log("quads: ", store.getQuads(id, null, null, null));
       var quadsWithSubj = this.extractShapeHelp(store, id);
 
@@ -116,13 +126,6 @@ export default {
       console.log("targetQuads: ", targetQuads);
 
       if (targetQuads.length == 0){
-        // this.addShapeTarget(store, id);
-
-        // quadsWithSubj = this.extractShapeHelp(store3, id);
-        // console.log("targetQuadsNew: ", store3.getQuads('_:BpropertyX5Fnode', null, null, null));
-        // console.log("targetstore: ", store3);
-        console.log(id);
-        console.log(blankNode);
         store2.addQuad(
           namedNode(id),
           namedNode('http://www.w3.org/ns/shacl#targetObjectsOf'),
@@ -130,50 +133,12 @@ export default {
           defaultGraph()
         );
         console.log("targetQuadsNew: ", store2.getQuads(null, 'http://www.w3.org/ns/shacl#targetObjectsOf', null, null));
-        console.log("targetstore: ", store2);
         quadsWithSubj = this.extractShapeHelp(store2, id);
       }
 
       console.log("shape: ", JSON.parse(JSON.stringify(quadsWithSubj)));
       return rdfSerializer.serialize(streamifyArray(quadsWithSubj), { contentType: 'text/turtle' });
-
-
-
-
-      // const quadsWithSubj = store.getQuads(id, null, null, null);
-
     },
-
-    // addShapeTarget(store, id){
-    //   console.log(id);
-    //   const parser = new N3.Parser();
-    //   parser.parse(
-    //     `_:BpropertyX5Fnode <http://www.w3.org/ns/shacl#targetObjectsOf> <https://w3id.org/tree#member> .`,
-    //     (error, quad, prefixes) => {
-    //       if (quad){
-    //         console.log("added quad: ", JSON.parse(JSON.stringify(quad)));
-    //         store.addQuad(quad);
-    //
-    //       } else {
-    //         console.log("done adding ", error, prefixes);
-    //         return rdfSerializer.serialize(streamifyArray(this.extractShapeHelp(store, id)), { contentType: 'text/turtle' });
-    //       }
-    //     });
-    //     // console.log("appended: ", JSON.parse(JSON.stringify(store)));
-    //     // return store;
-    //
-    //   // parser.parse(
-    //   //   `_:BpropertyX5Fnode <http://www.w3.org/ns/shacl#targetObjectsOf> <https://w3id.org/tree#member> .`,
-    //   // ).then((error, quad, prefixes) => {
-    //   //   if (quad){
-    //   //     console.log("added quad: ", JSON.parse(JSON.stringify(quad)));
-    //   //     store.addQuad(quad);
-    //   //     return store;
-    //   //   } else {
-    //   //     console.log("done adding ", error, prefixes);
-    //   //   }
-    //   // })
-    // },
 
     extractShapeMembers(store, ids){
       var quadsWithSubj = [];
@@ -200,7 +165,6 @@ export default {
       standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a2.nt';
       standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/cht_1_2.ttl';
       standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/marine1.jsonld'
-      //standardURL = 'https://github.com/Mikxox/visualizer/blob/main/src/assets/stops_a.nt';
 
       if(url){
         standardURL = url;
@@ -222,10 +186,12 @@ export default {
       quads.on('data', (quad) => {this.qtext.push(quad); /*console.log(quad)*/})
       .on('error', (error) => console.error(error))
       .on('end', () => {
-        //console.log('All done!');
+        console.log('All done!');
         // quads is an array of RDF Quads (RDF.Quad[])
         extractMetadata(this.qtext).then(metadata => {
           console.log(metadata);
+
+          const store = new N3.Store(this.qtext)
 
           if (metadata.collections.size > 1){
             let errorText = "";
@@ -284,6 +250,7 @@ export default {
               if (metadata.collections.get(collectionId).shape){
                 var count = 0;
                 for (var shapeNode of collectionObj.shape){
+                  //TODO make this a nice shape via extractShapeId
                   this.jsondata.shapes.push({"id":collectionId+"shape"+count, "type":"shape", "shape_extra":shapeNode});
                   this.jsondata.links.push({"source":collectionId, "target":collectionId+"shape"+count, "name":"shape"});
                   count++;
@@ -308,9 +275,7 @@ export default {
 
                 if (!double){
                   this.jsondata.nodes.push({"id":viewNode['@id']+"_node", "type":"Node", "name":viewNode['@id'], "relation_count":metadata.nodes.get(viewNode['@id']).relation.length, "offsetX": this.jsondata.nodes.length});
-                  // this.jsondata.links.push({"source":collectionId, "target":viewNode['@id']+"_node", "name":"view"});
                   this.jsondata.relations_holder.push({"id":viewNode['@id']+"_node", "node_id":viewNode['@id']+"_node", "name":viewNode['@id'], "relation_count":metadata.nodes.get(viewNode['@id']).relation.length, "offsetX": this.jsondata.relations_holder.length})
-                  // this.jsondata.links.push({"source":viewNode['@id']+"_node", "target":viewNode['@id']+"_relation_holder", "name":"relation_holder"});
                   this.jsondata.links.push({"source":collectionId, "target":viewNode['@id']+"_node", "name":"relation_holder"});
                 }
               }
@@ -319,20 +284,19 @@ export default {
             }
 
 
-            //TODO add member visualisation
             //TODO check what happens when as:items comes from a node not the collection
+
             if (collectionObj.member){
               let membIds = [];
               for (var memb of collectionObj.member){
                 membIds.push(memb['@id']);
-                this.extractMember(memb['@id']).then(mtemp => this.members[standardURL].push(mtemp));
-                //let mtemp = await this.extractMember(memb['@id']);
-                //this.members[standardURL].push(this.extractMember(memb['@id']));
+                this.extractId(store, memb['@id']).then(mtemp => this.members[standardURL].push(mtemp));
               }
-              this.validateShape(membIds);
+              this.validateShape(membIds, store);
             } else {
               this.remarks += "Found no members for " + standardURL + ".\n";
             }
+
           }
 
           //This does not need a duplicate check since old node relations won't be included in the new metadata
@@ -342,8 +306,6 @@ export default {
             this.jsondata[nodeId+"_node"] = [];
             for (var relation of nodeObj.relation){
               this.jsondata[nodeId+"_node"].push({"id":relation['@id'], "node_id":nodeId+"_node", "name":relation['@id'], "type":"relation"});
-              //Don't forget to add _node to the source id, else all relations will be linked to the collection not the node
-              //this.jsondata.links.push({"source":nodeId+"_node", "target":relation['@id'], "name":"relation"});
             }
           }
 
@@ -362,26 +324,28 @@ export default {
                 relationJson.node = relationObj.node;
 
                 this.jsondata.relations.push({"source":relationNode.id, "target":relationObj.node[0]['@id']+"_node"});
+
+                //TODO should there be a standard placeholder if not present? Now this gets rechecked in the drawing function
                 if(!relationObj['@type']){
-                  this.remarks += "relation from " + relationNode.id + " to " + relationObj.node[0]['@id'] + " has no type defined\n";
+                  this.remarks += "relation from " + relationNode.name + " to " + relationObj.node[0]['@id'] + " has no type defined\n";
                 } else {
                   relationJson.type = relationObj['@type'];
                 }
 
                 if(!relationObj.path){
-                  this.remarks += "relation from " + relationNode.id + " to " + relationObj.node[0]['@id'] + " has no path defined\n";
+                  this.remarks += "relation from " + relationNode.name + " to " + relationObj.node[0]['@id'] + " has no path defined\n";
                 } else {
                   relationJson.path = relationObj.path;
                 }
 
                 if(!relationObj.value){
-                  this.remarks += "relation from " + relationNode.id + " to " + relationObj.node[0]['@id'] + " has no value defined\n";
+                  this.remarks += "relation from " + relationNode.name + " to " + relationObj.node[0]['@id'] + " has no value defined\n";
                 } else {
                   relationJson.value = relationObj.value;
                 }
 
                 if(!relationObj.remainingItems){
-                  this.remarks += "relation from " + relationNode.id + " to " + relationObj.node[0]['@id'] + " has no remainingItems defined\n";
+                  this.remarks += "relation from " + relationNode.name + " to " + relationObj.node[0]['@id'] + " has no remainingItems defined\n";
                 } else {
                   relationJson.remainingItems = relationObj.remainingItems;
                 }
@@ -414,151 +378,64 @@ export default {
           console.log("members:");
           console.log(this.members);
 
-          //console.log(JSON.stringify(this.members));
-
           this.drawing(metadata);
 
+          console.log("done1");
         })
+
+        console.log("done2");
       });
+      console.log("done3");
     },
 
-    validateShape(membIds){
-      console.log(membIds);
-      let store = new N3.Store(this.qtext)
-      // console.log(store.getQuads(null, 'https://w3id.org/tree#shape', null, null).map(quad => quad.object.id));
-      // console.log(store.getQuads(null, 'http://www.w3.org/ns/shapetrees#validatedBy', null, null));
-
+    validateShape(membIds, store){
       var shapeIds = [];
       shapeIds = shapeIds.concat(store.getQuads(null, 'https://w3id.org/tree#shape', null, null).map(quad => quad.object.id));
       shapeIds = shapeIds.concat(store.getQuads(null, 'http://www.w3.org/ns/shapetrees#validatedBy', null, null).map(quad => quad.object.id));
+      shapeIds = shapeIds.concat(store.getQuads(null, 'http://www.w3.org/ns/shapetrees#shape', null, null).map(quad => quad.object.id));
 
       if (shapeIds.size > 1){
-        alert("ERROR: found multiple shapes " + JSON.stringify(shapeIds));
+        alert("Found multiple shapes this may lead to errors.\n" + JSON.stringify(shapeIds));
       }
       if (shapeIds.size == 0){
         this.remarks += "URL did not include a shacl shape given via tree:shape or st:validatedBy.\n"
       }
 
-      // console.log(shapeIds);
-      // for(let shapeId of shapeIds){
-      //   console.log("all:? ", this.extractShape(store, shapeId));
-      // }
-      // for (let tempS of shapeIds){
-      //   console.log(this.extractMember(tempS));
-      // }
-
-      //let shapeT = "_:BshapeX5Fnode\n sh:targetClass <http://vocab.gtfs.org/terms#Stop> ;\n sh:property [\n  sh:path <http://schema.org/name> ;\n  sh:minCount 1 ;\n ] .";
-
-
       async function loadDatasetX (stream) {
-        //console.log("stream: ", fs.createReadStream(filePath));
-        //const stream = fs.createReadStream(filePath);
-        //return stream;
-
         const parser = new ParserN3({ factory });
-        // console.log("parser: ", parser.import(await stream));
         return factory.dataset().import(parser.import(await stream));
-
-        // return factory.dataset().import(stream);
       }
 
-      // console.log(ParserN3);
-
-      //const testq = store.getQuads(shapeIds[0], null, null, null)
-      //rdfSerializer.serialize(streamifyArray(testq), { contentType: 'text/turtle' });
-      // const shapes = await loadDataset('my-shapes.ttl')
-      // const data = await loadDataset('my-data.ttl')
-
-      // const shapesX = streamifyArray(testq);
-      // const dataX = streamifyArray(testq);
-
       var shapesX = this.extractShape(store, shapeIds[0]);
-      //console.log("ShapesStreamString: ", stringifyStream(shapesX));
       const dataX = this.extractShapeMembers(store, membIds);
 
-      console.log(Readable);
+      loadDatasetX(shapesX).then(shapes => {
+        loadDatasetX(dataX).then(data => {
+          console.log("shapes: ", shapes);
+          console.log("data: ", data);
+          const validator = new SHACLValidator(shapes, { factory })
+          const report = validator.validate(data)
 
-/*
-      shapesX = new Readable({
-        read: () => {
-          shapesX.push(`
-            @prefix dash: <http://datashapes.org/dash#> .
-            @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-            @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-            @prefix schema: <http://schema.org/> .
-            @prefix sh: <http://www.w3.org/ns/shacl#> .
-            @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+          // Check conformance: `true` or `false`
+          console.log(report.conforms)
 
-            schema:StopShape
-              <http://www.w3.org/ns/shacl#targetObjectsOf> <https://w3id.org/tree#member> ;
-              <http://www.w3.org/ns/shacl#property> [
-                <http://www.w3.org/ns/shacl#path> <http://schema.org/name> ;
-                <http://www.w3.org/ns/shacl#minCount> 1 ;
-              ] .
-          `)
-          shapesX.push(null)
-        }
-      })
+          this.shape_report = JSON.stringify(report);
 
-      /*
+          this.shape_validation = report.conforms;
 
-      const dataX2 = new Readable({
-        read: () => {
-          dataX2.push(`
-            <https://data.delijn.be/stops/306117> <http://www.w3.org/2003/01/geo/wgs84_pos#lat> "50.8377";
-              a <http://vocab.gtfs.org/terms#Stop>;
-              <http://vocab.gtfs.org/terms#code> "306117";
-              <http://schema.org/name> "Anderlecht Westland Shopping";
-              <http://www.w3.org/2003/01/geo/wgs84_pos#long> "4.28415".
+          for (const result of report.results) {
+            // See https://www.w3.org/TR/shacl/#results-validation-result for details
+            // about each property
+            console.log(result.message)
+            console.log(result.path)
+            console.log(result.focusNode)
+            console.log(result.severity)
+            console.log(result.sourceConstraintComponent)
+            console.log(result.sourceShape)
+          }
 
-            <https://data.delijn.be/stops/306175> <http://www.w3.org/2003/01/geo/wgs84_pos#lat> "50.8676";
-              a <http://vocab.gtfs.org/terms#Stop>;
-              <http://vocab.gtfs.org/terms#code> "306175";
-              <http://www.w3.org/2003/01/geo/wgs84_pos#long> "4.64047".
-          `)
-          dataX2.push(null)
-        }
-      })
-*/
-      // console.log("shape: ", shapesX);
-      // console.log("data", dataX);
-
-      //const shapesX = rdfSerializer.serialize(streamifyArray(testq), { contentType: 'text/turtle' });
-      //const dataX = rdfSerializer.serialize(streamifyArray(testq), { contentType: 'text/turtle' });
-
-      //console.log(typeof(shapesX))
-
-      // console.log(loadDatasetX('./assets/shape_test.ttl'));
-
-      // rdfSerializer.serialize(streamifyArray(testq), { contentType: 'text/turtle' }).then(shapes => {
-        // rdfSerializer.serialize(streamifyArray(testq), { contentType: 'text/turtle' }).then(data => {
-        loadDatasetX(shapesX).then(shapes => {
-          loadDatasetX(dataX).then(data => {
-            console.log("shapes: ", shapes);
-            console.log("data: ", data);
-            const validator = new SHACLValidator(shapes, { factory })
-            const report = validator.validate(data)
-
-            //validator.validate(data).then(report => {
-            // Check conformance: `true` or `false`
-            console.log(report.conforms)
-
-            for (const result of report.results) {
-              // See https://www.w3.org/TR/shacl/#results-validation-result for details
-              // about each property
-              console.log(result.message)
-              console.log(result.path)
-              console.log(result.focusNode)
-              console.log(result.severity)
-              console.log(result.sourceConstraintComponent)
-              console.log(result.sourceShape)
-            }
-
-            // Validation report as RDF dataset
-            console.log(JSON.parse(JSON.stringify(report.dataset)));
-          //})
-
-
+          // Validation report as RDF dataset
+          console.log(JSON.parse(JSON.stringify(report.dataset)));
         })
       })
     },
@@ -1022,18 +899,34 @@ export default {
           .attr("sortIndex", sortIndex)
           .text("")
           .raise();
+          let textX = "";
+          if(relX.type){
+            textX += (relX.type + "").split('#').pop() + ": "
+          } else {
+            textX += "No Type"
+          }
 
-          let textX = (relX.type + "").split('#').pop() + ": "
-          for (let v of relX.value){
-            textX += v['@value'] + ", ";
-          }
-          for (let v of relX.path){
-            if(!v['@id']){
-              textX += 'Object'
-            } else {
-              textX += v['@id']//(v['@id'] + "").split("/").pop();
+          if (relX.value){
+            for (let v of relX.value){
+              textX += v['@value'] + ", ";
             }
+          } else {
+            textX += "No Value";
           }
+
+          if (relX.path){
+            for (let v of relX.path){
+              if(!v['@id']){
+                textX += 'Object'
+              } else {
+                textX += v['@id']//(v['@id'] + "").split("/").pop();
+              }
+            }
+          } else {
+            textX += "No Path";
+          }
+
+
 
           let itspan = innerText.append('tspan')
           .text(textX)
@@ -1122,54 +1015,76 @@ export default {
             .attr("y", d3.select(currentg).select(".inner_text").attr("y"));
 
             let relX = JSON.parse(d3.select(currentg).attr("info"));
-            tt.append("tspan").text("type: " + relX.type);
+            if (relX.type){
+              tt.append("tspan").text("type: " + relX.type);
+            } else {
+              tt.append("tspan").text("Relation has no type");
+            }
 
-            for (let v of relX.value){
-              if(!v['@value']){
-                tt.append("tspan").text("value: ");
-                let textArray = JSON.stringify(v, null, '\t').split('\n');
-                let prevIndent = 0;
-                for (let textX of textArray){
-                  let indent = (textX.split('\t').length -1) * 4;
-                  tt.append('tspan')
-                  .text(textX.replace('\t',''))
-                  .attr("dy", 20)
-                  .attr("dx", indent-prevIndent + 10);
-                  prevIndent = indent-prevIndent;
+            if (relX.value){
+              for (let v of relX.value){
+                if(!v['@value']){
+                  tt.append("tspan").text("value: ");
+                  let textArray = JSON.stringify(v, null, '\t').split('\n');
+                  let prevIndent = 0;
+                  for (let textX of textArray){
+                    let indent = (textX.split('\t').length -1) * 4;
+                    tt.append('tspan')
+                    .text(textX.replace('\t',''))
+                    .attr("dy", 20)
+                    .attr("dx", indent-prevIndent + 10);
+                    prevIndent = indent-prevIndent;
+                  }
+                } else {
+                  tt.append("tspan").text("value: " + v['@value']);
                 }
-              } else {
-                tt.append("tspan").text("value: " + v['@value']);
               }
+            } else {
+              tt.append("tspan").text("Relation has no value");
             }
 
-            for (let v of relX.path){
-              if(!v['@id']){
-                tt.append("tspan").text("path: ");
-                let textArray = JSON.stringify(v, null, '\t').split('\n');
-                let prevIndent = 0;
-                for (let textX of textArray){
-                  let indent = (textX.split('\t').length -1) * 4;
-                  tt.append('tspan')
-                  .text(textX.replace('\t',''))
-                  .attr("dy", 20)
-                  .attr("dx", indent-prevIndent + 10);
-                  prevIndent = indent-prevIndent;
+
+            if (relX.path){
+              for (let v of relX.path){
+                if(!v['@id']){
+                  tt.append("tspan").text("path: ");
+                  let textArray = JSON.stringify(v, null, '\t').split('\n');
+                  let prevIndent = 0;
+                  for (let textX of textArray){
+                    let indent = (textX.split('\t').length -1) * 4;
+                    tt.append('tspan')
+                    .text(textX.replace('\t',''))
+                    .attr("dy", 20)
+                    .attr("dx", indent-prevIndent + 10);
+                    prevIndent = indent-prevIndent;
+                  }
+                } else {
+                  tt.append("tspan").text("path: " + v['@id']);
                 }
-              } else {
-                tt.append("tspan").text("path: " + v['@id']);
+              }
+            } else {
+              tt.append("tspan").text("Relation has no path");
+            }
+
+            if (relX.node){
+              for (let v of relX.node){
+                tt.append("tspan").text("node: " + v['@id']);
+              }
+            } else {
+              tt.append("tspan").text("Relation has no node");
+            }
+
+
+            if (relX.remainingItems){
+              for (let v of relX.remainingItems){
+                tt.append("tspan").text("remainingItems: " + v['@value']);
+                if(v['@type']){
+                  tt.append("tspan").text("remainingItemsType: " + v['@type']);
+                }
               }
             }
 
-            for (let v of relX.node){
-              tt.append("tspan").text("node: " + v['@id']);
-            }
 
-            for (let v of relX.remainingItems){
-              tt.append("tspan").text("remainingItems: " + v['@value']);
-              if(v['@type']){
-                tt.append("tspan").text("remainingItemsType: " + v['@type']);
-              }
-            }
 
             tt.selectAll("tspan").attr("dy", 20).attr("x", 5+Number(tspanX));
             tt.selectAll("tspan").raise();

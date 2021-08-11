@@ -44,6 +44,11 @@ const factory = require('rdf-ext');
 const ParserN3 = require('@rdfjs/parser-n3');
 const SHACLValidator = require('rdf-validate-shacl');
 
+const Readable = require('stream').Readable
+
+// const { DataFactory } = N3;
+// const { blankNode } = DataFactory;
+
 
 export default {
   name: 'App',
@@ -82,6 +87,7 @@ export default {
       var quadsWithSubj = store.getQuads(id, null, null, null);
       for (let quad of quadsWithSubj){
         if (quad.object.termType === "NamedNode" || quad.object.termType === "BlankNode") {
+          console.log("type: ", quad.object.termType);
           if (quad.object.id && !checked.includes(quad.object.id)){
             checked.push(quad.object.id);
             quadsWithSubj = quadsWithSubj.concat(this.extractShapeHelp(store, quad.object.id, checked));
@@ -92,7 +98,16 @@ export default {
     },
 
     extractShape(store, id){
-      const quadsWithSubj = this.extractShapeHelp(store, id);
+      // store.addQuad(
+      //   blankNode(id),
+      //   blankNode('<https://www.w3.org/ns/shacl#targetClass>'),
+      //   blankNode('<http://vocab.gtfs.org/terms#Stop>')
+      // );
+
+      console.log("quads: ", store.getQuads(id, null, null, null));
+      var quadsWithSubj = this.extractShapeHelp(store, id);
+
+      // const quadsWithSubj = store.getQuads(id, null, null, null);
       console.log("shape: ", JSON.parse(JSON.stringify(quadsWithSubj)));
       return rdfSerializer.serialize(streamifyArray(quadsWithSubj), { contentType: 'text/turtle' });
     },
@@ -118,7 +133,7 @@ export default {
 
       //var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/a.nt';
       var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/.root.nt'
-      standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a2.nt';
+      standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a3.nt';
       //standardURL = 'https://github.com/Mikxox/visualizer/blob/main/src/assets/stops_a.nt';
 
       if(url){
@@ -342,6 +357,7 @@ export default {
     },
 
     validateShape(membIds){
+      console.log(membIds);
       let store = new N3.Store(this.qtext)
       // console.log(store.getQuads(null, 'https://w3id.org/tree#shape', null, null).map(quad => quad.object.id));
       // console.log(store.getQuads(null, 'http://www.w3.org/ns/shapetrees#validatedBy', null, null));
@@ -393,6 +409,50 @@ export default {
       const shapesX = this.extractShape(store, shapeIds[0]);
       const dataX = this.extractShapeMembers(store, membIds);
 
+      console.log(Readable);
+
+      /*
+      const shapesX2 = new Readable({
+        read: () => {
+          shapesX2.push(`
+            @prefix dash: <http://datashapes.org/dash#> .
+            @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+            @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+            @prefix schema: <http://schema.org/> .
+            @prefix sh: <http://www.w3.org/ns/shacl#> .
+            @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+            schema:StopShape
+              sh:targetClass <http://vocab.gtfs.org/terms#Stop> ;
+              sh:property [
+                sh:path <http://schema.org/name> ;
+                sh:minCount 1 ;
+              ] .
+          `)
+          shapesX2.push(null)
+        }
+      })
+
+      /*
+
+      const dataX2 = new Readable({
+        read: () => {
+          dataX2.push(`
+            <https://data.delijn.be/stops/306117> <http://www.w3.org/2003/01/geo/wgs84_pos#lat> "50.8377";
+              a <http://vocab.gtfs.org/terms#Stop>;
+              <http://vocab.gtfs.org/terms#code> "306117";
+              <http://schema.org/name> "Anderlecht Westland Shopping";
+              <http://www.w3.org/2003/01/geo/wgs84_pos#long> "4.28415".
+
+            <https://data.delijn.be/stops/306175> <http://www.w3.org/2003/01/geo/wgs84_pos#lat> "50.8676";
+              a <http://vocab.gtfs.org/terms#Stop>;
+              <http://vocab.gtfs.org/terms#code> "306175";
+              <http://www.w3.org/2003/01/geo/wgs84_pos#long> "4.64047".
+          `)
+          dataX2.push(null)
+        }
+      })
+*/
       // console.log("shape: ", shapesX);
       // console.log("data", dataX);
 
@@ -407,8 +467,8 @@ export default {
         // rdfSerializer.serialize(streamifyArray(testq), { contentType: 'text/turtle' }).then(data => {
         loadDatasetX(shapesX).then(shapes => {
           loadDatasetX(dataX).then(data => {
-            // console.log("shapes: ", shapes);
-            // console.log("data: ", data);
+            console.log("shapes: ", shapes);
+            console.log("data: ", data);
             const validator = new SHACLValidator(shapes, { factory })
             const report = validator.validate(data)
 

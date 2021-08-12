@@ -4,14 +4,8 @@
   ctrl+click a relation to add the node to the graph<br>
   shift+mousewheel / shift+pan to zoom or pan<br></p>
 
-  <label for="adecay">Enter graph convergence speed, between 0 and 1</label>
-  <input type="number" v-model="alpha_decay_rate" placeholder="0.023" name="adecay"><br>
-
-  <label for="width">Enter prefered graph width: </label>
-  <input type="number" v-model="graph_width" placeholder="400" name="width"><br>
-
-  <label for="height">Enter prefered graph height: </label>
-  <input type="number" v-model="graph_height" placeholder="400" name="height"><br>
+  <!-- <label for="adecay">Enter graph convergence speed, between 0 and 1</label>
+  <input type="number" v-model="alpha_decay_rate" placeholder="0.023" name="adecay"><br> -->
 
   <label for="url">Enter URL: </label>
   <input type="url" v-model="data_url" placeholder="URL" name="url"><br>
@@ -32,7 +26,7 @@
     </div>
   </div>
 
-  <div id="my_dataviz" style="overflow:scroll"></div>
+  <div id="my_dataviz" style="overflow:scroll; resize: both;"></div>
 
   <div v-if="svgHolder">
     <p>Click a node to reload after changing this option.</p>
@@ -42,9 +36,10 @@
     </select>
   </div>
 
-  <div id="extra"></div>
+  <div id="extra" style="resize: both;"></div>
 
-  <p>{{jsondata}}</p>
+<!-- This empty div allows user to resize extra info screen easily -->
+  <div style="height: 100px;"></div>
 
 </template>
 

@@ -1,8 +1,8 @@
 <template>
 
-  <p>Click a bubble to show all attributes</p>
-  <p>ctrl+click a relation to navigate to the node</p>
-  <p>shift+mousewheel / shift+pan to zoom or pan</p>
+  <p style="white-space: pre-line">Click a node, relation or shape to show all attributes<br>
+  ctrl+click a relation to add the node to the graph<br>
+  shift+mousewheel / shift+pan to zoom or pan<br></p>
 
   <label for="adecay">Enter graph convergence speed, between 0 and 1</label>
   <input type="number" v-model="alpha_decay_rate" placeholder="0.023" name="adecay"><br>
@@ -23,16 +23,25 @@
   <label for="checkbox_shape">Show shape validation report</label>
   <input type="checkbox" id="checkbox_shape" v-model="checked_shape">
 
-  <div v-if="checked_shape" style="text-align:center">
-    <div v-if="shape_report" style="text-align:center">
-      <p>{{shape_report}}</p>
+  <div v-if="checked_shape">
+    <div v-if="shape_report">
+      <div style="white-space: pre-line">{{shape_report}}</div>
     </div>
-    <div v-else style="text-align:center">
+    <div v-else>
       <p>No report available.</p>
     </div>
   </div>
 
   <div id="my_dataviz" style="overflow:scroll"></div>
+
+  <div v-if="svgHolder">
+    <p>Click a node to reload after changing this option.</p>
+    <select v-model="selected">
+      <!-- <option disabled value="">Select what details to show</option> -->
+      <option>Relations</option>
+      <option>Members</option>
+    </select>
+  </div>
 
   <div id="extra"></div>
 
@@ -81,6 +90,7 @@ export default {
       data_url: null,
       shape_validation: "unknown",
       shape_report: null,
+      selected: "Relations",
       alpha_decay_rate: 0.5//1 - Math.pow(0.001, 1 / 300)
     }
   },
@@ -164,7 +174,7 @@ export default {
       var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/.root.nt'
       standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a2.nt';
       standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/cht_1_2.ttl';
-      standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/marine1.jsonld'
+      // standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/marine1.jsonld'
 
       if(url){
         standardURL = url;
@@ -247,17 +257,6 @@ export default {
 
               this.jsondata.collection.push({"id":collectionId, "name":collectionObj['@id'], "type":"collection", "vocab":collectionObj['@context']["@vocab"]});
 
-              if (metadata.collections.get(collectionId).shape){
-                var count = 0;
-                for (var shapeNode of collectionObj.shape){
-                  //TODO make this a nice shape via extractShapeId
-                  this.jsondata.shapes.push({"id":collectionId+"shape"+count, "type":"shape", "shape_extra":shapeNode});
-                  this.jsondata.links.push({"source":collectionId, "target":collectionId+"shape"+count, "name":"shape"});
-                  count++;
-                }
-
-              }
-
             }
 
             //TODO if there is no view there should probably be an error shown
@@ -305,7 +304,7 @@ export default {
             var nodeObj = metadata.nodes.get(nodeId);
             this.jsondata[nodeId+"_node"] = [];
             for (var relation of nodeObj.relation){
-              this.jsondata[nodeId+"_node"].push({"id":relation['@id'], "node_id":nodeId+"_node", "name":relation['@id'], "type":"relation"});
+              this.jsondata[nodeId+"_node"].push({"id":relation['@id'], "node_id":nodeId+"_node", "name":relation['@id']});
             }
           }
 
@@ -378,24 +377,45 @@ export default {
           console.log("members:");
           console.log(this.members);
 
-          this.drawing(metadata);
+          console.log("collt: ", this.jsondata.collection[0]);
 
-          console.log("done1");
+
+          if (this.jsondata.shapes.length == 0 && metadata.collections.get(collectionId).shape){
+
+            const shapeIds = this.getShapeIds(store);
+
+            this.extractShapeId(store, shapeIds[0]).then(res => {
+              this.jsondata.shapes.push({"id":shapeIds[0], "type":"shape", "shape_extra":res});
+              this.jsondata.links.push({"source":collectionId, "target":shapeIds[0], "name":"shape"});
+              this.drawing(metadata);
+            });
+
+          } else {
+            this.drawing(metadata);
+          }
+
+
+
+
         })
 
-        console.log("done2");
       });
-      console.log("done3");
+
     },
 
-    validateShape(membIds, store){
+    getShapeIds(store){
       var shapeIds = [];
       shapeIds = shapeIds.concat(store.getQuads(null, 'https://w3id.org/tree#shape', null, null).map(quad => quad.object.id));
       shapeIds = shapeIds.concat(store.getQuads(null, 'http://www.w3.org/ns/shapetrees#validatedBy', null, null).map(quad => quad.object.id));
       shapeIds = shapeIds.concat(store.getQuads(null, 'http://www.w3.org/ns/shapetrees#shape', null, null).map(quad => quad.object.id));
+      return shapeIds;
+    },
+
+    validateShape(membIds, store){
+      const shapeIds = this.getShapeIds(store);
 
       if (shapeIds.size > 1){
-        alert("Found multiple shapes this may lead to errors.\n" + JSON.stringify(shapeIds));
+        alert("Found multiple shapes, will only validate using the first one.\n" + JSON.stringify(shapeIds));
       }
       if (shapeIds.size == 0){
         this.remarks += "URL did not include a shacl shape given via tree:shape or st:validatedBy.\n"
@@ -406,38 +426,36 @@ export default {
         return factory.dataset().import(parser.import(await stream));
       }
 
-      var shapesX = this.extractShape(store, shapeIds[0]);
+      const shapesX = this.extractShape(store, shapeIds[0]);
       const dataX = this.extractShapeMembers(store, membIds);
 
       loadDatasetX(shapesX).then(shapes => {
         loadDatasetX(dataX).then(data => {
-          console.log("shapes: ", shapes);
-          console.log("data: ", data);
-          const validator = new SHACLValidator(shapes, { factory })
-          const report = validator.validate(data)
-
-          // Check conformance: `true` or `false`
-          console.log(report.conforms)
-
-          this.shape_report = JSON.stringify(report);
+          const validator = new SHACLValidator(shapes, { factory });
+          const report = validator.validate(data);
 
           this.shape_validation = report.conforms;
+          this.shape_report = "Result report:\n";
 
           for (const result of report.results) {
-            // See https://www.w3.org/TR/shacl/#results-validation-result for details
-            // about each property
-            console.log(result.message)
-            console.log(result.path)
-            console.log(result.focusNode)
-            console.log(result.severity)
-            console.log(result.sourceConstraintComponent)
-            console.log(result.sourceShape)
+            // See https://www.w3.org/TR/shacl/#results-validation-result for details about each propert
+            this.shape_report += "\nmessage: \n";
+            for (let mt of result.message){
+              this.shape_report += "\t" + mt['value']+"\n";
+            }
+            this.shape_report += "path: " + result.path['value'] + "\n";
+            this.shape_report += "focusNode: " + result.focusNode['value'] + "\n";
+            this.shape_report += "severity: " + result.severity['value'] + "\n";
+            this.shape_report += "sourceConstraintComponent: " + result.sourceConstraintComponent['value'] + "\n";
+            this.shape_report += "sourceShape: " + result.sourceShape['value'] + "\n";
           }
 
-          // Validation report as RDF dataset
-          console.log(JSON.parse(JSON.stringify(report.dataset)));
-        })
-      })
+          if (report.results.length == 0){
+            this.shape_report += "All checks passed.";
+          }
+
+        });
+      });
     },
 
     drawing(metadata) {
@@ -471,8 +489,6 @@ export default {
       // This gets cleared in getData if we change collections
       if (!this.svgHolder){
         this.svgHolder = d3.select("#extra")
-        // .attr("width", width + margin.left + margin.right)
-        // .attr("height", height + margin.top + margin.bottom)
         .append("svg")
         .attr("pointer-events", "all");
       }
@@ -783,7 +799,7 @@ export default {
 
         currentg.raise();
 
-        let textArray = JSON.stringify(d.shape_extra, null, '\t').split('\n');
+        let textArray = d.shape_extra.split('\n');
 
         currentg.select("rect")
         .attr("height", 10 + 20*textArray.length)
@@ -809,7 +825,9 @@ export default {
 
 
       function clickRelationHolder(e, d){
-        if (d.relation_count && d.relation_count > 0){
+        svgEG.selectAll("g").remove();
+        svgMG.selectAll("g").remove();
+        if (this.selected == "Relations" && d.relation_count && d.relation_count > 0){
           let currentg = d3.select(e.target.parentNode);
           //currentg could be tspan parent = text and not the group
           if (!currentg.classed("relation_holder_g")){
@@ -819,45 +837,55 @@ export default {
           expandRelationHolder.bind(this)(currentg, d);
 
           ticked();
-        } else {
-          svgEG.selectAll("g").remove();
         }
 
-        if (this.members[d.name]){
+        if (this.selected == "Members" && this.members[d.name]){
           expandMember.bind(this)(d);
+        } else if (this.selected == "Members"){
+          expandMember.bind(this)(d, false);
         }
       }
 
-      function expandMember(d){
-        svgMG.selectAll("g").remove();
+      function expandMember(d, hasMembers=true){
+
 
         let newG = svgMG.append("g").attr("class", "new_g")
         .attr("node_id", d.node_id);
 
-        let textArray = [];
-        for (let tempA of this.members[d.name]){
-          if (tempA.includes('\n')){
-            for (let tempB of tempA.split('\n')){
-              textArray.push(tempB);
+        if (hasMembers){
+          let textArray = [];
+          for (let tempA of this.members[d.name]){
+            if (tempA.includes('\n')){
+              for (let tempB of tempA.split('\n')){
+                textArray.push(tempB);
+              }
+            } else {
+              textArray.push(tempA);
             }
-          } else {
-            textArray.push(tempA);
           }
-        }
 
-        newG.append("text").text("");
+          newG.append("text").text("");
 
-        for (let textX of textArray){
-          let indent = (textX.split('\t').length -1) * 20;
-          newG.select("text").append('tspan')
-          .text(" " + textX)
+          for (let textX of textArray){
+            let indent = (textX.split('\t').length -1) * 20;
+            newG.select("text").append('tspan')
+            .text(" " + textX)
+            .attr("dy", 20)
+            .attr("dx", indent + 5)
+            .attr("x", 0);
+          }
+
+          newG.append("rect").attr("x", 0).attr("y", 0).attr("height", 10 + 20*textArray.length).attr("width",0).style("fill", "#5e915a");
+          newG.select("rect").attr("width", newG.node().getBBox().width + 10).lower();
+        } else {
+          newG.append("text").text("This node has no members.")
           .attr("dy", 20)
-          .attr("dx", indent + 5)
+          .attr("dx", 5)
           .attr("x", 0);
+
         }
 
-        newG.append("rect").attr("x", 0).attr("y", 0).attr("height", 10 + 20*textArray.length).attr("width",0).style("fill", "#5e915a");
-        newG.select("rect").attr("width", newG.node().getBBox().width + 10).lower();
+
 
         let bbox = svgMG.node().getBBox();
         svgM.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))

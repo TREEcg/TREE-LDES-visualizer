@@ -2,7 +2,8 @@
 
   <p style="white-space: pre-line">Click a node, relation or shape to show all attributes<br>
   ctrl+click a relation to add the node to the graph<br>
-  shift+mousewheel / shift+pan to zoom or pan<br></p>
+  shift+mousewheel / shift+pan to zoom or pan<br>
+  Drag screen corner to resize views</p>
 
   <!-- <label for="adecay">Enter graph convergence speed, between 0 and 1</label>
   <input type="number" v-model="alpha_decay_rate" placeholder="0.023" name="adecay"><br> -->
@@ -249,7 +250,7 @@ export default {
               collection.type = "collection";
               collection.vocab = collectionObj['@context']["@vocab"];
 
-              let possibleAttrs = ["import", "importStream", "conditionalImport", "totalItems"];
+              let possibleAttrs = ["@type", "import", "importStream", "conditionalImport", "totalItems"];
               for (let pAttr of possibleAttrs){
                 if (collectionObj[pAttr]){
                   collection[pAttr] = collectionObj[pAttr];
@@ -289,7 +290,7 @@ export default {
                   relation_holder.relation_count = metadata.nodes.get(viewNode['@id']).relation.length;
                   relation_holder.offsetX = this.jsondata.relations_holder.length;
 
-                  let possibleAttrs = ["import", "importStream", "conditionalImport", "search", "retentionPolicy"];
+                  let possibleAttrs = ["import", "importStream", "conditionalImport", "search", "retentionPolicy", "@type"];
                   for (let pAttr of possibleAttrs){
                     if (viewNode[pAttr]){
                       node[pAttr] = viewNode[pAttr];
@@ -823,7 +824,7 @@ export default {
         .attr("x",0)
         .attr("dx",15);
 
-        let possibleAttrs = ["import", "importStream", "conditionalImport", "totalItems"];
+        let possibleAttrs = ["@type", "import", "importStream", "conditionalImport", "totalItems"];
         for (let pAttr of possibleAttrs){
           if (d[pAttr]){
             tt.append("tspan").text(`${pAttr}:`)
@@ -1084,7 +1085,7 @@ export default {
         .attr("x",0)
         .attr("dx",15);
 
-        let possibleAttrs = ["import", "importStream", "conditionalImport", "search", "retentionPolicy"];
+        let possibleAttrs = ["@type", "import", "importStream", "conditionalImport", "search", "retentionPolicy"];
         for (let pAttr of possibleAttrs){
           if (d[pAttr]){
             tt.append("tspan").text(`${pAttr}:`)

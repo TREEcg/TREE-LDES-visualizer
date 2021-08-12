@@ -225,7 +225,6 @@ export default {
           }
 
           for (var collectionId of metadata.collections.keys()) {
-            this.members[standardURL] = [];
             var collectionObj = metadata.collections.get(collectionId);
 
             let double = true;
@@ -267,8 +266,9 @@ export default {
             }
 
             //TODO if there is no view there should probably be an error shown
-            if (collectionObj.view){
-              for (var viewNode of collectionObj.view){
+            if (collectionObj.view || metadata.nodes.size > 0){
+              let iter = (metadata.nodes.size > 0) ? metadata.nodes.values() : collectionObj.view;
+              for (var viewNode of iter){
                 //Change the id to include _node because collection and main view can have the same URI
                 //We do still want to show them as two separate nodes even though they are the same thing
 
@@ -313,16 +313,16 @@ export default {
 
 
             //TODO check what happens when as:items comes from a node not the collection
-
+            this.members[this.jsondata.nodes[this.jsondata.nodes.length -1].name] = [];
             if (collectionObj.member){
               let membIds = [];
               for (var memb of collectionObj.member){
                 membIds.push(memb['@id']);
-                this.extractId(store, memb['@id']).then(mtemp => this.members[standardURL].push(mtemp));
+                this.extractId(store, memb['@id']).then(mtemp => this.members[this.jsondata.nodes[this.jsondata.nodes.length -1].name].push(mtemp));
               }
               this.validateShape(membIds, store);
             } else {
-              this.remarks += "Found no members for " + standardURL + ".\n";
+              this.remarks += "Found no members for " + this.jsondata.nodes[this.jsondata.nodes.length -1].name + ".\n";
             }
 
           }
@@ -934,9 +934,8 @@ export default {
         }
       }
 
+
       function expandMember(d, hasMembers=true){
-
-
         let newG = svgMG.append("g").attr("class", "new_g")
         .attr("node_id", d.node_id);
 

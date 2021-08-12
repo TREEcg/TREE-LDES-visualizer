@@ -29,25 +29,25 @@
 
   <div id="my_dataviz" style="overflow:scroll; resize: both;"></div>
 
-  <div v-if="svgHolder">
-    <p>Click a node to reload after changing this option.</p>
-    <select v-model="selected">
-      <option value="1">Node</option>
-      <option value="2">Members</option>
-    </select>
-  </div>
 
-  <div id="extra" style="resize: both;"></div>
+
+
 
 <!-- This empty div allows user to resize extra info screen easily -->
   <div style="height: 100px;"></div>
 
-  <!-- <div id="windowContainer">
+  <div id="windowContainer">
     <div class="divFloat">
       <button v-on:click="close()">Close</button>
-      <div id="extra" style="resize: both;"></div>
+      <div v-if="svgHolder">
+        <select v-model="selected">
+          <option value="1">Node</option>
+          <option value="2">Members</option>
+        </select>
+      </div>
+      <div id="extra"></div>
     </div>
-  </div> -->
+  </div>
 
 </template>
 
@@ -96,9 +96,24 @@ export default {
       alpha_decay_rate: 0.1//1 - Math.pow(0.001, 1 / 300)
     }
   },
+    watch: {
+    selected: {
+      handler(newVal, oldVal) {
+        console.log("test selected")
+        console.log(newVal, oldVal)
+        // this.data_url = newVal;
+        // this.getData();
+        this.drawing.setVisible();
+      },
+    }
+  },
   methods : {
     close(){
       document.getElementById("windowContainer").style.display = "none";
+    },
+    open(){
+      console.log("open");
+      document.getElementById("windowContainer").style.display = "block";
     },
     async extractId(store, id) {
       const quadsWithSubj = store.getQuads(id, null, null, null);
@@ -924,12 +939,24 @@ export default {
         currentg.select("rect").attr("width", currentg.node().getBBox().width + 10);
       }
 
+      function setVisible(){
+        if (this.selected == "1"){
+          svgE.attr("display", "inline");
+          svgM.attr("display", "none");
+        } else if (this.selected == "2"){
+          svgE.attr("display", "none");
+          svgM.attr("display", "inline");
+        }
+      }
+
+      this.drawing.setVisible = setVisible.bind(this);
 
       function clickRelationHolder(e, d){
         svgEG.selectAll("g").remove();
         svgMG.selectAll("g").remove();
-        console.log(this.selected);
-        if (this.selected == "1" && d.relation_count && d.relation_count > 0){
+        this.open();
+        // setVisibleX.bind(this);
+        if (d.relation_count && d.relation_count > 0){
           let currentg = d3.select(e.target.parentNode);
           //currentg could be tspan parent = text and not the group
           if (!currentg.classed("relation_holder_g")){
@@ -937,17 +964,26 @@ export default {
           }
 
           expandRelationHolder.bind(this)(currentg, d);
-
+          // this.open();
           ticked();
         }
 
-        if (this.selected == "2" && this.members[d.name]){
+        if (this.members[d.name]){
+          // this.open();
           expandMember.bind(this)(d);
         } else if (this.selected == "2"){
+          // this.open();
           expandMember.bind(this)(d, false);
         }
-      }
 
+        if (this.selected == "1"){
+          svgE.attr("display", "inline");
+          svgM.attr("display", "none");
+        } else if (this.selected == "2"){
+          svgE.attr("display", "none");
+          svgM.attr("display", "inline");
+        }
+      }
 
       function expandMember(d, hasMembers=true){
         let newG = svgMG.append("g").attr("class", "new_g")
@@ -1002,7 +1038,7 @@ export default {
 
       function expandRelationHolder(currentg, d){
 
-        svgEG.selectAll("g").remove();
+        // svgEG.selectAll("g").remove();
 
         let sortIndex = -1;
         let offsetY = Number(currentg.select("rect").attr("height"));
@@ -1337,8 +1373,6 @@ export default {
 
 #extra {
   width:100%;
-  height:600px;
-  overflow: scroll;
 }
 
 #windowContainer {
@@ -1365,6 +1399,8 @@ export default {
   -webkit-transition: 200ms -webkit-transform;
   box-shadow: 0 4px 23px 5px rgba(0, 0, 0, 0.2), 0 2px 6px rgba(0, 0, 0, 0.15);
   display: block;
+  resize: both;
+  overflow:scroll;
 }
 
 svg{

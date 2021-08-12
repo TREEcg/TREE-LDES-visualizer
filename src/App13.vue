@@ -78,7 +78,7 @@ export default {
       qtext: [],
       //easier to clear jsondata in functions without having to copy paste this
       empty : {"collection":[], "nodes":[], "relations":[], "links":[], "shapes":[], "relations_holder":[]},
-      jsondata: null, //this will be set to empty on start
+      jsondata: null, //this will be set to empty on start of getData
       members: {},
       svgHolder: null,
       remarks: "",
@@ -110,7 +110,6 @@ export default {
       var quadsWithSubj = store.getQuads(id, null, null, null);
       for (let quad of quadsWithSubj){
         if (quad.object.termType === "NamedNode" || quad.object.termType === "BlankNode") {
-          console.log("type: ", quad.object.termType);
           if (quad.object.id && !checked.includes(quad.object.id)){
             checked.push(quad.object.id);
             quadsWithSubj = quadsWithSubj.concat(this.extractShapeHelp(store, quad.object.id, checked));
@@ -132,8 +131,8 @@ export default {
       for (let tempTarget of shapeTargets){
         targetQuads = targetQuads.concat(store2.getQuads(null, 'http://www.w3.org/ns/shacl#'+tempTarget, null, null))
       }
-      console.log("targetQuads: ", targetQuads);
 
+      // If no target was given for the shape, make it target all tree:member objects
       if (targetQuads.length == 0){
         store2.addQuad(
           namedNode(id),
@@ -141,11 +140,10 @@ export default {
           namedNode('https://w3id.org/tree#member'),
           defaultGraph()
         );
-        console.log("targetQuadsNew: ", store2.getQuads(null, 'http://www.w3.org/ns/shacl#targetObjectsOf', null, null));
+
         quadsWithSubj = this.extractShapeHelp(store2, id);
       }
 
-      console.log("shape: ", JSON.parse(JSON.stringify(quadsWithSubj)));
       return rdfSerializer.serialize(streamifyArray(quadsWithSubj), { contentType: 'text/turtle' });
     },
 
@@ -153,14 +151,12 @@ export default {
       var quadsWithSubj = [];
       for (let id of ids){
         quadsWithSubj = quadsWithSubj.concat(store.getQuads(id, null, null, null));
+        // We need quads with a member as object for shacl targetting
         quadsWithSubj = quadsWithSubj.concat(store.getQuads(null, null, id, null));
       }
-
-      console.log("data: ", JSON.parse(JSON.stringify(quadsWithSubj)));
       return rdfSerializer.serialize(streamifyArray(quadsWithSubj), { contentType: 'text/turtle' });
     },
 
-    //TODO add import, importStream, conditionalImport, totalItems
     async getData(url) {
       //TODO is it possible to keep all quads, extract all metadata and then not have to check for doubles?
       //Simply by removing all doubles from the saved quads?
@@ -190,8 +186,7 @@ export default {
         this.svgHolder = null;
       }
 
-      //console.log("standardURL: ", standardURL);
-      const {quads} = await rdfDereferencer.dereference(standardURL);//'https://treecg.github.io/demo_data/stops.nt');//'http://dbpedia.org/page/12_Monkeys');
+      const {quads} = await rdfDereferencer.dereference(standardURL);
       quads.on('data', (quad) => {this.qtext.push(quad); /*console.log(quad)*/})
       .on('error', (error) => console.error(error))
       .on('end', () => {
@@ -206,8 +201,8 @@ export default {
             let errorText = "";
             errorText += "ERROR: found multiple collections! This is not allowed.\n";
             errorText += JSON.stringify(metadata.collections, null, '/t');
-            errorText += "\nPossible causes: \nmembers/shape are linked not to the collection but the node.";
             errorText += "\ncheck tree:view, hydra:view, void:subset, dct:isPartOf, as:partOf.";
+            errorText += "\nOther causes: \nmembers/shape are linked not to the collection but the node.";
             errorText += "\ncheck tree:member, hydra:member, as:items, ldp:contains.";
             alert(errorText);
           }
@@ -568,6 +563,8 @@ export default {
       .data(this.jsondata.collection)
       .join("g")
       .attr("class", "collection_g main_g")
+      .attr("expanded", "false")
+      .on("click", clickCollection.bind(this))
       .call(d3.drag()
       .on("start", dragstartX)
       .on("end", dragendX)
@@ -785,6 +782,77 @@ export default {
       // connect the zoom function to the main svg element
       svg.call(zoom);
 
+      function clickCollection(e, d){
+        let currentg = d3.select(e.target.parentNode);
+        if (!currentg.classed("collection_g")){
+          currentg = d3.select(currentg._groups.pop().pop().parentNode);
+        }
+
+        expandCollection.bind(this)(currentg, d);
+
+        ticked();
+      }
+
+      function expandCollection(currentg, d){
+        if(currentg.attr("expanded") == "false"){
+          currentg.attr("expanded", "true");
+
+          expandCollectionTrue.bind(this)(currentg, d);
+
+        } else {
+          currentg.attr("expanded", "false");
+
+          currentg.select("text").text((d.type + "").split('#').pop())
+          currentg.select("rect").attr("width", 1);
+
+          currentg.select("text").selectAll("tspan")
+          .attr("x", function(d) {return d.x;})
+
+          currentg.select("rect")
+          .attr("height", 30)
+          .attr("width", currentg.node().getBBox().width + 10);
+        }
+      }
+
+      function expandCollectionTrue(currentg, d){
+        currentg.raise();
+        currentg.select("text").text("");
+        let tt = currentg.select("text");
+
+        tt.append("tspan").text("Collection")
+        .attr("dy", 22)
+        .attr("dx",5);
+
+        tt.append("tspan").text(d.id)
+        .attr("dy", 22)
+        .attr("x",0)
+        .attr("dx",15);
+
+        let possibleAttrs = ["import", "importStream", "conditionalImport", "totalItems"];
+        for (let pAttr of possibleAttrs){
+          if (d[pAttr]){
+            tt.append("tspan").text(`${pAttr}:`)
+            .attr("dy", 22)
+            .attr("x",0)
+            .attr("dx",5);
+            for (const [key, value] of d[pAttr]) {
+              tt.append("tspan").text(`${key}: ${value}`)
+              .attr("dy", 22)
+              .attr("x",0)
+              .attr("dx",15);
+            }
+          }
+        }
+
+        currentg.select("rect")
+        .attr("height", 10 + currentg.select("text").node().getBBox().height)
+
+        currentg.select("text").selectAll("text, tspan")
+        .attr("x", function(d) {return d.x;})
+
+        currentg.select("rect").attr("width", currentg.node().getBBox().width + 10);
+      }
+
       function clickShape(e, d){
         let currentg = d3.select(e.target.parentNode);
         if (!currentg.classed("shape_g")){
@@ -805,11 +873,7 @@ export default {
 
         } else {
           currentg.attr("expanded", "false");
-          for(let temp of this.jsondata.shapes){
-            if (temp.id == d.id){
-              temp.expanded = "false";
-            }
-          }
+
           currentg.select("text").text((d.type + "").split('#').pop())
           currentg.select("rect").attr("width", 1);
 
@@ -823,12 +887,6 @@ export default {
       }
 
       function expandShapeTrue(currentg, d){
-        for(let temp of this.jsondata.shapes){
-          if (temp.id == d.id){
-            temp.expanded = "true";
-          }
-        }
-
         currentg.raise();
 
         let textArray = d.shape_extra.split('\n');
@@ -838,15 +896,12 @@ export default {
 
         currentg.select("text").text("");
 
-        let sortIndex = 0;
         for (let textX of textArray){
           let indent = (textX.split('\t').length -1) * 20;
           currentg.select("text").append('tspan')
           .text(textX.replace('\t',''))
           .attr("dy", 20)
-          .attr("dx", indent + 5)
-          .attr("sortIndex", sortIndex);
-          sortIndex++;
+          .attr("dx", indent + 5);
         }
 
         currentg.select("text").selectAll("text, tspan")

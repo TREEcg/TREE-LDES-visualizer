@@ -83,6 +83,7 @@ export default {
       empty : {"collection":[], "nodes":[], "relations":[], "links":[], "shapes":[], "relations_holder":[]},
       jsondata: null, //this will be set to empty on start of getData
       members: {},
+      membersFailed : [],
       svgHolder: null,
       remarks: "",
       next_url: "",
@@ -493,6 +494,7 @@ export default {
             }
             this.shape_report += "path: " + result.path['value'] + "\n";
             this.shape_report += "focusNode: " + result.focusNode['value'] + "\n";
+            this.membersFailed.push(result.focusNode['value']);
             this.shape_report += "severity: " + result.severity['value'] + "\n";
             this.shape_report += "sourceConstraintComponent: " + result.sourceConstraintComponent['value'] + "\n";
             this.shape_report += "sourceShape: " + result.sourceShape['value'] + "\n";
@@ -947,6 +949,16 @@ export default {
           svgE.attr("display", "none");
           svgM.attr("display", "inline");
         }
+
+        let bbox = svgMG.node().getBBox();
+        svgM.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
+        .attr("width", (bbox.width+bbox.x))
+        .attr("height", (bbox.height+bbox.y));
+
+        bbox = svgEG.node().getBBox();
+        svgE.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
+        .attr("width", (bbox.width+bbox.x))
+        .attr("height", (bbox.height+bbox.y));
       }
 
       this.drawing.setVisible = setVisible.bind(this);

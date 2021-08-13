@@ -44,6 +44,7 @@
         <select v-model="selected">
           <option value="1">Node</option>
           <option value="2">Members</option>
+          <option value="3">Shape validation</option>
         </select>
       </div>
       <div id="extra"></div>
@@ -93,6 +94,7 @@ export default {
       graph_width: 1000,
       data_url: null,
       shape_validation: "unknown",
+      node_validation: [],
       shape_report: null,
       selected: "1",
       alpha_decay_rate: 0.1//1 - Math.pow(0.001, 1 / 300)
@@ -338,7 +340,6 @@ export default {
 
             //TODO check what happens when as:items comes from a node not the collection
             const newNodeMembersId = this.jsondata.nodes[this.jsondata.nodes.length -1].name;
-            // this.members[newNodeMembersId] = [];
             this.members[newNodeMembersId] = new Map();
             if (collectionObj.member){
               let membIds = [];
@@ -347,10 +348,6 @@ export default {
                 // Need to save id inside loop because used in async push
                 let tX = memb['@id'];
                 this.extractId(store, memb['@id']).then(mtemp => {
-                  // this.members[newNodeMembersId].push({
-                  //   "id":tX,
-                  //   "value":mtemp
-                  // })
                   this.members[newNodeMembersId].set(
                     tX, mtemp
                   )
@@ -476,6 +473,7 @@ export default {
 
     validateShape(membIds, store, newNodeMembersId){
       this.membersFailed[newNodeMembersId] = [];
+      this.node_validation[newNodeMembersId] = {};
       const shapeIds = this.getShapeIds(store);
 
       if (shapeIds.size > 1){
@@ -560,7 +558,7 @@ export default {
       .attr("height", "100%")
       .attr("pointer-events", "all");
 
-
+      //TODO This is now not needed anymore since there is only one pop-up window
       // check if the extra info svg exists, if not create it
       // This gets cleared in getData if we change collections
       if (!this.svgHolder){
@@ -580,6 +578,12 @@ export default {
       .attr("pointer-events", "all");
 
       const svgMG = svgM.append("g");
+
+      const svgS = d3.select("#extra")
+      .append("svg")
+      .attr("pointer-events", "all");
+
+      const svgSG = svgS.append("g");
 
 
 
@@ -636,7 +640,7 @@ export default {
       .attr("class", "collection_rect main_rect")
       .attr("width", collection.select("text").node().getBBox().width+15)
       .attr("height", collection.select("text").node().getBBox().height+10)
-      .style("fill", "#5fd145")
+      .style("stroke", "#5fd145")
       .lower();
 
 
@@ -667,7 +671,7 @@ export default {
       .attr("class", "shape_rect main_rect")
       .attr("width", shape.select("text").node().getBBox().width+15)
       .attr("height", shape.select("text").node().getBBox().height+10)
-      .style("fill", "#5e915a")
+      .style("stroke", "#5e915a")
       .lower();
 
 
@@ -713,7 +717,7 @@ export default {
         .attr("class", "relation_holder_rect main_rect")
         .attr("width", d3.select(tg).node().getBBox().width+15)
         .attr("height", d3.select(tg).node().getBBox().height+10)
-        .style("fill", "#69b3a2")
+        .style("stroke", "#69b3a2")
         .lower();
       }
 
@@ -974,9 +978,15 @@ export default {
         if (this.selected == "1"){
           svgE.attr("display", "inline");
           svgM.attr("display", "none");
+          svgS.attr("display", "none");
         } else if (this.selected == "2"){
           svgE.attr("display", "none");
           svgM.attr("display", "inline");
+          svgS.attr("display", "none");
+        } else if (this.selected == "3"){
+          svgE.attr("display", "none");
+          svgM.attr("display", "none");
+          svgS.attr("display", "inline");
         }
 
         var el = document.getElementById("scrollContainer");
@@ -989,10 +999,12 @@ export default {
       function clickRelationHolder(e, d){
         svgEG.selectAll("g").remove();
         svgMG.selectAll("g").remove();
+        svgSG.selectAll("g").remove();
 
         // Display everything first so they have a correct viewbox attribute to use in calculations
         svgE.attr("display", "inline");
         svgM.attr("display", "inline");
+        svgS.attr("display", "inline");
         this.open();
 
         if (d.relation_count && d.relation_count > 0){
@@ -1008,98 +1020,92 @@ export default {
 
         expandMemberHolder.bind(this)(d);
 
-        // if (this.members[d.name]){
-        //   expandMember.bind(this)(d);
-        // } else {
-        //   expandMember.bind(this)(d, false);
-        // }
+        expandValidationHolder.bind(this)(d);
 
         // For some reason calling setVisible here instead does not work
         if (this.selected == "1"){
           svgE.attr("display", "inline");
           svgM.attr("display", "none");
+          svgS.attr("display", "none");
         } else if (this.selected == "2"){
           svgE.attr("display", "none");
           svgM.attr("display", "inline");
+          svgS.attr("display", "none");
+        } else if (this.selected == "3"){
+          svgE.attr("display", "none");
+          svgM.attr("display", "none");
+          svgS.attr("display", "inline");
         }
       }
 
-      function expandMemberHolder(d){
-        let newG = svgMG.append("g").attr("class", "new_g")
-        .attr("node_id", d.node_id);
-        // .style("pointer-events", "none");
+
+      function expandValidationHolder(d){
+        // let newG = svgSG.append("g").attr("class", "new_g")
+        // .attr("node_id", d.node_id);
+
+
+        expandMemberHolder.bind(this)(d, false);
+      }
+
+
+      function expandMemberHolder(d, showAll=true){
+        let newG;
+        if (showAll === true){
+          newG = svgMG.append("g").attr("class", "new_g")
+          .attr("node_id", d.node_id);
+        } else {
+          newG = svgSG.append("g").attr("class", "new_g")
+          .attr("node_id", d.node_id);
+        }
+
 
         if (this.members[d.name]){
-          // let textArray = [];
-
           let sortIndex = 0;
           for (let tempA of this.members[d.name].keys()){
-            // textArray.push(tempA.id);
+            if (showAll === true || this.membersFailed[d.name].includes(tempA)){
+              let innerG = newG.append("g")
+              .attr("sortIndex", sortIndex)
+              .attr("expanded", "false")
+              .attr("class", "member_g")
+              .attr("y", 22+44*sortIndex);
 
-            let innerG = newG.append("g")
-            .attr("sortIndex", sortIndex)
-            .attr("expanded", "false")
-            .attr("class", "member_g")
-            .attr("y", 22+44*sortIndex);
+              let tt = innerG.append("text").text(tempA)
+              .attr("sortIndex", sortIndex)
+              .attr("y", 22+44*sortIndex);
 
-            let tt = innerG.append("text").text(tempA)
-            .attr("sortIndex", sortIndex)
-            .attr("y", 22+44*sortIndex);
+              if (this.membersFailed[d.name].includes(tempA)){
+                tt.style("fill", "#FF0000");
+              }
 
-            if (this.membersFailed[d.name].includes(tempA)){
-              tt.style("fill", "#FF0000");
+              innerG.on("click", expandMember.bind(this, d, innerG, tempA, newG, showAll));
+
+              sortIndex++;
             }
-
-            innerG.on("click", expandMember.bind(this, d, innerG, tempA, newG));
-
-            sortIndex++;
           }
 
-          // newG.append("text").text("");
-
-          // let sortIndex = 0;
-          // for (let textX of textArray){
-          //
-          //   newG.append("text").text("");
-          //
-          //   let indent = (textX.split('\t').length -1) * 20;
-          //   newG.select("text").append('tspan')
-          //   .text(" " + textX)
-          //   .attr("dy", 20)
-          //   .attr("dx", indent + 5)
-          //   .attr("x", 0)
-          //   .attr("sortIndex", sortIndex);
-          //   sortIndex++;
-          // }
-
-          // newG.append("rect").attr("x", 0).attr("y", 0).attr("height", 10 + 20*textArray.length).attr("width",0).style("fill", "#5e915a");
-          // newG.select("rect").attr("width", newG.node().getBBox().width + 10).lower();
-        } else {
+        } else if (!this.members[d.name]){
           newG.append("text").text("This node has no members.")
           .attr("dy", 20)
           .attr("dx", 5)
           .attr("x", 0);
-
         }
 
+        if (showAll === true){
+          let bbox = svgMG.node().getBBox();
+          svgM.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
+          .attr("width", (bbox.width+bbox.x))
+          .attr("height", (bbox.height+bbox.y));
+        } else {
+          let bbox = svgSG.node().getBBox();
+          svgS.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
+          .attr("width", (bbox.width+bbox.x))
+          .attr("height", (bbox.height+bbox.y));
+        }
 
-
-        let bbox = svgMG.node().getBBox();
-        svgM.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
-        .attr("width", (bbox.width+bbox.x))
-        .attr("height", (bbox.height+bbox.y));
-
-        // bbox = svgEG.node().getBBox();
-        // svgE.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
-        // .attr("width", (bbox.width+bbox.x))
-        // .attr("height", (bbox.height+bbox.y));
       }
 
-      function expandMember(d, innerG, k, newG){
-        console.log("d: ", d);
-        console.log("innerG: ", innerG);
-        console.log("newG: ", newG);
 
+      function expandMember(d, innerG, k, newG, showAll){
         let heightStart = innerG.node().getBBox().height;
 
         if (innerG.attr("expanded") == "false"){
@@ -1144,61 +1150,21 @@ export default {
           }
         }
 
-
-        // let newG = svgMG.append("g").attr("class", "new_g")
-        // .attr("node_id", d.node_id);
-        //
-        // if (hasMembers){
-        //   let textArray = [];
-        //   for (let tempA of this.members[d.name]){
-        //     if (tempA.value.includes('\n')){
-        //       for (let tempB of tempA.value.split('\n')){
-        //         textArray.push(tempB);
-        //       }
-        //     } else {
-        //       textArray.push(tempA.value);
-        //     }
-        //   }
-        //
-        //   newG.append("text").text("");
-        //
-        //   for (let textX of textArray){
-        //     let indent = (textX.split('\t').length -1) * 20;
-        //     newG.select("text").append('tspan')
-        //     .text(" " + textX)
-        //     .attr("dy", 20)
-        //     .attr("dx", indent + 5)
-        //     .attr("x", 0);
-        //   }
-        //
-        //   newG.append("rect").attr("x", 0).attr("y", 0).attr("height", 10 + 20*textArray.length).attr("width",0).style("fill", "#5e915a");
-        //   newG.select("rect").attr("width", newG.node().getBBox().width + 10).lower();
-        // } else {
-        //   newG.append("text").text("This node has no members.")
-        //   .attr("dy", 20)
-        //   .attr("dx", 5)
-        //   .attr("x", 0);
-        //
-        // }
-        //
-        //
-        //
-        let bbox = svgMG.node().getBBox();
-        svgM.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
-        .attr("width", (bbox.width+bbox.x))
-        .attr("height", (bbox.height+bbox.y));
-        //
-        // bbox = svgEG.node().getBBox();
-        // svgE.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
-        // .attr("width", (bbox.width+bbox.x))
-        // .attr("height", (bbox.height+bbox.y));
+        if (showAll === true){
+          let bbox = svgMG.node().getBBox();
+          svgM.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
+          .attr("width", (bbox.width+bbox.x))
+          .attr("height", (bbox.height+bbox.y));
+        } else {
+          let bbox = svgSG.node().getBBox();
+          svgS.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
+          .attr("width", (bbox.width+bbox.x))
+          .attr("height", (bbox.height+bbox.y));
+        }
       }
 
 
       function expandRelationHolder(currentg, d){
-
-        // svgEG.selectAll("g").remove();
-
         let sortIndex = -1;
         let offsetY = Number(currentg.select("rect").attr("height"));
 
@@ -1268,7 +1234,7 @@ export default {
           .attr("height", 25)
           .attr("x", 30)
           .attr("y", function(){return sortIndex*25 + offsetY})
-          .style("fill", colors[sortIndex%2])
+          .style("stroke", colors[sortIndex%2])
           .lower();
 
           if(relX.node){
@@ -1314,7 +1280,7 @@ export default {
           }
         }
 
-        newG.append("rect").attr("x", 0).attr("y", 0).style("fill", "#69b3a2")
+        newG.append("rect").attr("x", 0).attr("y", 0).style("stroke", "#69b3a2")
         .attr("width", newG.node().getBBox().width+30)
         .attr("height", newG.node().getBBox().height+30)
         .attr("class", "outer_rect")
@@ -1446,7 +1412,7 @@ export default {
             tt.selectAll("tspan").raise();
 
             let colors = ["#c4b727", "#d4c957"];
-            let trect = d3.select(currentg).append("rect").style("fill", colors[Number(d3.select(currentg).attr("sortIndex"))%2])
+            let trect = d3.select(currentg).append("rect").style("stroke", colors[Number(d3.select(currentg).attr("sortIndex"))%2])
             .attr("class", "pop_up")
             .attr("x", d3.select(currentg).select(".inner_rect").attr("x"))
             .attr("y", d3.select(currentg).select(".inner_rect").attr("y"))
@@ -1596,5 +1562,10 @@ export default {
 
 svg{
   vertical-align: top;
+}
+
+rect {
+  fill: white;
+  stroke-width: 1.5px;
 }
 </style>

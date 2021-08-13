@@ -82,7 +82,7 @@ export default {
     return {
       qtext: [],
       //easier to clear jsondata in functions without having to copy paste this
-      empty : {"collection":[], "nodes":[], "relations":[], "links":[], "shapes":[], "relations_holder":[]},
+      empty : {"collection":[], "relations":[], "links":[], "shapes":[], "relations_holder":[]},
       jsondata: null, //this will be set to empty on start of getData
       members: {},
       membersFailed : [],
@@ -213,13 +213,11 @@ export default {
       quads.on('data', (quad) => {this.qtext.push(quad); /*console.log(quad)*/})
       .on('error', (error) => console.error(error))
       .on('end', () => {
-        // console.log('All done!');
-        // quads is an array of RDF Quads (RDF.Quad[])
         extractMetadata(this.qtext).then(metadata => {
-          // console.log(metadata);
 
           const store = new N3.Store(this.qtext)
 
+          // Having more than one collection is wrong but we can still try drawing a graph
           if (metadata.collections.size > 1){
             let errorText = "";
             errorText += "ERROR: found multiple collections! This is not allowed.\n";
@@ -230,8 +228,9 @@ export default {
             alert(errorText);
           }
 
-          if (metadata.collections.size == 0){
 
+          // If no 'new' collection was found, we might already have a collection stored
+          if (metadata.collections.size == 0){
             if (this.jsondata.collection.length == 0){
               alert("No collection pre-defined and no collection found on " + standardURL + ".\nPlease provide a different starting URL.");
               return;
@@ -239,17 +238,19 @@ export default {
 
             if (!this.jsondata[standardURL+"_node"]){
               this.jsondata[standardURL+"_node"] = [];
-
               alert("no collection metadata found at " + standardURL + ".\nWill add an empty node for this URL.");
-              this.jsondata.nodes.push({"id":standardURL+"_node", "type":"Node", "name":standardURL, "relation_count":0, "offsetX": this.jsondata.nodes.length});
-              this.jsondata.relations_holder.push({"id":standardURL+"_node", "node_id":standardURL+"_node", "name":standardURL, "relation_count":0, "offsetX": this.jsondata.relations_holder.length})
-              this.jsondata.links.push({"source":this.jsondata.collection[0].id, "target":standardURL+"_node", "name":"relation_holder"});
+              this.jsondata.relations_holder.push({"id":standardURL+"_node", "name":standardURL, "relation_count":0})
+              this.jsondata.links.push({"source":this.jsondata.collection[0].id, "target":standardURL+"_node"});
             }
           }
 
+
+          // The main data parsing part
           for (var collectionId of metadata.collections.keys()) {
             var collectionObj = metadata.collections.get(collectionId);
 
+
+            // If we already had a collection stored, check to make sure the 'new' one is the same as the old one
             let double = true;
             if (this.jsondata.collection.length > 0){
               for (let checker of this.jsondata.collection){
@@ -259,6 +260,8 @@ export default {
               }
             }
 
+
+            // If the new collection is not the same throw an error
             if (!double){
               let errorText = "";
               errorText += "ERROR: new node is linked to a different collection! This is not allowed.";
@@ -269,12 +272,12 @@ export default {
               return;
             }
 
-            if (this.jsondata.collection.length == 0){
 
+            // If we did not have a collection stored already add it to jsondata.collection
+            if (this.jsondata.collection.length == 0){
               let collection = {};
               collection.id = collectionId;
-              collection.name = collectionObj['@id'];
-              collection.type = "collection";
+              collection.type = "Collection";
               collection.vocab = collectionObj['@context']["@vocab"];
 
               let possibleAttrs = ["@type", "import", "importStream", "conditionalImport", "totalItems"];
@@ -285,46 +288,37 @@ export default {
               }
 
               this.jsondata.collection.push(collection);
-
             }
 
+
+            // Check for new nodes, either defined via collection->view or directly via nodes
             if (collectionObj.view || metadata.nodes.size > 0){
               let iter = (metadata.nodes.size > 0) ? metadata.nodes.values() : collectionObj.view;
               for (var viewNode of iter){
-                //Change the id to include _node because collection and main view can have the same URI
-                //We do still want to show them as two separate nodes even though they are the same thing
+
+                // Change the id to include _node because collection and view can have the same URI
+                // We do still want to show them as two separate nodes even though they have the same URL
 
                 let double = false;
-                for (let checker of this.jsondata.nodes){
+                for (let checker of this.jsondata.relations_holder){
                   if (checker.id == viewNode['@id']+"_node"){
                     double = true;
                   }
                 }
 
                 if (!double){
-                  let node = {};
-                  node.id = viewNode['@id']+"_node";
-                  node.type = "Node";
-                  node.name = viewNode['@id'];
-                  node.relation_count = metadata.nodes.get(viewNode['@id']).relation.length;
-                  node.offsetX = this.jsondata.nodes.length;
-
                   let relation_holder = {};
                   relation_holder.id = viewNode['@id']+"_node";
-                  relation_holder.node_id = viewNode['@id']+"_node";
                   relation_holder.name = viewNode['@id'];
                   relation_holder.relation_count = metadata.nodes.get(viewNode['@id']).relation.length;
-                  relation_holder.offsetX = this.jsondata.relations_holder.length;
 
                   let possibleAttrs = ["import", "importStream", "conditionalImport", "search", "retentionPolicy", "@type"];
                   for (let pAttr of possibleAttrs){
                     if (viewNode[pAttr]){
-                      node[pAttr] = viewNode[pAttr];
                       relation_holder[pAttr] = viewNode[pAttr];
                     }
                   }
 
-                  this.jsondata.nodes.push(node);
                   this.jsondata.relations_holder.push(relation_holder)
                   this.jsondata.links.push({"source":collectionId, "target":viewNode['@id']+"_node", "name":"relation_holder"});
                 }
@@ -335,7 +329,7 @@ export default {
 
 
             //TODO check what happens when as:items comes from a node not the collection
-            const newNodeMembersId = this.jsondata.nodes[this.jsondata.nodes.length -1].name;
+            const newNodeMembersId = this.jsondata.relations_holder[this.jsondata.relations_holder.length -1].name;
             this.members[newNodeMembersId] = new Map();
             if (collectionObj.member){
               let membIds = [];
@@ -362,7 +356,7 @@ export default {
             var nodeObj = metadata.nodes.get(nodeId);
             this.jsondata[nodeId+"_node"] = [];
             for (var relation of nodeObj.relation){
-              this.jsondata[nodeId+"_node"].push({"id":relation['@id'], "node_id":nodeId+"_node", "name":relation['@id']});
+              this.jsondata[nodeId+"_node"].push({"id":relation['@id'], "name":relation['@id']});
             }
           }
 
@@ -432,13 +426,14 @@ export default {
           console.log("members:");
           console.log(this.members);
 
-          if (this.jsondata.shapes.length == 0 && metadata.collections.get(collectionId).shape){
 
+          // TODO does the shape need to be changed every time we switch nodes or can we just keep it stored
+          if (this.jsondata.shapes.length == 0 && metadata.collections.get(collectionId).shape){
             const shapeIds = this.getShapeIds(store);
 
             this.extractShapeId(store, shapeIds[0]).then(res => {
               this.jsondata.shapes.push({"id":shapeIds[0], "type":"shape", "shape_extra":res});
-              this.jsondata.links.push({"source":collectionId, "target":shapeIds[0], "name":"shape"});
+              this.jsondata.links.push({"source":collectionId, "target":shapeIds[0]});
               this.drawing();
             });
 
@@ -539,15 +534,10 @@ export default {
       });
     },
 
+
     drawing() {
-      console.log("start drawing");
       const margin = {top: 10, right: 30, bottom: 10, left: 30};
-      if(!this.graph_width){
-        this.graph_width = 2000;
-      }
-      if(!this.graph_height){
-        this.graph_height = 2000;
-      }
+
       const width = this.graph_width - margin.left - margin.right;
       const height = this.graph_height - margin.top - margin.bottom;
 
@@ -563,10 +553,7 @@ export default {
       .attr("height", "100%")
       .attr("pointer-events", "all");
 
-      // var svgE, svgM, svgS;
-      // var svgEG, svgMG, svgSG;
-
-      // check if the extra info svg exists, if not create it
+      // check if the extra info svgs exist, if not create them
       // This gets cleared in getData if we change collections
       if (!this.svgHolder){
         this.svgHolder =
@@ -605,7 +592,6 @@ export default {
       //TODO find a way to make the arrowhead placed dynamically instead of using refX
       svg.append("marker")
       .attr("id", "arrow")
-      //.attr("markerUnits","strokeWidth")//The arrow set to strokeWidth will change with the thickness of the line
       .attr("markerUnits","userSpaceOnUse")
       .attr("viewBox", "0 -5 10 10")
       .attr("refX",55)//Arrow coordinates
@@ -625,7 +611,7 @@ export default {
       .append("path")
       .style("stroke","gray")
       .style("pointer-events", "none")
-      .style("stroke-width",0.5)//line thickness
+      .style("stroke-width",0.5)
       .attr("marker-end", "url(#arrow)" );
 
 
@@ -719,13 +705,11 @@ export default {
         d3.select(tg).select("text")
         .append("tspan").text(function(d){return d.name})
         .attr("dy", 22)
-        .attr("x",0)
         .attr("dx",5);
 
         d3.select(tg).select("text")
         .append("tspan").text(function(d){return "relations: " + d.relation_count})
         .attr("dy", 22)
-        .attr("x",0)
         .attr("dx",15);
 
         d3.select(tg).append("rect")
@@ -749,7 +733,6 @@ export default {
 
 
       function firstTick(){
-        // console.log("firstticked");
         ticked();
 
         svg.selectAll(".collection_g").attr("x", function(d){d.x=50; return d.x}).attr("y", function(d){d.y=20; return d.y});
@@ -759,9 +742,8 @@ export default {
         fixLinks();
       }
 
-      function ticked() {
-        // console.log("ticked");
 
+      function ticked() {
         // This simply sets the attribute to the given (parent) data x and y
         d3.selectAll(".maing_g")
         .attr("x", function(d) {
@@ -772,10 +754,9 @@ export default {
         });
 
         fixGroupChildren();
-
         fixLinks();
-
       }
+
 
       function fixLinks(){
         link.attr("transform", "scale("+d3.select("svg").attr("scaleAll")+")");
@@ -785,6 +766,7 @@ export default {
           return path;
         });
       }
+
 
       function fixGroupChildren(){
         d3.selectAll(".main_text, .main_rect")
@@ -796,7 +778,6 @@ export default {
       }
 
 
-      //Use X at the end to not confuse with buildin stuff
       function dragstartX() {
         d3.select(this).attr("stroke", "black");
       }
@@ -843,13 +824,13 @@ export default {
           svg.attr("prevTX", e.transform.x).attr("prevTY", e.transform.y).attr("scaleAll", e.transform.k);
 
           fixGroupChildren()
-
           fixLinks();
         }
       });
 
       // connect the zoom function to the main svg element
       svg.call(zoom);
+
 
       function clickCollection(e, d){
         let currentg = d3.select(e.target.parentNode);
@@ -931,6 +912,7 @@ export default {
         currentg.select("rect").attr("width", currentg.node().getBBox().width + 10);
       }
 
+
       function clickShape(e, d){
         let currentg = d3.select(e.target.parentNode);
         if (!currentg.classed("shape_g")){
@@ -938,10 +920,8 @@ export default {
         }
 
         expandShape.bind(this)(currentg, d);
-
         ticked();
       }
-
 
       function expandShape(currentg, d){
         if(currentg.attr("expanded") == "false"){
@@ -988,6 +968,8 @@ export default {
         currentg.select("rect").attr("width", currentg.node().getBBox().width + 10);
       }
 
+
+      this.drawing.setVisible = setVisible.bind(this);
       function setVisible(){
         if (this.selected == "1"){
           svgE.attr("display", "inline");
@@ -1008,7 +990,7 @@ export default {
         el.scrollLeft = 0;
       }
 
-      this.drawing.setVisible = setVisible.bind(this);
+
 
       function clickRelationHolder(e, d){
         svgEG.selectAll("g").remove();
@@ -1036,26 +1018,13 @@ export default {
 
         expandValidationHolder.bind(this)(d);
 
-        // For some reason calling setVisible here instead does not work
-        if (this.selected == "1"){
-          svgE.attr("display", "inline");
-          svgM.attr("display", "none");
-          svgS.attr("display", "none");
-        } else if (this.selected == "2"){
-          svgE.attr("display", "none");
-          svgM.attr("display", "inline");
-          svgS.attr("display", "none");
-        } else if (this.selected == "3"){
-          svgE.attr("display", "none");
-          svgM.attr("display", "none");
-          svgS.attr("display", "inline");
-        }
+        setVisible.bind(this)();
       }
+
 
 
       function expandValidationHolder(d){
         let newG = svgSG.append("g").attr("class", "new_g")
-        .attr("node_id", d.node_id);
         let textArray = [];
 
         for (let tempA of this.jsondata.shapes){
@@ -1081,11 +1050,9 @@ export default {
       function expandMemberHolder(d, showAll=true, offsetH = 0){
         let newG;
         if (showAll === true){
-          newG = svgMG.append("g").attr("class", "new_g")
-          .attr("node_id", d.node_id);
+          newG = svgMG.append("g").attr("class", "new_g");
         } else {
-          newG = svgSG.append("g").attr("class", "new_g")
-          .attr("node_id", d.node_id);
+          newG = svgSG.append("g").attr("class", "new_g");
         }
 
 
@@ -1215,13 +1182,9 @@ export default {
 
       function expandRelationHolder(currentg, d){
         let sortIndex = -1;
-        // let offsetY = Number(currentg.select("rect").attr("height"));
-
         let colors = ["#706ec4", "#7977d9"]
 
-        let newG = svgEG.append("g").attr("class", "new_g")
-        .attr("node_id", d.node_id);
-
+        let newG = svgEG.append("g").attr("class", "new_g");
         let tt = newG.append("text");
 
         tt.append("tspan").text("Node")
@@ -1265,9 +1228,7 @@ export default {
 
         let offH = tt.node().getBBox().height + 30;
 
-
-
-        for (let relX of this.jsondata[d.node_id]){
+        for (let relX of this.jsondata[d.id]){
           sortIndex++;
           let innerg = newG.append("g")
           .attr("sortIndex", sortIndex)
@@ -1303,13 +1264,12 @@ export default {
               if(!v['@id']){
                 textX += 'Object'
               } else {
-                textX += v['@id']//(v['@id'] + "").split("/").pop();
+                textX += v['@id'];
               }
             }
           } else {
             textX += "No Path";
           }
-
 
 
           let itspan = innerText.append('tspan')
@@ -1318,8 +1278,8 @@ export default {
           .attr("x", 35)
           .attr("sortIndex", sortIndex);
 
-          innerText.attr("y", function(){return sortIndex*25 /*+ offsetY*/ + offH});
-          innerg.attr("y", function(){return sortIndex*25 /*+ offsetY*/ + offH});
+          innerText.attr("y", function(){return sortIndex*25 + offH});
+          innerg.attr("y", function(){return sortIndex*25 + offH});
 
           innerg.append("rect")
           .attr("class", "relation_rect inner_rect")
@@ -1327,7 +1287,7 @@ export default {
           .attr("sortIndex", sortIndex)
           .attr("height", 25)
           .attr("x", 30)
-          .attr("y", function(){return sortIndex*25 /*+ offsetY*/ + offH})
+          .attr("y", function(){return sortIndex*25 + offH})
           .style("stroke", colors[sortIndex%2])
           .lower();
 
@@ -1359,10 +1319,10 @@ export default {
       }
 
 
+
       function expandRelation(e){
         e.stopPropagation();
         if (!e.ctrlKey){
-
 
           let currentg = e.target;
           while(!d3.select(currentg).classed("relation_g")){
@@ -1535,11 +1495,6 @@ export default {
           svgE.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
           .attr("width", (bbox.width+bbox.x))
           .attr("height", (bbox.height+bbox.y));
-
-          // bbox = svgMG.node().getBBox();
-          // svgM.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
-          // .attr("width", (bbox.width+bbox.x))
-          // .attr("height", (bbox.height+bbox.y));
 
         //if ctrl was pressed, add new node
         } else {

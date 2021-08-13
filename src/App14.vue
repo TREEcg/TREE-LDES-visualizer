@@ -1116,7 +1116,8 @@ export default {
 
         } else {
           innerG.attr("expanded", "false");
-          innerG.select("text").text("");
+          innerG.select("text").text(k);
+          heightStart += 44;
         }
 
         let heightNew = innerG.node().getBBox().height - heightStart + 22;

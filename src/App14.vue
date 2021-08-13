@@ -37,7 +37,7 @@
   <div style="height: 100px;"></div>
 
   <div id="windowContainer">
-    <div class="divFloat">
+    <div class="divFloat" id="scrollContainer">
       <div v-on:click="close()" class="close"></div>
       <div class="container">
 
@@ -200,12 +200,12 @@ export default {
         standardURL = this.data_url;
         // This means user gave a url for a new collection so we need to clear whatever data we already had
         this.jsondata = this.empty;
-        d3.select("#extra").selectAll("g").remove();
+        d3.select("#extra").selectAll("svg").remove();
         this.svgHolder = null;
       } else {
         //Fallback
         this.jsondata = this.empty;
-        d3.select("#extra").selectAll("g").remove();
+        d3.select("#extra").selectAll("svg").remove();
         this.svgHolder = null;
       }
 
@@ -336,16 +336,28 @@ export default {
 
 
             //TODO check what happens when as:items comes from a node not the collection
-            this.members[this.jsondata.nodes[this.jsondata.nodes.length -1].name] = [];
+            const newNodeMembersId = this.jsondata.nodes[this.jsondata.nodes.length -1].name;
+            // this.members[newNodeMembersId] = [];
+            this.members[newNodeMembersId] = new Map();
             if (collectionObj.member){
               let membIds = [];
               for (var memb of collectionObj.member){
                 membIds.push(memb['@id']);
-                this.extractId(store, memb['@id']).then(mtemp => this.members[this.jsondata.nodes[this.jsondata.nodes.length -1].name].push(mtemp));
+                // Need to save id inside loop because used in async push
+                let tX = memb['@id'];
+                this.extractId(store, memb['@id']).then(mtemp => {
+                  // this.members[newNodeMembersId].push({
+                  //   "id":tX,
+                  //   "value":mtemp
+                  // })
+                  this.members[newNodeMembersId].set(
+                    tX, mtemp
+                  )
+                });
               }
-              this.validateShape(membIds, store);
+              this.validateShape(membIds, store, newNodeMembersId);
             } else {
-              this.remarks += "Found no members for " + this.jsondata.nodes[this.jsondata.nodes.length -1].name + ".\n";
+              this.remarks += "Found no members for " + newNodeMembersId + ".\n";
             }
 
           }
@@ -461,7 +473,8 @@ export default {
       return shapeIds;
     },
 
-    validateShape(membIds, store){
+    validateShape(membIds, store, newNodeMembersId){
+      this.membersFailed[newNodeMembersId] = [];
       const shapeIds = this.getShapeIds(store);
 
       if (shapeIds.size > 1){
@@ -495,7 +508,7 @@ export default {
             }
             this.shape_report += "path: " + result.path['value'] + "\n";
             this.shape_report += "focusNode: " + result.focusNode['value'] + "\n";
-            this.membersFailed.push(result.focusNode['value']);
+            this.membersFailed[newNodeMembersId].push(result.focusNode['value']);
             this.shape_report += "severity: " + result.severity['value'] + "\n";
             this.shape_report += "sourceConstraintComponent: " + result.sourceConstraintComponent['value'] + "\n";
             this.shape_report += "sourceShape: " + result.sourceShape['value'] + "\n";
@@ -528,11 +541,9 @@ export default {
 
       // append the svg object to the body of the page
       const svg = d3.select("#my_dataviz")
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom)
       .append("svg")
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom)
+      .attr("width", "100%")
+      .attr("height", "100%")
       .attr("pointer-events", "all");
 
 
@@ -542,6 +553,9 @@ export default {
         this.svgHolder = d3.select("#extra")
         .append("svg")
         .attr("pointer-events", "all");
+        d3.select("#my_dataviz")
+        .style("width", width + margin.left + margin.right+"px")
+        .style("height", height + margin.top + margin.bottom+"px");
       }
       const svgE = this.svgHolder;
 
@@ -950,6 +964,10 @@ export default {
           svgE.attr("display", "none");
           svgM.attr("display", "inline");
         }
+
+        var el = document.getElementById("scrollContainer");
+        el.scrollTop = 0;
+        el.scrollLeft = 0;
       }
 
       this.drawing.setVisible = setVisible.bind(this);
@@ -974,11 +992,13 @@ export default {
           ticked();
         }
 
-        if (this.members[d.name]){
-          expandMember.bind(this)(d);
-        } else if (this.selected == "2"){
-          expandMember.bind(this)(d, false);
-        }
+        expandMemberHolder.bind(this)(d);
+
+        // if (this.members[d.name]){
+        //   expandMember.bind(this)(d);
+        // } else {
+        //   expandMember.bind(this)(d, false);
+        // }
 
         // For some reason calling setVisible here instead does not work
         if (this.selected == "1"){
@@ -990,35 +1010,56 @@ export default {
         }
       }
 
-      function expandMember(d, hasMembers=true){
+      function expandMemberHolder(d){
         let newG = svgMG.append("g").attr("class", "new_g")
         .attr("node_id", d.node_id);
+        // .style("pointer-events", "none");
 
-        if (hasMembers){
-          let textArray = [];
-          for (let tempA of this.members[d.name]){
-            if (tempA.includes('\n')){
-              for (let tempB of tempA.split('\n')){
-                textArray.push(tempB);
-              }
-            } else {
-              textArray.push(tempA);
+        if (this.members[d.name]){
+          // let textArray = [];
+
+          let sortIndex = 0;
+          for (let tempA of this.members[d.name].keys()){
+            // textArray.push(tempA.id);
+
+            let innerG = newG.append("g")
+            .attr("sortIndex", sortIndex)
+            .attr("expanded", "false")
+            .attr("class", "member_g")
+            .attr("y", 22+44*sortIndex);
+
+            let tt = innerG.append("text").text(tempA)
+            .attr("sortIndex", sortIndex)
+            .attr("y", 22+44*sortIndex);
+
+            if (this.membersFailed[d.name].includes(tempA)){
+              tt.style("fill", "#FF0000");
             }
+
+            innerG.on("click", expandMember.bind(this, d, innerG, tempA, newG));
+
+            sortIndex++;
           }
 
-          newG.append("text").text("");
+          // newG.append("text").text("");
 
-          for (let textX of textArray){
-            let indent = (textX.split('\t').length -1) * 20;
-            newG.select("text").append('tspan')
-            .text(" " + textX)
-            .attr("dy", 20)
-            .attr("dx", indent + 5)
-            .attr("x", 0);
-          }
+          // let sortIndex = 0;
+          // for (let textX of textArray){
+          //
+          //   newG.append("text").text("");
+          //
+          //   let indent = (textX.split('\t').length -1) * 20;
+          //   newG.select("text").append('tspan')
+          //   .text(" " + textX)
+          //   .attr("dy", 20)
+          //   .attr("dx", indent + 5)
+          //   .attr("x", 0)
+          //   .attr("sortIndex", sortIndex);
+          //   sortIndex++;
+          // }
 
-          newG.append("rect").attr("x", 0).attr("y", 0).attr("height", 10 + 20*textArray.length).attr("width",0).style("fill", "#5e915a");
-          newG.select("rect").attr("width", newG.node().getBBox().width + 10).lower();
+          // newG.append("rect").attr("x", 0).attr("y", 0).attr("height", 10 + 20*textArray.length).attr("width",0).style("fill", "#5e915a");
+          // newG.select("rect").attr("width", newG.node().getBBox().width + 10).lower();
         } else {
           newG.append("text").text("This node has no members.")
           .attr("dy", 20)
@@ -1034,10 +1075,108 @@ export default {
         .attr("width", (bbox.width+bbox.x))
         .attr("height", (bbox.height+bbox.y));
 
-        bbox = svgEG.node().getBBox();
-        svgE.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
+        // bbox = svgEG.node().getBBox();
+        // svgE.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
+        // .attr("width", (bbox.width+bbox.x))
+        // .attr("height", (bbox.height+bbox.y));
+      }
+
+      function expandMember(d, innerG, k, newG){
+        console.log("d: ", d);
+        console.log("innerG: ", innerG);
+        console.log("newG: ", newG);
+
+        let heightStart = innerG.node().getBBox().height;
+
+        if (innerG.attr("expanded") == "false"){
+          innerG.attr("expanded", "true");
+          let textArray = [];
+          let tempA = this.members[d.name].get(k)
+          if (tempA.includes('\n')){
+            for (let tempB of tempA.split('\n')){
+              textArray.push(tempB);
+            }
+          } else {
+            textArray.push(tempA);
+          }
+
+
+          innerG.select("text").text("");
+
+          for (let textX of textArray){
+            let indent = (textX.split('\t').length -1) * 20;
+            innerG.select("text").append('tspan')
+            .text(" " + textX)
+            .attr("dy", 20)
+            .attr("dx", indent + 5)
+            .attr("x", 0);
+          }
+
+
+
+        } else {
+          innerG.attr("expanded", "false");
+          innerG.select("text").text("");
+        }
+
+        let heightNew = innerG.node().getBBox().height - heightStart + 22;
+
+        for(let tn of newG.selectAll(".member_g")){
+          if (Number(d3.select(tn).attr("sortIndex")) > Number(innerG.attr("sortIndex"))){
+            d3.select(tn).attr("y", heightNew + Number(d3.select(tn).attr("y")));
+            d3.select(tn).selectAll("text").attr("y", d3.select(tn).attr("y"));
+
+          }
+        }
+
+
+        // let newG = svgMG.append("g").attr("class", "new_g")
+        // .attr("node_id", d.node_id);
+        //
+        // if (hasMembers){
+        //   let textArray = [];
+        //   for (let tempA of this.members[d.name]){
+        //     if (tempA.value.includes('\n')){
+        //       for (let tempB of tempA.value.split('\n')){
+        //         textArray.push(tempB);
+        //       }
+        //     } else {
+        //       textArray.push(tempA.value);
+        //     }
+        //   }
+        //
+        //   newG.append("text").text("");
+        //
+        //   for (let textX of textArray){
+        //     let indent = (textX.split('\t').length -1) * 20;
+        //     newG.select("text").append('tspan')
+        //     .text(" " + textX)
+        //     .attr("dy", 20)
+        //     .attr("dx", indent + 5)
+        //     .attr("x", 0);
+        //   }
+        //
+        //   newG.append("rect").attr("x", 0).attr("y", 0).attr("height", 10 + 20*textArray.length).attr("width",0).style("fill", "#5e915a");
+        //   newG.select("rect").attr("width", newG.node().getBBox().width + 10).lower();
+        // } else {
+        //   newG.append("text").text("This node has no members.")
+        //   .attr("dy", 20)
+        //   .attr("dx", 5)
+        //   .attr("x", 0);
+        //
+        // }
+        //
+        //
+        //
+        let bbox = svgMG.node().getBBox();
+        svgM.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
         .attr("width", (bbox.width+bbox.x))
         .attr("height", (bbox.height+bbox.y));
+        //
+        // bbox = svgEG.node().getBBox();
+        // svgE.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
+        // .attr("width", (bbox.width+bbox.x))
+        // .attr("height", (bbox.height+bbox.y));
       }
 
 
@@ -1343,10 +1482,10 @@ export default {
           .attr("width", (bbox.width+bbox.x))
           .attr("height", (bbox.height+bbox.y));
 
-          bbox = svgMG.node().getBBox();
-          svgM.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
-          .attr("width", (bbox.width+bbox.x))
-          .attr("height", (bbox.height+bbox.y));
+          // bbox = svgMG.node().getBBox();
+          // svgM.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
+          // .attr("width", (bbox.width+bbox.x))
+          // .attr("height", (bbox.height+bbox.y));
 
         //if ctrl was pressed, add new node
         } else {

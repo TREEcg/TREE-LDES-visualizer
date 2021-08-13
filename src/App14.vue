@@ -102,11 +102,7 @@ export default {
   },
     watch: {
     selected: {
-      handler(newVal, oldVal) {
-        console.log("test selected")
-        console.log(newVal, oldVal)
-        // this.data_url = newVal;
-        // this.getData();
+      handler() {
         this.drawing.setVisible();
       },
     }
@@ -116,7 +112,6 @@ export default {
       document.getElementById("windowContainer").style.display = "none";
     },
     open(){
-      console.log("open");
       document.getElementById("windowContainer").style.display = "block";
     },
     async extractId(store, id) {
@@ -145,29 +140,33 @@ export default {
     },
 
     async extractShape(store, id){
-      console.log("quads: ", store.getQuads(id, null, null, null));
       var quadsWithSubj = this.extractShapeHelp(store, id);
 
       const store2 = new N3.Store();
       store2.addQuads(quadsWithSubj);
       var targetQuads = [];
-      //TODO add a check for implicit targetting, when shacl shape is both a class and sh:NodeShape then the identifier is a class and thus is the target
       const shapeTargets = ['targetClass', 'targetNode', 'targetSubjectsOf', 'targetObjectsOf']
       for (let tempTarget of shapeTargets){
         targetQuads = targetQuads.concat(store2.getQuads(null, 'http://www.w3.org/ns/shacl#'+tempTarget, null, null))
       }
 
-      // If no target was given for the shape, make it target all tree:member objects
       if (targetQuads.length == 0){
-        store2.addQuad(
-          namedNode(id),
-          namedNode('http://www.w3.org/ns/shacl#targetObjectsOf'),
-          namedNode('https://w3id.org/tree#member'),
-          defaultGraph()
-        );
+        // This check for implicit targetting TODO check if this actually works
+        let t1 = targetQuads.concat(store2.getQuads(id, 'http://www.w3.org/ns/shacl#'+'NodeShape', null, null));
+        let t2 = targetQuads.concat(store2.getQuads(id, 'http://www.w3.org/2000/01/rdf-schema#Class', null, null));
 
-        quadsWithSubj = this.extractShapeHelp(store2, id);
-        console.log("quadsNew: ", JSON.parse(JSON.stringify(quadsWithSubj)));
+        // If no target was given for the shape, make it target all tree:member objects
+        if (t1.length == 0 || t2.length == 0){
+          store2.addQuad(
+            namedNode(id),
+            namedNode('http://www.w3.org/ns/shacl#targetObjectsOf'),
+            namedNode('https://w3id.org/tree#member'),
+            defaultGraph()
+          );
+
+          quadsWithSubj = this.extractShapeHelp(store2, id);
+        }
+
       }
 
       return rdfSerializer.serialize(streamifyArray(quadsWithSubj), { contentType: 'text/turtle' });
@@ -184,9 +183,6 @@ export default {
     },
 
     async getData(url) {
-      //TODO is it possible to keep all quads, extract all metadata and then not have to check for doubles?
-      //Simply by removing all doubles from the saved quads?
-
       //Need to clear the data before redrawing
       this.qtext = [];
       this.remarks = "";
@@ -195,7 +191,7 @@ export default {
       var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/.root.nt'
       standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a2.nt';
       standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/cht_1_2.ttl';
-      standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/marine1.jsonld'
+      // standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/marine1.jsonld'
 
       if(url){
         standardURL = url;
@@ -216,10 +212,10 @@ export default {
       quads.on('data', (quad) => {this.qtext.push(quad); /*console.log(quad)*/})
       .on('error', (error) => console.error(error))
       .on('end', () => {
-        console.log('All done!');
+        // console.log('All done!');
         // quads is an array of RDF Quads (RDF.Quad[])
         extractMetadata(this.qtext).then(metadata => {
-          console.log(metadata);
+          // console.log(metadata);
 
           const store = new N3.Store(this.qtext)
 
@@ -291,7 +287,6 @@ export default {
 
             }
 
-            //TODO if there is no view there should probably be an error shown
             if (collectionObj.view || metadata.nodes.size > 0){
               let iter = (metadata.nodes.size > 0) ? metadata.nodes.values() : collectionObj.view;
               for (var viewNode of iter){
@@ -386,7 +381,6 @@ export default {
 
                 this.jsondata.relations.push({"source":relationNode.id, "target":relationObj.node[0]['@id']+"_node"});
 
-                //TODO should there be a standard placeholder if not present? Now this gets rechecked in the drawing function
                 if(!relationObj['@type']){
                   this.remarks += "relation from " + relationNode.name + " to " + relationObj.node[0]['@id'] + " has no type defined\n";
                 } else {
@@ -437,9 +431,6 @@ export default {
           console.log("members:");
           console.log(this.members);
 
-          console.log("collt: ", this.jsondata.collection[0]);
-
-
           if (this.jsondata.shapes.length == 0 && metadata.collections.get(collectionId).shape){
 
             const shapeIds = this.getShapeIds(store);
@@ -447,11 +438,11 @@ export default {
             this.extractShapeId(store, shapeIds[0]).then(res => {
               this.jsondata.shapes.push({"id":shapeIds[0], "type":"shape", "shape_extra":res});
               this.jsondata.links.push({"source":collectionId, "target":shapeIds[0], "name":"shape"});
-              this.drawing(metadata);
+              this.drawing();
             });
 
           } else {
-            this.drawing(metadata);
+            this.drawing();
           }
 
 
@@ -547,8 +538,7 @@ export default {
       });
     },
 
-    drawing(metadata) {
-      console.log(metadata);
+    drawing() {
       const margin = {top: 10, right: 30, bottom: 10, left: 30};
       if(!this.graph_width){
         this.graph_width = 2000;
@@ -757,11 +747,8 @@ export default {
         console.log("firstticked");
         ticked();
 
-        //TODO make this dynamic
         svg.selectAll(".collection_g").attr("x", function(d){d.x=50; return d.x}).attr("y", function(d){d.y=20; return d.y});
         svg.selectAll(".shape_g").attr("x", function(d){d.x=200+50; return d.x}).attr("y", function(d){d.y=20; return d.y});
-        // svg.selectAll(".node_g").attr("x", function(d){d.x=50+d.offsetX*500; return d.x}).attr("y", function(d){d.y=150; return d.y});
-        // svg.selectAll(".relation_holder_g").attr("x", function(d){d.x=50+d.offsetX*500; return d.x}).attr("y", function(d){d.y=300; return d.y});
 
         fixGroupChildren();
         fixLinks();

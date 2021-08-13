@@ -38,8 +38,9 @@
 
   <div id="windowContainer">
     <div class="divFloat">
-      <button v-on:click="close()">Close</button>
-      <div v-if="svgHolder">
+      <div v-on:click="close()" class="close"></div>
+      <div class="container">
+
         <select v-model="selected">
           <option value="1">Node</option>
           <option value="2">Members</option>
@@ -949,16 +950,6 @@ export default {
           svgE.attr("display", "none");
           svgM.attr("display", "inline");
         }
-
-        let bbox = svgMG.node().getBBox();
-        svgM.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
-        .attr("width", (bbox.width+bbox.x))
-        .attr("height", (bbox.height+bbox.y));
-
-        bbox = svgEG.node().getBBox();
-        svgE.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
-        .attr("width", (bbox.width+bbox.x))
-        .attr("height", (bbox.height+bbox.y));
       }
 
       this.drawing.setVisible = setVisible.bind(this);
@@ -966,8 +957,12 @@ export default {
       function clickRelationHolder(e, d){
         svgEG.selectAll("g").remove();
         svgMG.selectAll("g").remove();
+
+        // Display everything first so they have a correct viewbox attribute to use in calculations
+        svgE.attr("display", "inline");
+        svgM.attr("display", "inline");
         this.open();
-        // setVisibleX.bind(this);
+
         if (d.relation_count && d.relation_count > 0){
           let currentg = d3.select(e.target.parentNode);
           //currentg could be tspan parent = text and not the group
@@ -976,18 +971,16 @@ export default {
           }
 
           expandRelationHolder.bind(this)(currentg, d);
-          // this.open();
           ticked();
         }
 
         if (this.members[d.name]){
-          // this.open();
           expandMember.bind(this)(d);
         } else if (this.selected == "2"){
-          // this.open();
           expandMember.bind(this)(d, false);
         }
 
+        // For some reason calling setVisible here instead does not work
         if (this.selected == "1"){
           svgE.attr("display", "inline");
           svgM.attr("display", "none");
@@ -1398,6 +1391,12 @@ export default {
   display: none;
 }
 
+.container {
+  margin-bottom: 10px;
+  position: sticky;
+  left: 0%;
+}
+
 .divFloat {
   margin: 0 auto;
   background-color: #FFF;
@@ -1413,6 +1412,32 @@ export default {
   display: block;
   resize: both;
   overflow:scroll;
+}
+
+.close {
+  position: sticky;
+  left: 100%;
+  width: 20px;
+  height: 20px;
+  opacity: 0.3;
+  float: right;
+}
+.close:hover {
+  opacity: 1;
+}
+.close:before, .close:after {
+  position: absolute;
+  top: -1px;
+  content: ' ';
+  height: 20px;
+  width: 2px;
+  background-color: #333;
+}
+.close:before {
+  transform: rotate(45deg);
+}
+.close:after {
+  transform: rotate(-45deg);
 }
 
 svg{

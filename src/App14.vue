@@ -124,7 +124,7 @@ export default {
     },
 
     async extractShapeId(store, id){
-      const quadsWithSubj =  this.extractShapeHelp(store, id);
+      const quadsWithSubj = this.extractShapeHelp(store, id);
       const textStream = rdfSerializer.serialize(streamifyArray(quadsWithSubj), { contentType: 'text/turtle' });
       return await stringifyStream(textStream);
     },
@@ -165,6 +165,7 @@ export default {
         );
 
         quadsWithSubj = this.extractShapeHelp(store2, id);
+        console.log("quadsNew: ", JSON.parse(JSON.stringify(quadsWithSubj)));
       }
 
       return rdfSerializer.serialize(streamifyArray(quadsWithSubj), { contentType: 'text/turtle' });
@@ -494,6 +495,19 @@ export default {
 
       loadDatasetX(shapesX).then(shapes => {
         loadDatasetX(dataX).then(data => {
+
+          let dtX = [];
+          for (let sX of shapes){
+            if (sX.object.termType == "BlankNode" && !dtX.includes(sX.object.value)){
+              sX.object.value = sX.object.value.slice(3);
+              dtX.push(sX.object.value)
+            }
+            if (sX.subject.termType == "BlankNode" && !dtX.includes(sX.subject.value)){
+              sX.subject.value = sX.subject.value.slice(3);
+              dtX.push(sX.subject.value)
+            }
+          }
+
           const validator = new SHACLValidator(shapes, { factory });
           const report = validator.validate(data);
 

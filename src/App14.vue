@@ -93,9 +93,9 @@ export default {
       graph_height: 600,
       graph_width: 1000,
       data_url: null,
-      shape_validation: "unknown",
+      shape_validation: null,
       node_validation: [],
-      shape_report: null,
+      shape_report: "",
       selected: "1",
       alpha_decay_rate: 0.1//1 - Math.pow(0.001, 1 / 300)
     }
@@ -195,7 +195,7 @@ export default {
       var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/.root.nt'
       standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a2.nt';
       standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/cht_1_2.ttl';
-      // standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/marine1.jsonld'
+      standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/marine1.jsonld'
 
       if(url){
         standardURL = url;
@@ -427,7 +427,7 @@ export default {
           }
 
           if (this.remarks != ""){
-            //alert(this.remarks);
+            alert(this.remarks);
             console.log(this.remarks);
           }
 
@@ -509,8 +509,13 @@ export default {
           const validator = new SHACLValidator(shapes, { factory });
           const report = validator.validate(data);
 
-          this.shape_validation = report.conforms;
-          this.shape_report = "Result report:\n";
+          if (this.shape_validation && this.shape_validation === false){
+            this.shape_validation = false;
+          } else {
+            this.shape_validation = report.conforms;
+          }
+
+          this.shape_report += "\nResult report for "+newNodeMembersId+":\n";
 
           for (const result of report.results) {
             // See https://www.w3.org/TR/shacl/#results-validation-result for details about each propert
@@ -1209,12 +1214,57 @@ export default {
 
       function expandRelationHolder(currentg, d){
         let sortIndex = -1;
-        let offsetY = Number(currentg.select("rect").attr("height"));
+        // let offsetY = Number(currentg.select("rect").attr("height"));
 
         let colors = ["#706ec4", "#7977d9"]
 
         let newG = svgEG.append("g").attr("class", "new_g")
         .attr("node_id", d.node_id);
+
+        let tt = newG.append("text");
+
+        tt.append("tspan").text("Node")
+        .attr("dy", 22)
+        .attr("dx",5);
+
+        tt.append("tspan").text(d.name)
+        .attr("dy", 22)
+        .attr("x",0)
+        .attr("dx",5);
+
+        tt.append("tspan").text("relations: " + d.relation_count)
+        .attr("dy", 22)
+        .attr("x",0)
+        .attr("dx",15);
+
+        let possibleAttrs = ["@type", "import", "importStream", "conditionalImport", "search", "retentionPolicy"];
+        for (let pAttr of possibleAttrs){
+          if (d[pAttr]){
+            tt.append("tspan").text(`${pAttr}:`)
+            .attr("dy", 22)
+            .attr("x",0)
+            .attr("dx",5);
+            for (const value of Object.values(d[pAttr])) {
+              let textArray = JSON.stringify(value, null, '\t').split('\n');
+              let regex = /^(\t*{\t*)|(\t*}\t*)|(\t*],*\t*)$/g;
+              for (let textX of textArray){
+                if (!textX.match(regex)){
+                  let indent = (textX.split('\t').length -1) * 20;
+                  tt.append('tspan')
+                  .text(" " + textX.replace(': [',': '))
+                  .attr("dy", 22)
+                  .attr("dx", indent + 5)
+                  .attr("x", 0);
+                }
+
+              }
+            }
+          }
+        }
+
+        let offH = tt.node().getBBox().height + 30;
+
+
 
         for (let relX of this.jsondata[d.node_id]){
           sortIndex++;
@@ -1267,8 +1317,8 @@ export default {
           .attr("x", 35)
           .attr("sortIndex", sortIndex);
 
-          innerText.attr("y", function(){return sortIndex*25 + offsetY});
-          innerg.attr("y", function(){return sortIndex*25 + offsetY});
+          innerText.attr("y", function(){return sortIndex*25 /*+ offsetY*/ + offH});
+          innerg.attr("y", function(){return sortIndex*25 /*+ offsetY*/ + offH});
 
           innerg.append("rect")
           .attr("class", "relation_rect inner_rect")
@@ -1276,7 +1326,7 @@ export default {
           .attr("sortIndex", sortIndex)
           .attr("height", 25)
           .attr("x", 30)
-          .attr("y", function(){return sortIndex*25 + offsetY})
+          .attr("y", function(){return sortIndex*25 /*+ offsetY*/ + offH})
           .style("stroke", colors[sortIndex%2])
           .lower();
 
@@ -1291,43 +1341,13 @@ export default {
 
         newG.selectAll(".inner_rect").attr("width", newG.node().getBBox().width+10);
 
-        let tt = newG.append("text");
-
-        tt.append("tspan").text("Node")
-        .attr("dy", 22)
-        .attr("dx",5);
-
-        tt.append("tspan").text(d.name)
-        .attr("dy", 22)
-        .attr("x",0)
-        .attr("dx",5);
-
-        tt.append("tspan").text("relations: " + d.relation_count)
-        .attr("dy", 22)
-        .attr("x",0)
-        .attr("dx",15);
-
-        let possibleAttrs = ["@type", "import", "importStream", "conditionalImport", "search", "retentionPolicy"];
-        for (let pAttr of possibleAttrs){
-          if (d[pAttr]){
-            tt.append("tspan").text(`${pAttr}:`)
-            .attr("dy", 22)
-            .attr("x",0)
-            .attr("dx",5);
-            for (const [key, value] of d[pAttr]) {
-              tt.append("tspan").text(`${key}: ${value}`)
-              .attr("dy", 22)
-              .attr("x",0)
-              .attr("dx",15);
-            }
-          }
-        }
-
         newG.append("rect").attr("x", 0).attr("y", 0).style("stroke", "#69b3a2")
         .attr("width", newG.node().getBBox().width+30)
         .attr("height", newG.node().getBBox().height+30)
         .attr("class", "outer_rect")
         .lower();
+
+        newG.selectAll("text tspan").raise();
 
 
         // Make the main svg holding this large enough to show everything

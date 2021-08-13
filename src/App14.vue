@@ -912,11 +912,20 @@ export default {
             .attr("dy", 22)
             .attr("x",0)
             .attr("dx",5);
-            for (const [key, value] of d[pAttr]) {
-              tt.append("tspan").text(`${key}: ${value}`)
-              .attr("dy", 22)
-              .attr("x",0)
-              .attr("dx",15);
+            for (const value of Object.values(d[pAttr])) {
+              let textArray = JSON.stringify(value, null, '\t').split('\n');
+              let regex = /^(\t*{\t*)|(\t*}\t*)|(\t*],*\t*)$/g;
+              for (let textX of textArray){
+                if (!textX.match(regex)){
+                  let indent = (textX.split('\t').length -1) * 20;
+                  tt.append('tspan')
+                  .text(" " + textX.replace(': [',': '))
+                  .attr("dy", 22)
+                  .attr("dx", indent + 15)
+                  .attr("x", 0);
+                }
+
+              }
             }
           }
         }
@@ -1459,12 +1468,21 @@ export default {
                 tt.append("tspan").text(`${pAttr}:`)
                 .attr("dy", 22)
                 .attr("x",0)
-                .attr("dx",0);
-                for (const [key, value] of relX[pAttr]) {
-                  tt.append("tspan").text(`${key}: ${value}`)
-                  .attr("dy", 22)
-                  .attr("x",0)
-                  .attr("dx",10);
+                .attr("dx",5);
+                for (const value of Object.values(relX[pAttr])) {
+                  let textArray = JSON.stringify(value, null, '\t').split('\n');
+                  let regex = /^(\t*{\t*)|(\t*}\t*)|(\t*],*\t*)$/g;
+                  for (let textX of textArray){
+                    if (!textX.match(regex)){
+                      let indent = (textX.split('\t').length -1) * 20;
+                      tt.append('tspan')
+                      .text(" " + textX.replace(': [',': '))
+                      .attr("dy", 22)
+                      .attr("dx", indent + 5)
+                      .attr("x", 0);
+                    }
+
+                  }
                 }
               }
             }

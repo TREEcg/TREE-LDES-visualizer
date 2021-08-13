@@ -514,16 +514,24 @@ export default {
 
           for (const result of report.results) {
             // See https://www.w3.org/TR/shacl/#results-validation-result for details about each propert
-            this.shape_report += "\nmessage: \n";
+            let mX = "";
+
+            mX += "\nmessage: \n";
             for (let mt of result.message){
-              this.shape_report += "\t" + mt['value']+"\n";
+              mX += "\t" + mt['value']+"\n";
             }
-            this.shape_report += "path: " + result.path['value'] + "\n";
-            this.shape_report += "focusNode: " + result.focusNode['value'] + "\n";
+            mX += "path: " + result.path['value'] + "\n";
+            mX += "focusNode: " + result.focusNode['value'] + "\n";
             this.membersFailed[newNodeMembersId].push(result.focusNode['value']);
-            this.shape_report += "severity: " + result.severity['value'] + "\n";
-            this.shape_report += "sourceConstraintComponent: " + result.sourceConstraintComponent['value'] + "\n";
-            this.shape_report += "sourceShape: " + result.sourceShape['value'] + "\n";
+            mX += "severity: " + result.severity['value'] + "\n";
+            mX += "sourceConstraintComponent: " + result.sourceConstraintComponent['value'] + "\n";
+            mX += "sourceShape: " + result.sourceShape['value'] + "\n";
+
+            this.shape_report += mX;
+
+            if (result.focusNode && result.focusNode['value']){
+              this.node_validation[result.focusNode['value']] = mX;
+            }
           }
 
           if (report.results.length == 0){
@@ -1040,15 +1048,31 @@ export default {
 
 
       function expandValidationHolder(d){
-        // let newG = svgSG.append("g").attr("class", "new_g")
-        // .attr("node_id", d.node_id);
+        let newG = svgSG.append("g").attr("class", "new_g")
+        .attr("node_id", d.node_id);
+        let textArray = [];
 
+        for (let tempA of this.jsondata.shapes){
+          textArray = textArray.concat(tempA.shape_extra.split('\n'));
+        }
 
-        expandMemberHolder.bind(this)(d, false);
+        let tt = newG.append("text").text("Shape:")
+        .attr("y", 22);
+
+        for (let textX of textArray){
+          let indent = (textX.split('\t').length -1) * 20;
+          tt.append('tspan')
+          .text(textX.replace('\t',''))
+          .attr("dy", 20)
+          .attr("dx", indent + 5)
+          .attr("x", 0);
+        }
+
+        expandMemberHolder.bind(this)(d, false, newG.node().getBBox().height+22);
       }
 
 
-      function expandMemberHolder(d, showAll=true){
+      function expandMemberHolder(d, showAll=true, offsetH = 0){
         let newG;
         if (showAll === true){
           newG = svgMG.append("g").attr("class", "new_g")
@@ -1067,11 +1091,11 @@ export default {
               .attr("sortIndex", sortIndex)
               .attr("expanded", "false")
               .attr("class", "member_g")
-              .attr("y", 22+44*sortIndex);
+              .attr("y", 22+44*sortIndex + offsetH);
 
               let tt = innerG.append("text").text(tempA)
               .attr("sortIndex", sortIndex)
-              .attr("y", 22+44*sortIndex);
+              .attr("y", 22+44*sortIndex + offsetH);
 
               if (this.membersFailed[d.name].includes(tempA)){
                 tt.style("fill", "#FF0000");
@@ -1132,6 +1156,25 @@ export default {
             .attr("x", 0);
           }
 
+          if (showAll === false && this.node_validation[k]){
+            textArray = this.node_validation[k].split('\n');
+
+            //Empty line between member & report
+            innerG.select("text").append('tspan')
+            .text(" ")
+            .attr("dy", 20)
+            .attr("dx", 25)
+            .attr("x", 0);
+
+            for (let textX of textArray){
+              let indent = (textX.split('\t').length -1) * 20;
+              innerG.select("text").append('tspan')
+              .text(" " + textX)
+              .attr("dy", 20)
+              .attr("dx", indent + 25)
+              .attr("x", 0);
+            }
+          }
 
 
         } else {

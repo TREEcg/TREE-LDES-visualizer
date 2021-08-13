@@ -87,6 +87,7 @@ export default {
       members: {},
       membersFailed : [],
       svgHolder: null,
+      svgGHolder: null,
       remarks: "",
       next_url: "",
       checked_shape: false,
@@ -97,7 +98,7 @@ export default {
       node_validation: [],
       shape_report: "",
       selected: "1",
-      alpha_decay_rate: 0.1//1 - Math.pow(0.001, 1 / 300)
+      alpha_decay_rate: 0.5//1 - Math.pow(0.001, 1 / 300)
     }
   },
     watch: {
@@ -191,7 +192,7 @@ export default {
       var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/.root.nt'
       standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a2.nt';
       standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/cht_1_2.ttl';
-      // standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/marine1.jsonld'
+      // standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/marine1.jsonld';
 
       if(url){
         standardURL = url;
@@ -539,6 +540,7 @@ export default {
     },
 
     drawing() {
+      console.log("start drawing");
       const margin = {top: 10, right: 30, bottom: 10, left: 30};
       if(!this.graph_width){
         this.graph_width = 2000;
@@ -561,32 +563,42 @@ export default {
       .attr("height", "100%")
       .attr("pointer-events", "all");
 
-      //TODO This is now not needed anymore since there is only one pop-up window
+      // var svgE, svgM, svgS;
+      // var svgEG, svgMG, svgSG;
+
       // check if the extra info svg exists, if not create it
       // This gets cleared in getData if we change collections
       if (!this.svgHolder){
-        this.svgHolder = d3.select("#extra")
-        .append("svg")
-        .attr("pointer-events", "all");
+        this.svgHolder =
+        [
+          d3.select("#extra")
+          .append("svg")
+          .attr("pointer-events", "all"),
+          d3.select("#extra")
+          .append("svg")
+          .attr("pointer-events", "all"),
+          d3.select("#extra")
+          .append("svg")
+          .attr("pointer-events", "all")
+        ]
+        this.svgGHolder =
+        [
+          this.svgHolder[0].append("g"),
+          this.svgHolder[1].append("g"),
+          this.svgHolder[2].append("g")
+        ]
         d3.select("#my_dataviz")
         .style("width", width + margin.left + margin.right+"px")
         .style("height", height + margin.top + margin.bottom+"px");
       }
-      const svgE = this.svgHolder;
 
-      const svgEG = svgE.append("g");
+      const svgE = this.svgHolder[0];
+      const svgM = this.svgHolder[1];
+      const svgS = this.svgHolder[2];
 
-      const svgM = d3.select("#extra")
-      .append("svg")
-      .attr("pointer-events", "all");
-
-      const svgMG = svgM.append("g");
-
-      const svgS = d3.select("#extra")
-      .append("svg")
-      .attr("pointer-events", "all");
-
-      const svgSG = svgS.append("g");
+      const svgEG = this.svgGHolder[0];
+      const svgMG = this.svgGHolder[1];
+      const svgSG = this.svgGHolder[2];
 
 
 
@@ -729,22 +741,15 @@ export default {
       .force("link", d3.forceLink()
       .id(function(d) { return d.id; })
       .links(this.jsondata.links)
-      .distance(200)
       )
       .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("charge", d3.forceManyBody().strength(-800))
-      .alphaDecay(this.alpha_decay_rate)
-      // .on("end", firstTick.bind(this));
-
-      d3.forceSimulation(relation_holder)
-      .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("charge", d3.forceManyBody().strength(-800))
+      .force("collide", d3.forceCollide(100))
       .alphaDecay(this.alpha_decay_rate)
       .on("end", firstTick.bind(this));
 
 
       function firstTick(){
-        console.log("firstticked");
+        // console.log("firstticked");
         ticked();
 
         svg.selectAll(".collection_g").attr("x", function(d){d.x=50; return d.x}).attr("y", function(d){d.y=20; return d.y});
@@ -755,7 +760,7 @@ export default {
       }
 
       function ticked() {
-        console.log("ticked");
+        // console.log("ticked");
 
         // This simply sets the attribute to the given (parent) data x and y
         d3.selectAll(".maing_g")

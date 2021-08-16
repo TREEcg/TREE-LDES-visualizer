@@ -82,7 +82,6 @@ export default {
     return {
       qtext: [],
       //easier to clear jsondata in functions without having to copy paste this
-      empty : {"collection":[], "relations":[], "links":[], "shapes":[], "relations_holder":[]},
       jsondata: null, //this will be set to empty on start of getData
       members: {},
       membersFailed : [],
@@ -109,6 +108,9 @@ export default {
     }
   },
   methods : {
+    clearData(){
+      this.jsondata = {"collection":[], "relations":[], "links":[], "shapes":[], "relations_holder":[]};
+    },
     close(){
       document.getElementById("windowContainer").style.display = "none";
     },
@@ -199,12 +201,12 @@ export default {
       } else if (this.data_url){
         standardURL = this.data_url;
         // This means user gave a url for a new collection so we need to clear whatever data we already had
-        this.jsondata = this.empty;
+        this.clearData();
         d3.select("#extra").selectAll("svg").remove();
         this.svgHolder = null;
       } else {
         //Fallback
-        this.jsondata = this.empty;
+        this.clearData();
         d3.select("#extra").selectAll("svg").remove();
         this.svgHolder = null;
       }
@@ -255,6 +257,7 @@ export default {
             if (this.jsondata.collection.length > 0){
               for (let checker of this.jsondata.collection){
                 if (checker.id != collectionId){
+                  console.log(checker.id, collectionId)
                   double = false;
                 }
               }
@@ -1516,6 +1519,7 @@ export default {
 }
 .close:hover {
   opacity: 1;
+  z-index: 11;
 }
 .close:before, .close:after {
   position: absolute;

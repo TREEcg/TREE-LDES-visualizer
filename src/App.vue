@@ -423,6 +423,9 @@ export default {
             console.log(this.remarks);
           }
 
+          console.log("metadata:");
+          console.log(metadata);
+
           console.log("jsondata:");
           console.log(this.jsondata);
 
@@ -432,6 +435,7 @@ export default {
 
           // TODO does the shape need to be changed every time we switch nodes or can we just keep it stored
           if (this.jsondata.shapes.length == 0 && metadata.collections.get(collectionId).shape){
+            console.log(metadata.collections.get(collectionId).shape)
             const shapeIds = this.getShapeIds(store);
 
             this.extractShapeId(store, shapeIds[0]).then(res => {
@@ -617,111 +621,117 @@ export default {
       .style("stroke-width",0.5)
       .attr("marker-end", "url(#arrow)" );
 
+      if (this.jsondata.collection.length > 0){
+        const collection = svg
+        .selectAll("gcollection")
+        .data(this.jsondata.collection)
+        .join("g")
+        .attr("class", "collection_g main_g")
+        .attr("expanded", "false")
+        .on("click", clickCollection.bind(this))
+        .call(d3.drag()
+        .on("start", dragstartX)
+        .on("end", dragendX)
+        .on("drag", dragX));
 
-      const collection = svg
-      .selectAll("gcollection")
-      .data(this.jsondata.collection)
-      .join("g")
-      .attr("class", "collection_g main_g")
-      .attr("expanded", "false")
-      .on("click", clickCollection.bind(this))
-      .call(d3.drag()
-      .on("start", dragstartX)
-      .on("end", dragendX)
-      .on("drag", dragX));
+        collection.append("text")
+        .attr("text-anchor", "start")
+        .attr("class", "collection_text main_text")
+        .attr("dy",20)
+        .attr("dx",5)
+        .text(function(d) {
+          return (d.type + "").split('#').pop()
+        })
+        .raise();
 
-      collection.append("text")
-      .attr("text-anchor", "start")
-      .attr("class", "collection_text main_text")
-      .attr("dy",20)
-      .attr("dx",5)
-      .text(function(d) {
-        return (d.type + "").split('#').pop()
-      })
-      .raise();
-
-      collection.append("rect")
-      .attr("class", "collection_rect main_rect")
-      .attr("width", collection.select("text").node().getBBox().width+15)
-      .attr("height", collection.select("text").node().getBBox().height+10)
-      .style("stroke", "#5fd145")
-      .lower();
-
-
-
-      const shape = svg
-      .selectAll("gshape")
-      .data(this.jsondata.shapes)
-      .join("g")
-      .attr("class", "shape_g main_g")
-      .attr("expanded", "false")
-      .on("click", clickShape.bind(this))
-      .call(d3.drag()
-      .on("start", dragstartX)
-      .on("end", dragendX)
-      .on("drag", dragX));
-
-      shape.append("text")
-      .attr("text-anchor", "start")
-      .attr("class", "shape_text main_text")
-      .attr("dy",20)
-      .attr("dx",5)
-      .text(function(d) {
-        return (d.type + "").split('#').pop()
-      })
-      .raise();
-
-      shape.append("rect")
-      .attr("class", "shape_rect main_rect")
-      .attr("width", shape.select("text").node().getBBox().width+15)
-      .attr("height", shape.select("text").node().getBBox().height+10)
-      .style("stroke", "#5e915a")
-      .lower();
-
-
-
-      const relation_holder = svg
-      .selectAll("grelation_holder")
-      .data(this.jsondata.relations_holder)
-      .join("g")
-      .attr("class", "relation_holder_g main_g")
-      .on("click", clickRelationHolder.bind(this))
-      .call(d3.drag()
-      .on("start", dragstartX)
-      .on("end", dragendX)
-      .on("drag", dragX));
-
-      relation_holder.append("text")
-      .attr("text-anchor", "start")
-      .attr("class", "relation_holder_text main_text")
-      .attr("dx", 5)
-      .attr("dy",20)
-      .text("")
-      .raise();
-
-      for (let tg of d3.selectAll(".relation_holder_g")){
-        d3.select(tg).select("text")
-        .append("tspan").text("Node")
-        .attr("dy", 22)
-        .attr("dx",5);
-
-        d3.select(tg).select("text")
-        .append("tspan").text(function(d){return d.name})
-        .attr("dy", 22)
-        .attr("dx",5);
-
-        d3.select(tg).select("text")
-        .append("tspan").text(function(d){return "relations: " + d.relation_count})
-        .attr("dy", 22)
-        .attr("dx",15);
-
-        d3.select(tg).append("rect")
-        .attr("class", "relation_holder_rect main_rect")
-        .attr("width", d3.select(tg).node().getBBox().width+15)
-        .attr("height", d3.select(tg).node().getBBox().height+10)
-        .style("stroke", "#69b3a2")
+        collection.append("rect")
+        .attr("class", "collection_rect main_rect")
+        .attr("width", collection.select("text").node().getBBox().width+15)
+        .attr("height", collection.select("text").node().getBBox().height+10)
+        .style("stroke", "#5fd145")
         .lower();
       }
+
+
+
+      if (this.jsondata.shapes.length > 0){
+        const shape = svg
+        .selectAll("gshape")
+        .data(this.jsondata.shapes)
+        .join("g")
+        .attr("class", "shape_g main_g")
+        .attr("expanded", "false")
+        .on("click", clickShape.bind(this))
+        .call(d3.drag()
+        .on("start", dragstartX)
+        .on("end", dragendX)
+        .on("drag", dragX));
+
+        shape.append("text")
+        .attr("text-anchor", "start")
+        .attr("class", "shape_text main_text")
+        .attr("dy",20)
+        .attr("dx",5)
+        .text(function(d) {
+          return (d.type + "").split('#').pop()
+        })
+        .raise();
+
+        shape.append("rect")
+        .attr("class", "shape_rect main_rect")
+        .attr("width", shape.select("text").node().getBBox().width+15)
+        .attr("height", shape.select("text").node().getBBox().height+10)
+        .style("stroke", "#5e915a")
+        .lower();
+      }
+
+
+
+      if (this.jsondata.relations_holder.length > 0){
+        const relation_holder = svg
+        .selectAll("grelation_holder")
+        .data(this.jsondata.relations_holder)
+        .join("g")
+        .attr("class", "relation_holder_g main_g")
+        .on("click", clickRelationHolder.bind(this))
+        .call(d3.drag()
+        .on("start", dragstartX)
+        .on("end", dragendX)
+        .on("drag", dragX));
+
+        relation_holder.append("text")
+        .attr("text-anchor", "start")
+        .attr("class", "relation_holder_text main_text")
+        .attr("dx", 5)
+        .attr("dy",20)
+        .text("")
+        .raise();
+
+        for (let tg of d3.selectAll(".relation_holder_g")){
+          d3.select(tg).select("text")
+          .append("tspan").text("Node")
+          .attr("dy", 22)
+          .attr("dx",5);
+
+          d3.select(tg).select("text")
+          .append("tspan").text(function(d){return d.name})
+          .attr("dy", 22)
+          .attr("dx",5);
+
+          d3.select(tg).select("text")
+          .append("tspan").text(function(d){return "relations: " + d.relation_count})
+          .attr("dy", 22)
+          .attr("dx",15);
+
+          d3.select(tg).append("rect")
+          .attr("class", "relation_holder_rect main_rect")
+          .attr("width", d3.select(tg).node().getBBox().width+15)
+          .attr("height", d3.select(tg).node().getBBox().height+10)
+          .style("stroke", "#69b3a2")
+          .lower();
+        }
+      }
+
 
 
       d3.forceSimulation(all)

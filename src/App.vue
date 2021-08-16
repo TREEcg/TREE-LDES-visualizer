@@ -387,7 +387,7 @@ export default {
 
           let tempN = [];
           for (let relationNode of this.jsondata.relations_holder){
-            //This will hold all newly added nodes to later check if they confirm to any already existing relations
+            //This will hold all newly added nodes to later check if they conform to any already existing relations
             tempN.push(relationNode.id);
             for (var relationJson of this.jsondata[relationNode.id]){
               if (metadata.relations.get(relationJson.id)){
@@ -1105,10 +1105,11 @@ export default {
           }
 
         } else if (!this.members[d.name]){
-          newG.append("text").text("This node has no members.")
+          newG.append("g").append("text").text("This node has no members.")
           .attr("dy", 20)
           .attr("dx", 5)
-          .attr("x", 0);
+          .attr("x", 0)
+          .attr("y", 22 + offsetH);
         }
 
         if (showAll === true){
@@ -1323,7 +1324,7 @@ export default {
           trX.id = "large"+count;
           trX.onclick = tableClick.bind(this, count, this.jsondata[d.id][count].node[0]["@id"], newG, innerg, table, false)
 
-          let textX = document.createTextNode(createExtraCell(this.jsondata[d.id][count]));
+          let textX = document.createTextNode(createExtraCell.call(this, this.jsondata[d.id][count]));
 
           let tdX = trX.insertCell();
           tdX.classList.add('spacing');
@@ -1462,7 +1463,6 @@ export default {
             }
           }
         }
-        console.log(textX);
         return textX;
       }
 

@@ -97,7 +97,13 @@ export default {
       node_validation: [],
       shape_report: "",
       selected: "1",
-      alpha_decay_rate: 0.5//1 - Math.pow(0.001, 1 / 300)
+      alpha_decay_rate: 0.5,//1 - Math.pow(0.001, 1 / 300)
+      shapeTargets: ['targetClass', 'targetNode', 'targetSubjectsOf', 'targetObjectsOf'],
+      // Add possible properties from metadata extraction to these arrays
+      collectionSpecial: ["@type", "import", "importStream", "conditionalImport", "totalItems"],
+      nodeSpecial: ["@type", "import", "importStream", "conditionalImport", "search", "retentionPolicy"],
+      // value, path, node, remainingItems are checked in a different way
+      relationSpecial: ["import", "importStream", "conditionalImport"]
     }
   },
   watch: {
@@ -137,6 +143,14 @@ export default {
       return await stringifyStream(textStream);
     },
 
+    getShapeIds(store){
+      var shapeIds = [];
+      shapeIds = shapeIds.concat(store.getQuads(null, 'https://w3id.org/tree#shape', null, null).map(quad => quad.object.id));
+      shapeIds = shapeIds.concat(store.getQuads(null, 'http://www.w3.org/ns/shapetrees#validatedBy', null, null).map(quad => quad.object.id));
+      shapeIds = shapeIds.concat(store.getQuads(null, 'http://www.w3.org/ns/shapetrees#shape', null, null).map(quad => quad.object.id));
+      return shapeIds;
+    },
+
     extractShapeHelp(store, id, checked = []) {
       var quadsWithSubj = store.getQuads(id, null, null, null);
       for (let quad of quadsWithSubj){
@@ -156,7 +170,7 @@ export default {
       const store2 = new N3.Store();
       store2.addQuads(quadsWithSubj);
       var targetQuads = [];
-      const shapeTargets = ['targetClass', 'targetNode', 'targetSubjectsOf', 'targetObjectsOf']
+      const shapeTargets = this.shapeTargets;
       for (let tempTarget of shapeTargets){
         targetQuads = targetQuads.concat(store2.getQuads(null, 'http://www.w3.org/ns/shacl#'+tempTarget, null, null))
       }
@@ -194,7 +208,7 @@ export default {
     },
 
     async getData(url) {
-      //Need to clear the data before redrawing
+      //Need to always clear these values before getting new data
       this.qtext = [];
       this.remarks = "";
 
@@ -291,8 +305,7 @@ export default {
               collection.type = "Collection";
               collection.vocab = collectionObj['@context']["@vocab"];
 
-              let possibleAttrs = ["@type", "import", "importStream", "conditionalImport", "totalItems"];
-              for (let pAttr of possibleAttrs){
+              for (let pAttr of this.collectionSpecial){
                 if (collectionObj[pAttr]){
                   collection[pAttr] = collectionObj[pAttr];
                 }
@@ -307,7 +320,7 @@ export default {
               let iter = (metadata.nodes.size > 0) ? metadata.nodes.values() : collectionObj.view;
               for (var viewNode of iter){
 
-                // Change the id to include _node because collection and view can have the same URI
+                // Change the id by appending _node because collection and view can have the same URI
                 // We do still want to show them as two separate nodes even though they have the same URL
 
                 let double = false;
@@ -323,8 +336,7 @@ export default {
                   relation_holder.name = viewNode['@id'];
                   relation_holder.relation_count = metadata.nodes.get(viewNode['@id']).relation.length;
 
-                  let possibleAttrs = ["import", "importStream", "conditionalImport", "search", "retentionPolicy", "@type"];
-                  for (let pAttr of possibleAttrs){
+                  for (let pAttr of this.nodeSpecial){
                     if (viewNode[pAttr]){
                       relation_holder[pAttr] = viewNode[pAttr];
                     }
@@ -404,8 +416,7 @@ export default {
                   }
                 }
 
-                let possibleAttrs = ["import", "importStream", "conditionalImport"];
-                for (let pAttr of possibleAttrs){
+                for (let pAttr of this.relationSpecial){
                   if (relationObj[pAttr]){
                     relationJson[pAttr] = relationObj[pAttr];
                   }
@@ -458,21 +469,10 @@ export default {
             this.drawing();
           }
 
-
-
-
         })
 
       });
 
-    },
-
-    getShapeIds(store){
-      var shapeIds = [];
-      shapeIds = shapeIds.concat(store.getQuads(null, 'https://w3id.org/tree#shape', null, null).map(quad => quad.object.id));
-      shapeIds = shapeIds.concat(store.getQuads(null, 'http://www.w3.org/ns/shapetrees#validatedBy', null, null).map(quad => quad.object.id));
-      shapeIds = shapeIds.concat(store.getQuads(null, 'http://www.w3.org/ns/shapetrees#shape', null, null).map(quad => quad.object.id));
-      return shapeIds;
     },
 
     validateShape(membIds, store, newNodeMembersId){
@@ -522,7 +522,7 @@ export default {
           this.shape_report += "\nResult report for "+newNodeMembersId+":\n";
 
           for (const result of report.results) {
-            // See https://www.w3.org/TR/shacl/#results-validation-result for details about each propert
+            // See https://www.w3.org/TR/shacl/#results-validation-result for details about each property
             let mX = "";
 
             mX += "\nmessage: \n";
@@ -606,7 +606,7 @@ export default {
 
 
 
-      //TODO find a way to make the arrowhead placed dynamically instead of using refX
+      //TODO find a way to make the arrowhead on the link-line placed dynamically instead of using refX
       svg.append("marker")
       .attr("id", "arrow")
       .attr("markerUnits","userSpaceOnUse")
@@ -630,6 +630,7 @@ export default {
       .style("pointer-events", "none")
       .style("stroke-width",0.5)
       .attr("marker-end", "url(#arrow)" );
+
 
       if (this.jsondata.collection.length > 0){
         const collection = svg
@@ -901,7 +902,7 @@ export default {
         .attr("x",0)
         .attr("dx",15);
 
-        let possibleAttrs = ["@type", "import", "importStream", "conditionalImport", "totalItems"];
+        let possibleAttrs = this.collectionSpecial;
         for (let pAttr of possibleAttrs){
           if (d[pAttr]){
             tt.append("tspan").text(`${pAttr}:`)
@@ -1221,8 +1222,7 @@ export default {
         .attr("x",0)
         .attr("dx",15);
 
-        let possibleAttrs = ["@type", "import", "importStream", "conditionalImport", "search", "retentionPolicy"];
-        for (let pAttr of possibleAttrs){
+        for (let pAttr of this.nodeSpecial){
           if (d[pAttr]){
             tt.append("tspan").text(`${pAttr}:`)
             .attr("dy", 22)
@@ -1253,11 +1253,7 @@ export default {
           .attr("width", 600)
           .attr("height", 600);
 
-        var table = innerg
-          // .append("xhtml:body")
-          .append('xhtml:table')
-        // .attr("width", 600)
-        // .attr("height", 600);
+        var table = innerg.append('xhtml:table');
         var thead = table.append('thead');
         var	tbody = table.append('tbody').attr("id", "my_tbody");
 
@@ -1451,8 +1447,7 @@ export default {
           }
         }
 
-        let possibleAttrs = ["import", "importStream", "conditionalImport"];
-        for (let pAttr of possibleAttrs){
+        for (let pAttr of this.relationSpecial){
           if (relX[pAttr]){
             textX += `${pAttr}:` + "\n";
             for (const value of Object.values(relX[pAttr])) {
@@ -1467,6 +1462,7 @@ export default {
             }
           }
         }
+        console.log(textX);
         return textX;
       }
 
@@ -1556,7 +1552,7 @@ export default {
   transform: rotate(-45deg);
 }
 .spacing {
-  white-space: pre-line;
+  white-space: pre;
 }
 
 svg{

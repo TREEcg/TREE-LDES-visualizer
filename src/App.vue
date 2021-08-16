@@ -110,6 +110,14 @@ export default {
   methods : {
     clearData(){
       this.jsondata = {"collection":[], "relations":[], "links":[], "shapes":[], "relations_holder":[]};
+      this.shape_validation = null;
+      this.node_validation = [];
+      d3.select("#extra").selectAll("svg").remove();
+      this.svgHolder = null;
+      this.svgGHolder = null;
+      this.members = {};
+      this.membersFailed = [];
+      this.shape_report = "";
     },
     close(){
       document.getElementById("windowContainer").style.display = "none";
@@ -346,7 +354,9 @@ export default {
                   )
                 });
               }
-              this.validateShape(membIds, store, newNodeMembersId);
+              if (this.jsondata.shapes.size > 0 || collectionObj.shape){
+                this.validateShape(membIds, store, newNodeMembersId);
+              }
             } else {
               this.remarks += "Found no members for " + newNodeMembersId + ".\n";
             }

@@ -1526,10 +1526,10 @@ export default {
   height: 20px;
   opacity: 0.3;
   float: right;
+  z-index: 11;
 }
 .close:hover {
   opacity: 1;
-  z-index: 11;
 }
 .close:before, .close:after {
   position: absolute;

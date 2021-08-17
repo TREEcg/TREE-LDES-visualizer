@@ -116,7 +116,7 @@ export default {
   },
   methods : {
     clearData(){
-      this.jsondata = {"collection":[], "relations":new Map(), "links":new Map(), "shapes":[], "relations_holder":[]};
+      this.jsondata = {"collection":[], "relations":new Map(), "links":new Map(), "shapes":[], "nodes":[]};
       this.shape_validation = null;
       this.node_validation = [];
       d3.select("#extra").selectAll("svg").remove();
@@ -218,6 +218,7 @@ export default {
       standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a4.nt';
       standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/cht_1_2.ttl';
       // standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/marine1.jsonld';
+      // standardURL = 'https://bag2.basisregistraties.overheid.nl/feed/2020-08-14T16:05';
 
       if(url){
         standardURL = url;
@@ -264,7 +265,7 @@ export default {
             if (!this.jsondata[standardURL+"_node"]){
               this.jsondata[standardURL+"_node"] = [];
               alert("no collection metadata found at " + standardURL + ".\nWill add an empty node for this URL.");
-              this.jsondata.relations_holder.push({"id":standardURL+"_node", "name":standardURL, "relation_count":0})
+              this.jsondata.nodes.push({"id":standardURL+"_node", "name":standardURL, "relation_count":0})
               if (this.jsondata.links.has(this.jsondata.collection[0].id)){
                 this.jsondata.links.get(this.jsondata.collection[0].id).add(standardURL+"_node");
               } else {
@@ -329,25 +330,25 @@ export default {
                 // We do still want to show them as two separate nodes even though they have the same URL
 
                 let double = false;
-                for (let checker of this.jsondata.relations_holder){
+                for (let checker of this.jsondata.nodes){
                   if (checker.id == viewNode['@id']+"_node"){
                     double = true;
                   }
                 }
 
                 if (!double){
-                  let relation_holder = {};
-                  relation_holder.id = viewNode['@id']+"_node";
-                  relation_holder.name = viewNode['@id'];
-                  relation_holder.relation_count = metadata.nodes.get(viewNode['@id']).relation.length;
+                  let node = {};
+                  node.id = viewNode['@id']+"_node";
+                  node.name = viewNode['@id'];
+                  node.relation_count = metadata.nodes.get(viewNode['@id']).relation.length;
 
                   for (let pAttr of this.nodeSpecial){
                     if (viewNode[pAttr]){
-                      relation_holder[pAttr] = viewNode[pAttr];
+                      node[pAttr] = viewNode[pAttr];
                     }
                   }
 
-                  this.jsondata.relations_holder.push(relation_holder)
+                  this.jsondata.nodes.push(node)
                   if (this.jsondata.links.has(collectionId)){
                     this.jsondata.links.get(collectionId).add(viewNode['@id']+"_node");
                   } else {
@@ -361,7 +362,7 @@ export default {
 
 
             //TODO check what happens when as:items comes from a node not the collection
-            const newNodeMembersId = this.jsondata.relations_holder[this.jsondata.relations_holder.length -1].name;
+            const newNodeMembersId = this.jsondata.nodes[this.jsondata.nodes.length -1].name;
             this.members[newNodeMembersId] = new Map();
             if (collectionObj.member){
               let membIds = [];
@@ -384,9 +385,10 @@ export default {
 
           }
 
-          //This does not need a duplicate check since old node relations won't be included in the new metadata
-          //or they will just overwrite with the exact same data as was already present
+          // This does not need a duplicate check since old node relations won't be included in the new metadata
+          // or they will just overwrite with the exact same data as was already present
           for (var nodeId of metadata.nodes.keys()){
+            this.jsondata.links.delete(nodeId+"_node");
             var nodeObj = metadata.nodes.get(nodeId);
             this.jsondata[nodeId+"_node"] = [];
             for (var relation of nodeObj.relation){
@@ -395,7 +397,13 @@ export default {
           }
 
           let tempN = [];
-          for (let nodeName of metadata.nodes.keys()){
+          // If metadata.nodes had no new node, a new empty node still got added to the graph
+          // Need to ensure a link for all relations leading to this node is also created via standardURL_node
+          let it = metadata.nodes.keys();
+          if (metadata.nodes.size == 0){
+            it = [standardURL];
+          }
+          for (let nodeName of it){
             let nodeId = nodeName + "_node"
             //This will hold all newly added nodes to later check if they conform to any already existing relations
             tempN.push(nodeId);
@@ -449,12 +457,14 @@ export default {
             }
 
             //This checks if any of the newly added nodes are the target of a relation already on the graph
-            for (let [tempS, tempT] of this.jsondata.relations){
-              if (tempN.includes(tempT)){
-                if (this.jsondata.links.has(tempS)){
-                  this.jsondata.links.get(tempS).add(tempT);
-                } else {
-                  this.jsondata.links.set(tempS, new Set([tempT]));
+            for (let [tempKey, tempSet] of this.jsondata.relations){
+              for (let tempValue of tempSet){
+                if (tempN.includes(tempValue)){
+                  if (this.jsondata.links.has(tempKey)){
+                    this.jsondata.links.get(tempKey).add(tempValue);
+                  } else {
+                    this.jsondata.links.set(tempKey, new Set([tempValue]));
+                  }
                 }
               }
             }
@@ -590,7 +600,7 @@ export default {
       const linkData = [];
       this.jsondata.links.forEach((s, k) => {s.forEach(v => linkData.push({"source":k,"target":v}))});
       console.log("linkData: ", linkData);
-      var all = this.jsondata.collection.concat(this.jsondata.shapes.concat(this.jsondata.relations_holder));
+      var all = this.jsondata.collection.concat(this.jsondata.shapes.concat(this.jsondata.nodes));
 
       // append the svg object to the body of the page
       const svg = d3.select("#my_dataviz")
@@ -640,8 +650,8 @@ export default {
       .attr("id", "arrow")
       .attr("markerUnits","userSpaceOnUse")
       .attr("viewBox", "0 -5 10 10")
-      .attr("refX",55)//Arrow coordinates
-      .attr("refY", -1)
+      .attr("refX",0)//Arrow coordinates
+      .attr("refY", 0)
       .attr("markerWidth", 12)//The size of the logo
       .attr("markerHeight", 12)
       .attr("orient", "auto")//Drawing direction, can be set to: auto (automatically confirm the direction) and angle value
@@ -653,12 +663,11 @@ export default {
 
       const link = svg.selectAll(".edgepath")
       .data(linkData)
-      .enter()
-      .append("path")
+      .enter().append("polyline")
       .style("stroke","gray")
       .style("pointer-events", "none")
       .style("stroke-width",0.5)
-      .attr("marker-end", "url(#arrow)" );
+      .attr("marker-mid", "url(#arrow)" );
 
 
       if (this.jsondata.collection.length > 0){
@@ -727,46 +736,45 @@ export default {
 
 
 
-      if (this.jsondata.relations_holder.length > 0){
-        const relation_holder = svg
-        .selectAll("grelation_holder")
-        .data(this.jsondata.relations_holder)
+      if (this.jsondata.nodes.length > 0){
+        const node = svg
+        .selectAll("gnode")
+        .data(this.jsondata.nodes)
         .join("g")
-        .attr("class", "relation_holder_g main_g")
+        .attr("class", "node_g main_g")
         .on("click", clickRelationHolder.bind(this))
         .call(d3.drag()
         .on("start", dragstartX)
         .on("end", dragendX)
         .on("drag", dragX));
 
-        relation_holder.append("text")
+        node.append("text")
         .attr("text-anchor", "start")
-        .attr("class", "relation_holder_text main_text")
+        .attr("class", "node_text main_text")
         .attr("dx", 5)
         .attr("dy",20)
         .text("")
         .raise();
 
-        for (let tg of d3.selectAll(".relation_holder_g")){
+        for (let tg of d3.selectAll(".node_g")){
           d3.select(tg).select("text")
           .append("tspan").text("Node")
-          .attr("dy", 22)
           .attr("dx",5);
 
           d3.select(tg).select("text")
           .append("tspan").text(function(d){return d.name})
-          .attr("dy", 22)
           .attr("dx",5);
 
           d3.select(tg).select("text")
           .append("tspan").text(function(d){return "relations: " + d.relation_count})
-          .attr("dy", 22)
           .attr("dx",15);
 
+          d3.select(tg).selectAll("tspan").attr("x", 0).attr("dy", 22);
+
           d3.select(tg).append("rect")
-          .attr("class", "relation_holder_rect main_rect")
-          .attr("width", d3.select(tg).node().getBBox().width+15)
-          .attr("height", d3.select(tg).node().getBBox().height+10)
+          .attr("class", "node_rect main_rect")
+          .attr("width", d3.select(tg).select("text").node().getBBox().width+15)
+          .attr("height", d3.select(tg).select("text").node().getBBox().height+10)
           .style("stroke", "#69b3a2")
           .lower();
         }
@@ -813,11 +821,14 @@ export default {
 
       function fixLinks(){
         link.attr("transform", "scale("+d3.select("svg").attr("scaleAll")+")");
-        link.attr('d', function(d) {
-          //TODO find a way to make the path go to the center, not the top corner by finding source, target width and height
-          var path='M '+d.source.x+' '+d.source.y+' L '+ d.target.x +' '+d.target.y;
-          return path;
-        });
+        // Calculate start, mid, end
+        link.attr("points", function(d) {
+             return [
+                  d.source.x, d.source.y,
+                  d.source.x/2+d.target.x/2, d.source.y/2+d.target.y/2,
+                  d.target.x, d.target.y
+             ].join(',');
+        })
       }
 
 
@@ -939,7 +950,6 @@ export default {
                   .text(" " + textX.replace(': [',': '))
                   .attr("dx", indent + 15);
                 }
-
               }
             }
           }
@@ -1018,7 +1028,7 @@ export default {
       }
 
 
-
+      // Only d is used and only for id, name, relation_count so standalone would be possible, with access to the extracted data ofcourse
       function clickRelationHolder(e, d){
         // Remove all previous showing details
         for (let sX of this.svgGHolder){

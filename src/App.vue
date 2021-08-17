@@ -74,6 +74,8 @@ const SHACLValidator = require('rdf-validate-shacl');
 const { DataFactory } = N3;
 const { namedNode, defaultGraph } = DataFactory;
 
+// const { PassThrough } = require('stream');
+
 
 export default {
   name: 'App',
@@ -104,7 +106,10 @@ export default {
       collectionSpecial: ["@type", "import", "importStream", "conditionalImport", "totalItems"],
       nodeSpecial: ["@type", "import", "importStream", "conditionalImport", "search", "retentionPolicy"],
       // value, path, node, remainingItems are checked in a different way
-      relationSpecial: ["import", "importStream", "conditionalImport"]
+      relationSpecial: ["import", "importStream", "conditionalImport"],
+      importLinks: new Set(),
+      newImportLinks: new Set(),
+      importedQuads: new Map()
     }
   },
   watch: {
@@ -125,6 +130,9 @@ export default {
       this.members = {};
       this.membersFailed = [];
       this.shape_report = "";
+      this.importLinks = new Set();
+      this.newImportLinks = new Set();
+      this.importedQuads = new Map();
     },
     close(){
       document.getElementById("windowContainer").style.display = "none";
@@ -209,6 +217,20 @@ export default {
     },
 
     async getData(url) {
+
+      // const concatStreams = (streamArray, streamCounter = streamArray.length) => streamArray
+      // .reduce((mergedStream, stream) => {
+      //   // pipe each stream of the array into the merged stream
+      //   // prevent the automated 'end' event from firing
+      //   mergedStream = stream.pipe(mergedStream, { end: false });
+      //   // rewrite the 'end' event handler
+      //   // Every time one of the stream ends, the counter is decremented.
+      //   // Once the counter reaches 0, the mergedstream can emit its 'end' event.
+      //   stream.once('end', () => --streamCounter === 0 && mergedStream.emit('end'));
+      //   return mergedStream;
+      // }, new PassThrough());
+
+
       //Need to always clear these values before getting new data
       this.qtext = [];
       this.remarks = "";
@@ -219,6 +241,8 @@ export default {
       standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/cht_1_2.ttl';
       // standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/marine1.jsonld';
       // standardURL = 'https://bag2.basisregistraties.overheid.nl/feed/2020-08-14T16:05';
+      // standardURL = 'https://raw.githubusercontent.com/TREEcg/TREE-LDES-visualizer/main/src/assets/testerfirst.ttl';
+      standardURL = 'https://raw.githubusercontent.com/TREEcg/TREE-LDES-visualizer/main/src/assets/testerMultipleImports.ttl';
 
       if(url){
         standardURL = url;
@@ -237,7 +261,7 @@ export default {
 
       const {quads} = await rdfDereferencer.dereference(standardURL);
       quads.on('data', (quad) => {this.qtext.push(quad); /*console.log(quad)*/})
-      .on('error', (error) => console.error(error))
+      .on('error', (error) => {console.error(error); alert("Error while parsing data at:\n"+standardURL+".\n\n"+error)})
       .on('end', () => {
         extractMetadata(this.qtext).then(metadata => {
 
@@ -348,6 +372,18 @@ export default {
                     }
                   }
 
+                  if (node.import){
+                    for (let importX of node.import){
+                      this.newImportLinks.add(importX['@id']);
+                    }
+                  }
+
+                  if (node.conditionalImport){
+                    for (let importX of node.conditionalImport.import){
+                      this.newImportLinks.add(importX['@id']);
+                    }
+                  }
+
                   this.jsondata.nodes.push(node)
                   if (this.jsondata.links.has(collectionId)){
                     this.jsondata.links.get(collectionId).add(viewNode['@id']+"_node");
@@ -361,27 +397,73 @@ export default {
             }
 
 
-            //TODO check what happens when as:items comes from a node not the collection
             const newNodeMembersId = this.jsondata.nodes[this.jsondata.nodes.length -1].name;
             this.members[newNodeMembersId] = new Map();
-            if (collectionObj.member){
-              let membIds = [];
-              for (var memb of collectionObj.member){
-                membIds.push(memb['@id']);
-                // Need to save id inside loop because used in async push
-                let tX = memb['@id'];
-                this.extractId(store, memb['@id']).then(mtemp => {
-                  this.members[newNodeMembersId].set(
-                    tX, mtemp
-                  )
-                });
+
+
+            this.importLinks.forEach(v => {
+              if (this.newImportLinks.has(v)){
+                store.addQuads(this.importedQuads.get(v));
               }
-              if (this.jsondata.shapes.size > 0 || collectionObj.shape){
-                this.validateShape(membIds, store, newNodeMembersId);
+              this.newImportLinks.delete(v);
+            });
+            this.newImportLinks.forEach(v => this.importLinks.add(v));
+
+            const importPromises = [...this.newImportLinks].map(url => {new Promise((resolve, reject) => {
+              let newQuads = [];
+              rdfDereferencer.dereference(url).then(v => {v.quads.on('data', (quad) => {newQuads.push(quad)})
+              .on('error', (error) => {console.error(error); alert("Error while parsing import data at:\n"+url+"\n\n" +error); reject})
+              .on('end', () => {
+                this.importedQuads.set(url, newQuads);
+                store.addQuads(newQuads);
+                resolve;
+              })
+            })})})
+
+
+            Promise.all(importPromises).then(() => {
+              if (collectionObj.member){
+                let membIds = [];
+                for (var memb of collectionObj.member){
+                  membIds.push(memb['@id']);
+                  // Need to save id inside loop because used in async push
+                  let tX = memb['@id'];
+                  this.extractId(store, memb['@id']).then(mtemp => {
+                    this.members[newNodeMembersId].set(
+                      tX, mtemp
+                    )
+                  });
+                }
+                if (this.jsondata.shapes.size > 0 || collectionObj.shape){
+                  this.validateShape(membIds, store, newNodeMembersId);
+                }
+              } else {
+                this.remarks += "Found no members for " + newNodeMembersId + ".\n";
               }
-            } else {
-              this.remarks += "Found no members for " + newNodeMembersId + ".\n";
-            }
+            })
+
+
+            //TODO check what happens when as:items comes from a node not the collection
+            // const newNodeMembersId = this.jsondata.nodes[this.jsondata.nodes.length -1].name;
+            // this.members[newNodeMembersId] = new Map();
+            // if (collectionObj.member){
+            //   let membIds = [];
+            //   for (var memb of collectionObj.member){
+            //     membIds.push(memb['@id']);
+            //     // Need to save id inside loop because used in async push
+            //     let tX = memb['@id'];
+            //     this.extractId(store, memb['@id']).then(mtemp => {
+            //       this.members[newNodeMembersId].set(
+            //         tX, mtemp
+            //       )
+            //     });
+            //   }
+            //   if (this.jsondata.shapes.size > 0 || collectionObj.shape){
+            //     this.validateShape(membIds, store, newNodeMembersId);
+            //   }
+            // } else {
+            //   this.remarks += "Found no members for " + newNodeMembersId + ".\n";
+            // }
 
           }
 
@@ -433,7 +515,7 @@ export default {
                 for (let wAttr of wantedAttrs){
                   if (relationObj[wAttr]){
                     relationJson[wAttr] = relationObj[wAttr];
-                  } else {
+                  } else if (wAttr != "remainingItems"){
                     this.remarks += "relation from " + nodeName + " to " + relationObj.node[0]['@id'] + " has no " + wAttr + " defined\n";
                   }
                 }
@@ -498,10 +580,12 @@ export default {
               } else {
                 this.jsondata.links.set(collectionId, new Set([shapeIds[0]]));
               }
+              this.newImportLinks = new Set();
               this.drawing();
             });
 
           } else {
+            this.newImportLinks = new Set();
             this.drawing();
           }
 

@@ -3,7 +3,8 @@
   <p style="white-space: pre-line">Click a node, relation or shape to show all attributes<br>
   ctrl+click a relation to add the node to the graph<br>
   shift+mousewheel / shift+pan to zoom or pan<br>
-  Drag screen corner to resize views</p>
+  Drag screen corner to resize views<br>
+  An arrowhead next to a node means the node has a relation with itself as the node</p>
 
   <label for="adecay">Enter graph convergence speed, between 0 and 1</label>
   <input type="number" v-model="alpha_decay_rate" placeholder="0.023" name="adecay"><br>
@@ -42,9 +43,9 @@
       <div class="container">
 
         <select v-model="selected">
-          <option value="1">Node</option>
-          <option value="2">Members</option>
-          <option value="3">Shape validation</option>
+          <option value=0>Node</option>
+          <option value=1>Members</option>
+          <option value=2>Shape validation</option>
         </select>
       </div>
       <div id="extra"></div>
@@ -96,7 +97,7 @@ export default {
       shape_validation: null,
       node_validation: [],
       shape_report: "",
-      selected: "1",
+      selected: 0,
       alpha_decay_rate: 0.5,//1 - Math.pow(0.001, 1 / 300)
       shapeTargets: ['targetClass', 'targetNode', 'targetSubjectsOf', 'targetObjectsOf'],
       // Add possible properties from metadata extraction to these arrays
@@ -115,7 +116,7 @@ export default {
   },
   methods : {
     clearData(){
-      this.jsondata = {"collection":[], "relations":[], "links":[], "shapes":[], "relations_holder":[]};
+      this.jsondata = {"collection":[], "relations":new Map(), "links":new Map(), "shapes":[], "relations_holder":[]};
       this.shape_validation = null;
       this.node_validation = [];
       d3.select("#extra").selectAll("svg").remove();
@@ -264,7 +265,11 @@ export default {
               this.jsondata[standardURL+"_node"] = [];
               alert("no collection metadata found at " + standardURL + ".\nWill add an empty node for this URL.");
               this.jsondata.relations_holder.push({"id":standardURL+"_node", "name":standardURL, "relation_count":0})
-              this.jsondata.links.push({"source":this.jsondata.collection[0].id, "target":standardURL+"_node"});
+              if (this.jsondata.links.has(this.jsondata.collection[0].id)){
+                this.jsondata.links.get(this.jsondata.collection[0].id).add(standardURL+"_node");
+              } else {
+                this.jsondata.links.set(this.jsondata.collection[0].id, new Set([standardURL+"_node"]));
+              }
             }
           }
 
@@ -343,7 +348,11 @@ export default {
                   }
 
                   this.jsondata.relations_holder.push(relation_holder)
-                  this.jsondata.links.push({"source":collectionId, "target":viewNode['@id']+"_node", "name":"relation_holder"});
+                  if (this.jsondata.links.has(collectionId)){
+                    this.jsondata.links.get(collectionId).add(viewNode['@id']+"_node");
+                  } else {
+                    this.jsondata.links.set(collectionId, new Set([viewNode['@id']+"_node"]));
+                  }
                 }
               }
             } else {
@@ -386,23 +395,28 @@ export default {
           }
 
           let tempN = [];
-          for (let relationNode of this.jsondata.relations_holder){
+          for (let nodeName of metadata.nodes.keys()){
+            let nodeId = nodeName + "_node"
             //This will hold all newly added nodes to later check if they conform to any already existing relations
-            tempN.push(relationNode.id);
-            for (var relationJson of this.jsondata[relationNode.id]){
+            tempN.push(nodeId);
+            for (var relationJson of this.jsondata[nodeId]){
               if (metadata.relations.get(relationJson.id)){
 
                 var relationObj = metadata.relations.get(relationJson.id);
                 if (!relationObj.node || !relationObj.node[0]['@id']){
-                  alert("Error: relation from " + relationNode.id + " has no node defined!\nThis is not allowed!\nRelation: " + JSON.stringify(relationObj, null, '\t'));
+                  alert("Error: relation from " + nodeId + " has no node defined!\nThis is not allowed!\nRelation: " + JSON.stringify(relationObj, null, '\t'));
                   break;
                 }
                 relationJson.node = relationObj.node;
 
-                this.jsondata.relations.push({"source":relationNode.id, "target":relationObj.node[0]['@id']+"_node"});
+                if (this.jsondata.relations.has(nodeId)){
+                  this.jsondata.relations.get(nodeId).add(relationObj.node[0]['@id']+"_node");
+                } else {
+                  this.jsondata.relations.set(nodeId, new Set([relationObj.node[0]['@id']+"_node"]));
+                }
 
                 if(!relationObj['@type']){
-                  this.remarks += "relation from " + relationNode.name + " to " + relationObj.node[0]['@id'] + " has no type defined\n";
+                  this.remarks += "relation from " + nodeName + " to " + relationObj.node[0]['@id'] + " has no type defined\n";
                 } else {
                   relationJson.type = relationObj['@type'];
                 }
@@ -412,7 +426,7 @@ export default {
                   if (relationObj[wAttr]){
                     relationJson[wAttr] = relationObj[wAttr];
                   } else {
-                    this.remarks += "relation from " + relationNode.name + " to " + relationObj.node[0]['@id'] + " has no " + wAttr + " defined\n";
+                    this.remarks += "relation from " + nodeName + " to " + relationObj.node[0]['@id'] + " has no " + wAttr + " defined\n";
                   }
                 }
 
@@ -424,16 +438,24 @@ export default {
 
                 //This checks if the node this relation links to already exists in the graph
                 if(this.jsondata[relationObj.node[0]['@id']+"_node"]){
-                  this.jsondata.links.push({"source":relationNode.id, "target":relationObj.node[0]['@id']+"_node"});
+                  if (this.jsondata.links.has(nodeId)){
+                    this.jsondata.links.get(nodeId).add(relationObj.node[0]['@id']+"_node");
+                  } else {
+                    this.jsondata.links.set(nodeId, new Set([relationObj.node[0]['@id']+"_node"]));
+                  }
                 }
 
               }
             }
 
             //This checks if any of the newly added nodes are the target of a relation already on the graph
-            for (let tempR of this.jsondata.relations){
-              if (tempN.includes(tempR.target)){
-                this.jsondata.links.push(tempR);
+            for (let [tempS, tempT] of this.jsondata.relations){
+              if (tempN.includes(tempT)){
+                if (this.jsondata.links.has(tempS)){
+                  this.jsondata.links.get(tempS).add(tempT);
+                } else {
+                  this.jsondata.links.set(tempS, new Set([tempT]));
+                }
               }
             }
 
@@ -461,7 +483,11 @@ export default {
 
             this.extractShapeId(store, shapeIds[0]).then(res => {
               this.jsondata.shapes.push({"id":shapeIds[0], "type":"shape", "shape_extra":res});
-              this.jsondata.links.push({"source":collectionId, "target":shapeIds[0]});
+              if (this.jsondata.links.has(collectionId)){
+                this.jsondata.links.get(collectionId).add(shapeIds[0]);
+              } else {
+                this.jsondata.links.set(collectionId, new Set([shapeIds[0]]));
+              }
               this.drawing();
             });
 
@@ -561,6 +587,9 @@ export default {
       //clear the graph on redrawing
       d3.select("#my_dataviz").selectAll("svg").remove();
 
+      const linkData = [];
+      this.jsondata.links.forEach((s, k) => {s.forEach(v => linkData.push({"source":k,"target":v}))});
+      console.log("linkData: ", linkData);
       var all = this.jsondata.collection.concat(this.jsondata.shapes.concat(this.jsondata.relations_holder));
 
       // append the svg object to the body of the page
@@ -623,7 +652,7 @@ export default {
 
 
       const link = svg.selectAll(".edgepath")
-      .data(this.jsondata.links)
+      .data(linkData)
       .enter()
       .append("path")
       .style("stroke","gray")
@@ -748,7 +777,7 @@ export default {
       d3.forceSimulation(all)
       .force("link", d3.forceLink()
       .id(function(d) { return d.id; })
-      .links(this.jsondata.links)
+      .links(linkData)
       )
       .force("center", d3.forceCenter(width / 2, height / 2))
       .force("collide", d3.forceCollide(100))
@@ -879,9 +908,6 @@ export default {
           currentg.select("text").text((d.type + "").split('#').pop())
           currentg.select("rect").attr("width", 1);
 
-          currentg.select("text").selectAll("tspan")
-          .attr("x", function(d) {return d.x;})
-
           currentg.select("rect")
           .attr("height", 30)
           .attr("width", currentg.node().getBBox().width + 10);
@@ -890,24 +916,18 @@ export default {
 
       function expandCollectionTrue(currentg, d){
         currentg.raise();
-        currentg.select("text").text("");
         let tt = currentg.select("text");
+        tt.text("");
 
         tt.append("tspan").text("Collection")
-        .attr("dy", 22)
         .attr("dx",5);
 
         tt.append("tspan").text(d.id)
-        .attr("dy", 22)
-        .attr("x",0)
         .attr("dx",15);
 
-        let possibleAttrs = this.collectionSpecial;
-        for (let pAttr of possibleAttrs){
+        for (let pAttr of this.collectionSpecial){
           if (d[pAttr]){
             tt.append("tspan").text(`${pAttr}:`)
-            .attr("dy", 22)
-            .attr("x",0)
             .attr("dx",5);
             for (const value of Object.values(d[pAttr])) {
               let textArray = JSON.stringify(value, null, '\t').split('\n');
@@ -917,9 +937,7 @@ export default {
                   let indent = (textX.split('\t').length -1) * 20;
                   tt.append('tspan')
                   .text(" " + textX.replace(': [',': '))
-                  .attr("dy", 22)
-                  .attr("dx", indent + 15)
-                  .attr("x", 0);
+                  .attr("dx", indent + 15);
                 }
 
               }
@@ -927,11 +945,10 @@ export default {
           }
         }
 
+        tt.selectAll("tspan").attr("dy", 22);
+
         currentg.select("rect")
         .attr("height", 10 + currentg.select("text").node().getBBox().height)
-
-        currentg.select("text").selectAll("text, tspan")
-        .attr("x", function(d) {return d.x;})
 
         currentg.select("rect").attr("width", currentg.node().getBBox().width + 10);
       }
@@ -959,9 +976,6 @@ export default {
           currentg.select("text").text((d.type + "").split('#').pop())
           currentg.select("rect").attr("width", 1);
 
-          currentg.select("text").selectAll("tspan")
-          .attr("x", function(d) {return d.x;})
-
           currentg.select("rect")
           .attr("height", 30)
           .attr("width", currentg.node().getBBox().width + 10);
@@ -986,28 +1000,17 @@ export default {
           .attr("dx", indent + 5);
         }
 
-        currentg.select("text").selectAll("text, tspan")
-        .attr("x", function(d) {return d.x;})
-
         currentg.select("rect").attr("width", currentg.node().getBBox().width + 10);
       }
 
 
       this.drawing.setVisible = setVisible.bind(this);
       function setVisible(){
-        if (this.selected == "1"){
-          svgE.attr("display", "inline");
-          svgM.attr("display", "none");
-          svgS.attr("display", "none");
-        } else if (this.selected == "2"){
-          svgE.attr("display", "none");
-          svgM.attr("display", "inline");
-          svgS.attr("display", "none");
-        } else if (this.selected == "3"){
-          svgE.attr("display", "none");
-          svgM.attr("display", "none");
-          svgS.attr("display", "inline");
+        for (let sX of this.svgHolder){
+          sX.attr("display", "none");
         }
+
+        this.svgHolder[this.selected].attr("display", "inline");
 
         var el = document.getElementById("scrollContainer");
         el.scrollTop = 0;
@@ -1017,32 +1020,26 @@ export default {
 
 
       function clickRelationHolder(e, d){
-        svgEG.selectAll("g").remove();
-        svgMG.selectAll("g").remove();
-        svgSG.selectAll("g").remove();
+        // Remove all previous showing details
+        for (let sX of this.svgGHolder){
+          sX.selectAll("g").remove();
+        }
 
         // Display everything first so they have a correct viewbox attribute to use in calculations
-        svgE.attr("display", "inline");
-        svgM.attr("display", "inline");
-        svgS.attr("display", "inline");
+        for (let sX of this.svgHolder){
+          sX.attr("display", "inline");
+        }
         this.open();
 
         if (d.relation_count && d.relation_count > 0){
-          let currentg = d3.select(e.target.parentNode);
-          //currentg could be tspan parent = text and not the group
-          if (!currentg.classed("relation_holder_g")){
-            currentg = d3.select(currentg._groups[0][0].parentNode);
-          }
-
-          expandRelationHolder.bind(this)(currentg, d);
-          ticked();
+          expandRelationHolder.bind(this)(d);
         }
 
         expandMemberHolder.bind(this)(d);
 
         expandValidationHolder.bind(this)(d);
 
-        setVisible.bind(this)();
+        setVisible.call(this);
       }
 
 
@@ -1067,7 +1064,7 @@ export default {
           .attr("x", 0);
         }
 
-        expandMemberHolder.bind(this)(d, false, newG.node().getBBox().height+22);
+        expandMemberHolder.call(this, d, false, newG.node().getBBox().height+22);
       }
 
 
@@ -1083,7 +1080,7 @@ export default {
         if (this.members[d.name]){
           let sortIndex = 0;
           for (let tempA of this.members[d.name].keys()){
-            if (showAll === true || this.membersFailed[d.name].includes(tempA)){
+            if (showAll === true || (this.membersFailed[d.name] && this.membersFailed[d.name].includes(tempA))){
               let innerG = newG.append("g")
               .attr("sortIndex", sortIndex)
               .attr("expanded", "false")
@@ -1094,7 +1091,7 @@ export default {
               .attr("sortIndex", sortIndex)
               .attr("y", 22+44*sortIndex + offsetH);
 
-              if (this.membersFailed[d.name].includes(tempA)){
+              if (this.membersFailed[d.name] && this.membersFailed[d.name].includes(tempA)){
                 tt.style("fill", "#FF0000");
               }
 
@@ -1205,47 +1202,11 @@ export default {
       }
 
 
-      function expandRelationHolder(currentg, d){
+      function expandRelationHolder(d){
         let newG = svgEG.append("g").attr("class", "new_g");
         let tt = newG.append("text");
 
-        tt.append("tspan").text("Node")
-        .attr("dy", 22)
-        .attr("dx",5);
-
-        tt.append("tspan").text(d.name)
-        .attr("dy", 22)
-        .attr("x",0)
-        .attr("dx",5);
-
-        tt.append("tspan").text("relations: " + d.relation_count)
-        .attr("dy", 22)
-        .attr("x",0)
-        .attr("dx",15);
-
-        for (let pAttr of this.nodeSpecial){
-          if (d[pAttr]){
-            tt.append("tspan").text(`${pAttr}:`)
-            .attr("dy", 22)
-            .attr("x",0)
-            .attr("dx",5);
-            for (const value of Object.values(d[pAttr])) {
-              let textArray = JSON.stringify(value, null, '\t').split('\n');
-              let regex = /^(\t*{\t*)|(\t*}\t*)|(\t*],*\t*)$/g;
-              for (let textX of textArray){
-                if (!textX.match(regex)){
-                  let indent = (textX.split('\t').length -1) * 20;
-                  tt.append('tspan')
-                  .text(" " + textX.replace(': [',': '))
-                  .attr("dy", 22)
-                  .attr("dx", indent + 5)
-                  .attr("x", 0);
-                }
-
-              }
-            }
-          }
-        }
+        expandRelationHolderNodeInfo.call(this, d, tt);
 
         let offH = tt.node().getBBox().height + 30;
         let innerg = newG.append("svg:foreignObject")
@@ -1258,43 +1219,8 @@ export default {
         var thead = table.append('thead');
         var	tbody = table.append('tbody').attr("id", "my_tbody");
 
-        var tableData = [];
         var tableColumns = ["type", "value", "path"];
-
-        for (let relX of this.jsondata[d.id]){
-          let rowData = {};
-          if(relX.type){
-            rowData.type = (relX.type + "").split('#').pop() + ": "
-          } else {
-            rowData.type = "No Type"
-          }
-
-          if (relX.value){
-            let tempV = ""
-            for (let v of relX.value){
-              tempV += v['@value'] + ", ";
-            }
-            rowData.value = tempV.slice(0,-2);
-          } else {
-            rowData.value = "No Value";
-          }
-
-          if (relX.path){
-            let tempP = ""
-            for (let v of relX.path){
-              if(!v['@id']){
-                tempP += 'Nested path, expand to view'
-              } else {
-                tempP += v['@id'];
-              }
-            }
-            rowData.path = tempP;
-          } else {
-            rowData.path = "No Path";
-          }
-          tableData.push(rowData);
-        }
-
+        var tableData = parseTableData.call(this, d);
 
 
         // append the header row
@@ -1337,17 +1263,11 @@ export default {
         let bboxT = table.node();
         innerg.attr("width", bboxT.offsetWidth).attr("height", bboxT.offsetHeight);
 
-        newG.selectAll(".inner_rect").attr("width", newG.node().getBBox().width+10);
-
         newG.append("rect").attr("x", 0).attr("y", 0).style("stroke", "#69b3a2")
         .attr("width", newG.node().getBBox().width+30)
         .attr("height", newG.node().getBBox().height+30)
         .attr("class", "outer_rect")
         .lower();
-
-        newG.selectAll("text tspan").raise();
-
-
 
 
         // Make the main svg holding this large enough to show everything
@@ -1355,6 +1275,91 @@ export default {
         svgE.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
         .attr("width", (bbox.width+bbox.x))
         .attr("height", (bbox.height+bbox.y));
+      }
+
+
+
+      function expandRelationHolderNodeInfo(d, tt){
+        tt.append("tspan").text("Node")
+        .attr("dy", 22)
+        .attr("dx",5);
+
+        tt.append("tspan").text(d.name)
+        .attr("dy", 22)
+        .attr("x",0)
+        .attr("dx",5);
+
+        tt.append("tspan").text("relations: " + d.relation_count)
+        .attr("dy", 22)
+        .attr("x",0)
+        .attr("dx",15);
+
+        for (let pAttr of this.nodeSpecial){
+          if (d[pAttr]){
+            tt.append("tspan").text(`${pAttr}:`)
+            .attr("dy", 22)
+            .attr("x",0)
+            .attr("dx",5);
+            for (const value of Object.values(d[pAttr])) {
+              let textArray = JSON.stringify(value, null, '\t').split('\n');
+              let regex = /^(\t*{\t*)|(\t*}\t*)|(\t*],*\t*)$/g;
+              for (let textX of textArray){
+                if (!textX.match(regex)){
+                  let indent = (textX.split('\t').length -1) * 20;
+                  tt.append('tspan')
+                  .text(" " + textX.replace(': [',': '))
+                  .attr("dy", 22)
+                  .attr("dx", indent + 5)
+                  .attr("x", 0);
+                }
+
+              }
+            }
+          }
+        }
+      }
+
+
+      function parseTableData(d){
+        var tableData = [];
+        for (let relX of this.jsondata[d.id]){
+          let rowData = {};
+          if(relX.type){
+            rowData.type = (relX.type + "").split('#').pop();
+          } else {
+            rowData.type = "No Type";
+          }
+
+          if (relX.value){
+            let tempV = ""
+            for (let v of relX.value){
+              if(!v['@value']){
+                tempV += 'Nested value, expand to view';
+              } else {
+                tempV += v['@value'] + ", ";
+              }
+            }
+            rowData.value = tempV.slice(0,-2);
+          } else {
+            rowData.value = "No Value";
+          }
+
+          if (relX.path){
+            let tempP = ""
+            for (let v of relX.path){
+              if(!v['@id']){
+                tempP += 'Nested path, expand to view';
+              } else {
+                tempP += v['@id'];
+              }
+            }
+            rowData.path = tempP;
+          } else {
+            rowData.path = "No Path";
+          }
+          tableData.push(rowData);
+        }
+        return tableData;
       }
 
 
@@ -1373,14 +1378,13 @@ export default {
           document.getElementById("large"+index).style.visibility = "collapse";
         }
 
-        newG.selectAll(".outer_rect").attr("width", 0)
-        .attr("height", 0);
+        newG.selectAll(".outer_rect").attr("width", 0).attr("height", 0);
         let bboxT = table.node();
         innerg.attr("width", bboxT.offsetWidth).attr("height", bboxT.offsetHeight);
-        newG.selectAll(".inner_rect").attr("width", newG.node().getBBox().width+10);
+
         newG.selectAll(".outer_rect").attr("width", newG.node().getBBox().width+30)
         .attr("height", newG.node().getBBox().height+30);
-        newG.selectAll("text tspan").raise();
+
         let bbox = svgEG.node().getBBox();
         svgE.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
         .attr("width", (bbox.width+bbox.x))
@@ -1390,6 +1394,7 @@ export default {
 
 
       function createExtraCell(relX){
+        const regex = /^(\t*{\t*)|(\t*}\t*)|(\t*],*\t*)$/g;
         let textX = "";
         if (relX.type){
           textX += "type: " + relX.type + "\n";
@@ -1403,7 +1408,13 @@ export default {
               textX += "value: " + "\n";
               let textArray = JSON.stringify(v, null, '\t').split('\n');
               for (let textXX of textArray){
-                textX += textXX + "\n";
+                if (!textXX.match(regex)){
+                  if (textXX.slice(-1) == '['){
+                    textX += textXX.slice(0,-1) + "\n";
+                  } else {
+                    textX += textXX + "\n";
+                  }
+                }
               }
             } else {
               textX += "value: " + v['@value'] + "\n";
@@ -1420,7 +1431,13 @@ export default {
               textX += "path: " + "\n";
               let textArray = JSON.stringify(v, null, '\t').split('\n');
               for (let textXX of textArray){
-                textX += textXX + "\n";
+                if (!textXX.match(regex)){
+                  if (textXX.slice(-1) == '['){
+                    textX += textXX.slice(0,-1) + "\n";
+                  } else {
+                    textX += textXX + "\n";
+                  }
+                }
               }
             } else {
               textX += "path: " + v['@id'] + "\n";
@@ -1453,10 +1470,13 @@ export default {
             textX += `${pAttr}:` + "\n";
             for (const value of Object.values(relX[pAttr])) {
               let textArray = JSON.stringify(value, null, '\t').split('\n');
-              let regex = /^(\t*{\t*)|(\t*}\t*)|(\t*],*\t*)$/g;
               for (let textXX of textArray){
-                if (!textX.match(regex)){
-                  textX += textXX + "\n";
+                if (!textXX.match(regex)){
+                  if (textXX.slice(-1) == '['){
+                    textX += textXX.slice(0,-1) + "\n";
+                  } else {
+                    textX += textXX + "\n";
+                  }
                 }
 
               }

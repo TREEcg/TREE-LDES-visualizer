@@ -67,6 +67,8 @@ function validateNext(todo, done, callBack){
         promiseResolve2 = resolve;
       });
 
+      console.log(p1, p2);
+
       Promise.all([p1, p2]).then(() => {
         myMetadata.relations.forEach(v => {
           todo.push({"url":v.node[0]['@id'], "imports":getImportLinks(v)})
@@ -411,6 +413,7 @@ export async function getData(url, callBack, fix, extraClear) {
             }
           } else {
             remarks += "Found no members for " + newNodeMembersId + ".\n";
+            fix();
           }
         });
 
@@ -553,6 +556,7 @@ export async function getData(url, callBack, fix, extraClear) {
 // );
 
 function validateShape(membIds, store, newNodeMembersId, fix){
+  console.log("validating");
   membersFailed[newNodeMembersId] = [];
   node_validation[newNodeMembersId] = {};
   const shapeIds = getShapeIds(store);

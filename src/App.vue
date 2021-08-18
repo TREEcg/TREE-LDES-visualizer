@@ -238,6 +238,7 @@ export default {
       // standardURL = 'https://bag2.basisregistraties.overheid.nl/feed/2020-08-14T16:05';
       // standardURL = 'https://raw.githubusercontent.com/TREEcg/TREE-LDES-visualizer/main/src/assets/testerfirst.ttl';
       // standardURL = 'https://raw.githubusercontent.com/TREEcg/TREE-LDES-visualizer/main/src/assets/testerMultipleImports.ttl';
+      standardURL = 'https://raw.githubusercontent.com/TREEcg/TREE-LDES-visualizer/main/src/assets/testerfirst.ttl';
 
       if(url){
         standardURL = url;
@@ -259,6 +260,9 @@ export default {
       .on('error', (error) => {console.error(error); alert("Error while parsing data at:\n"+standardURL+".\n\n"+error)})
       .on('end', () => {
         extractMetadata(this.qtext).then(metadata => {
+
+          console.log("metadata:");
+          console.log(metadata);
 
           const store = new N3.Store(this.qtext)
 
@@ -304,7 +308,6 @@ export default {
             if (this.jsondata.collection.length > 0){
               for (let checker of this.jsondata.collection){
                 if (checker.id != collectionId){
-                  console.log(checker.id, collectionId)
                   double = false;
                 }
               }
@@ -359,7 +362,13 @@ export default {
                   let node = {};
                   node.id = viewNode['@id']+"_node";
                   node.name = viewNode['@id'];
-                  node.relation_count = metadata.nodes.get(viewNode['@id']).relation.length;
+                  // the metadata extractor will only find a node if it has at least one property, else it will only show up as a view
+                  if(metadata.nodes && metadata.nodes.get(viewNode['@id']) && metadata.nodes.get(viewNode['@id']).relation){
+                    node.relation_count = metadata.nodes.get(viewNode['@id']).relation.length;
+                  } else {
+                    node.relation_count = 0;
+                  }
+
 
                   for (let pAttr of this.nodeSpecial){
                     if (viewNode[pAttr]){
@@ -444,6 +453,9 @@ export default {
           let it = metadata.nodes.keys();
           if (metadata.nodes.size == 0){
             it = [standardURL];
+
+            this.jsondata.links.delete(standardURL+"_node");
+            this.jsondata[standardURL+"_node"] = [];
           }
           for (let nodeName of it){
             let nodeId = nodeName + "_node"
@@ -518,9 +530,6 @@ export default {
             console.log(this.remarks);
           }
 
-          console.log("metadata:");
-          console.log(metadata);
-
           console.log("jsondata:");
           console.log(this.jsondata);
 
@@ -530,7 +539,6 @@ export default {
 
           // TODO does the shape need to be changed every time we switch nodes or can we just keep it stored
           if (this.jsondata.shapes.length == 0 && metadata.collections.get(collectionId).shape){
-            console.log(metadata.collections.get(collectionId).shape)
             const shapeIds = this.getShapeIds(store);
 
             this.extractShapeId(store, shapeIds[0]).then(res => {

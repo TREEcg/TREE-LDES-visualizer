@@ -1,0 +1,67 @@
+<https://data.cultureelerfgoed.nl/term/id/cht/62dbde09-ad2e-4abb-8f05-68cb4532f6bf>
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/7ca1a6b4-85ce-4244-a097-0ad177b5575c> ;
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/moutp> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/rce#Source> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
+        <http://schema.semantic-web.at/ppt/inSubtree>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
+        <http://purl.org/dc/terms/created>  "2016-09-29T11:46:58Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> .
+
+<https://data.cultureelerfgoed.nl/term/id/cht/63a5bc4e-d815-45fa-af2b-d5d736feacb1>
+        a ex:test ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/superadmin> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://data.cultureelerfgoed.nl/vocab/id/cht#CHTconcept> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasSourceHolder>  <https://data.cultureelerfgoed.nl/term/id/cht/030cf4e4-16de-450f-9209-82b266c43042> ;
+        <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/b532325c-dc08-49db-b4f1-15e53b037ec3> ;
+        <http://purl.org/dc/terms/creator>  <https://cultureelerfgoed.poolparty.biz/user/moutp> ;
+        <https://data.cultureelerfgoed.nl/vocab/id/rce#hasConceptStatus>  <https://data.cultureelerfgoed.nl/term/id/cht/c58475d5-0795-4623-b4be-ea1524f4b4fb> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/2004/02/skos/core#Concept> ;
+        <http://schema.semantic-web.at/ppt/inSubtree>  <https://data.cultureelerfgoed.nl/term/id/cht/bece25a6-eb64-46e8-85a8-2a7991f02a2c> ;
+        <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/3fa943db-ec0b-4900-8912-900f3105ade2> .
+
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#member> <https://data.cultureelerfgoed.nl/term/id/cht/63a5bc4e-d815-45fa-af2b-d5d736feacb1> ;
+        <https://w3id.org/tree#member> <https://data.cultureelerfgoed.nl/term/id/cht/62dbde09-ad2e-4abb-8f05-68cb4532f6bf> ;
+        <http://rdfs.org/ns/void#subset>  <https://treecg.github.io/demo_data/cht/1.ttl> .
+
+_:b0    <http://www.w3.org/1999/02/22-rdf-syntax-ns#first>  <http://www.w3.org/2004/02/skos/core#prefLabel> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>  _:b1 .
+
+_:b1    <http://www.w3.org/1999/02/22-rdf-syntax-ns#first>  <http://www.w3.org/2004/02/skos/core#altLabel> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>  <http://www.w3.org/1999/02/22-rdf-syntax-ns#nil> .
+
+_:b2    <http://www.w3.org/ns/shacl#alternativePath>  _:b0 .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#shape>  ex:test .
+
+ex:test <http://www.w3.org/ns/shacl#property>  _:b4 ;
+        a <http://www.w3.org/ns/shacl#NodeShape> ,
+          <http://www.w3.org/2000/01/rdf-schema#Class> .
+
+_:b4    <http://www.w3.org/ns/shacl#path>  _:b2 ;
+        <http://www.w3.org/ns/shacl#minCount>  "1"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/1.ttl>
+        <https://w3id.org/tree#relation>  _:b5 .
+
+_:b5    <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/10.ttl> ;
+        <https://w3id.org/tree#value>  "10" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "2"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/1.ttl>
+        <https://w3id.org/tree#relation>  _:b6 .
+
+_:b6    <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/12.ttl> ;
+        <https://w3id.org/tree#value>  "12" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "2"^^<http://www.w3.org/2001/XMLSchema#int> .

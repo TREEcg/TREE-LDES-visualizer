@@ -14,6 +14,7 @@ const SHACLValidator = require('rdf-validate-shacl');
 const { DataFactory } = N3;
 const { namedNode, defaultGraph } = DataFactory;
 
+// Exports functions setDataUrl(url), validateAll(url, callBack), addImportLinks(data), getData(url, callBack, fix, extraClear)
 
 export var qtext = [];
 export var jsondata = null;
@@ -21,9 +22,6 @@ export var members = {};
 export var membersFailed = [];
 export var remarks = "";
 export var data_url = null;
-export function setDataUrl(url){
-  data_url = url;
-}
 export var shape_validation = null;
 export var node_validation = [];
 export var shape_report = "";
@@ -35,6 +33,16 @@ export var newImportLinks = new Set();
 export var importedQuads = new Map();
 var myMetadata;
 
+
+// Use this function to set the url of a new collection
+// Setting this and then calling getData with url undefined will then clear all data and start a new collection
+export function setDataUrl(url){
+  data_url = url;
+}
+
+
+// expected arguments: starting url and callBack function for when all possible nodes have been evaluated
+// This function will delete any previous saved data
 export function validateAll(url, callBack){
   if (!url){
     alert("Please enter a starting url.");
@@ -101,6 +109,10 @@ function clearData(){
   importedQuads = new Map();
 }
 
+
+// Used to check if a relation has an import statement defined right before calling getData()
+// Used to check if a new node has an import statement defined so it gets imported before creating and validating members
+// argument data expects an object and checks for an import and/or conditionalImport property
 export function addImportLinks(data){
   getImportLinks(data).forEach(v => newImportLinks.add(v));
 }
@@ -197,7 +209,12 @@ function extractShapeMembers(store, ids){
   return rdfSerializer.serialize(streamifyArray(quadsWithSubj), { contentType: 'text/turtle' });
 }
 
-// export const getData = new Promise((resolve) =>
+// pass a url to add a new node OR set data_url to go to a new collection
+// presence of url variable will get checked BEFORE data_url and thus data_url gets ignored if url is not undefined
+// callBack expects a funtion and will call it when all data has been extracted into jsondata, members, ..
+// fix expects a function and will be called either when shacl validation is done or when no validation is possible (no shape / no members)
+// extraClear expects a function and will be called when clearData() gets called, namely when NO url is passed to this function
+// if extraClear gets called this will happen BEFORE any data gets extracted not after
 export async function getData(url, callBack, fix, extraClear) {
   //Need to always clear these values before getting new data
   qtext = [];
@@ -532,8 +549,6 @@ export async function getData(url, callBack, fix, extraClear) {
             jsondata.links.set(collectionId, new Set([shapeIds[0]]));
           }
           newImportLinks = new Set();
-          // drawing();
-          // resolve();
           if (callBack){
             callBack();
           }
@@ -541,8 +556,6 @@ export async function getData(url, callBack, fix, extraClear) {
 
       } else {
         newImportLinks = new Set();
-        // drawing();
-        // resolve();
         if (callBack){
           callBack();
         }
@@ -553,7 +566,6 @@ export async function getData(url, callBack, fix, extraClear) {
   });
 
 }
-// );
 
 function validateShape(membIds, store, newNodeMembersId, fix){
   console.log("validating");

@@ -135,11 +135,13 @@ export default {
   },
   methods : {
 
+    //url = undefined & this.data_url defined if you wish to start a new collection
     start(url){
       dF.setDataUrl(this.data_url);
       dF.getData(url, this.cB, this.fixReport, this.svgClear);
     },
     validateAll(){
+      dF.setDataUrl(this.data_url);
       dF.validateAll(this.data_url, this.cB);
     },
     copyData(){

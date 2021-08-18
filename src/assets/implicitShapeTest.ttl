@@ -1,3 +1,5 @@
+@prefix ex: <http://example.org/ns#> .
+
 <https://data.cultureelerfgoed.nl/term/id/cht/62dbde09-ad2e-4abb-8f05-68cb4532f6bf>
         <http://www.w3.org/2004/02/skos/core#inScheme>  <https://data.cultureelerfgoed.nl/term/id/cht/7ca1a6b4-85ce-4244-a097-0ad177b5575c> ;
         <http://www.w3.org/2004/02/skos/core#broader>  <https://data.cultureelerfgoed.nl/term/id/cht/f772d0b1-5828-4786-b77f-37eabc8c19f4> ;

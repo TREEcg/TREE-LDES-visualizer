@@ -12,16 +12,18 @@
   <label for="url">Enter URL: </label>
   <input type="url" v-model="data_url" placeholder="URL" name="url"><br>
 
-  <button v-on:click="getData(undefined)">Draw Graph</button><br>
+  <button v-on:click="start(undefined)">Draw Graph</button>
 
-  <p>All members conform to shape: {{shape_validation}}</p>
+  <button v-on:click="validateAll()">Validate and add all reachable nodes</button><br>
+
+  <p>All members conform to shape: {{this.shape_validation}}</p>
 
   <label for="checkbox_shape">Show shape validation report</label>
   <input type="checkbox" id="checkbox_shape" v-model="checked_shape">
 
   <div v-if="checked_shape">
     <div v-if="shape_report">
-      <div style="white-space: pre-line">{{shape_report}}</div>
+      <div style="white-space: pre-line">{{this.shape_report}}</div>
     </div>
     <div v-else>
       <p>No report available.</p>
@@ -30,7 +32,17 @@
 
   <div id="my_dataviz" style="overflow:scroll; resize: both;"></div>
 
+  <!-- <label for="checkbox_remarks">Show data remarks</label>
+  <input type="checkbox" id="checkbox_remarks" v-model="checked_remarks">
 
+  <div v-if="checked_remarks">
+    <div v-if="remarks">
+      <div style="white-space: pre-line">{{remarks}}</div>
+    </div>
+    <div v-else>
+      <p>No remarks to report.</p>
+    </div>
+  </div> -->
 
 
 
@@ -57,22 +69,8 @@
 
 <script>
 
-import rdfDereferencer from "rdf-dereference";
-import 'setimmediate';
 import * as d3 from "d3";
-const extractMetadata = require('@treecg/tree-metadata-extraction').extractMetadata
-import * as N3 from 'n3';
-import rdfSerializer from "rdf-serialize";
-const streamifyArray = require('streamify-array');
-const stringifyStream = require('stream-to-string');
-
-const factory = require('rdf-ext');
-const ParserN3 = require('@rdfjs/parser-n3');
-const SHACLValidator = require('rdf-validate-shacl');
-
-
-const { DataFactory } = N3;
-const { namedNode, defaultGraph } = DataFactory;
+import * as dF from './components/dataFunctions.js';
 
 /*
 POSSIBLE TODO OVERVIEW
@@ -136,18 +134,43 @@ export default {
     }
   },
   methods : {
-    clearData(){
-      this.jsondata = {"collection":[], "relations":new Map(), "links":new Map(), "shapes":[], "nodes":[]};
-      this.shape_validation = null;
-      this.node_validation = [];
+
+    start(url){
+      dF.setDataUrl(this.data_url);
+      dF.getData(url, this.cB, this.fixReport, this.svgClear);
+    },
+    validateAll(){
+      dF.validateAll(this.data_url, this.cB);
+    },
+    copyData(){
+      // TODO at some point these should probably just get fixed in the code instead of copying them over
+      this.qtext = dF.qtext;
+      this.jsondata = dF.jsondata;
+      this.members = dF.members;
+      this.membersFailed = dF.membersFailed;
+      this.remarks = dF.remarks;
+      this.data_url = dF.data_url;
+      this.shape_validation = dF.shape_validation;
+      this.node_validation = dF.node_validation;
+      this.shape_report = dF.shape_report;
+      this.shapeTargets = dF.shapeTargets;
+      this.collectionSpecial = dF.collectionSpecial;
+      this.nodeSpecial = dF.nodeSpecial;
+      this.relationSpecial = dF.relationSpecial;
+      this.newImportLinks = dF.newImportLinks;
+      this.importedQuads = dF.importedQuads;
+    },
+    svgClear(){
       d3.select("#extra").selectAll("svg").remove();
       this.svgHolder = null;
       this.svgGHolder = null;
-      this.members = {};
-      this.membersFailed = [];
-      this.shape_report = "";
-      this.newImportLinks = new Set();
-      this.importedQuads = new Map();
+    },
+    cB(){
+      this.copyData();
+      this.drawing();
+    },
+    fixReport(){
+      this.copyData();
     },
     close(){
       document.getElementById("windowContainer").style.display = "none";
@@ -155,510 +178,6 @@ export default {
     open(){
       document.getElementById("windowContainer").style.display = "block";
     },
-    addImportLinks(data){
-      if (data.import){
-        for (let importX of data.import){
-          this.newImportLinks.add(importX['@id']);
-        }
-      }
-
-      if (data.conditionalImport){
-        for (let importX of data.conditionalImport.import){
-          this.newImportLinks.add(importX['@id']);
-        }
-      }
-    },
-    async extractId(store, id) {
-      const quadsWithSubj = store.getQuads(id, null, null, null);
-      const textStream = rdfSerializer.serialize(streamifyArray(quadsWithSubj), { contentType: 'text/turtle' });
-      return await stringifyStream(textStream);
-    },
-
-    async extractShapeId(store, id){
-      const quadsWithSubj = this.extractShapeHelp(store, id);
-      const textStream = rdfSerializer.serialize(streamifyArray(quadsWithSubj), { contentType: 'text/turtle' });
-      return await stringifyStream(textStream);
-    },
-
-    getShapeIds(store){
-      var shapeIds = [];
-      shapeIds = shapeIds.concat(store.getQuads(null, 'https://w3id.org/tree#shape', null, null).map(quad => quad.object.id));
-      shapeIds = shapeIds.concat(store.getQuads(null, 'http://www.w3.org/ns/shapetrees#validatedBy', null, null).map(quad => quad.object.id));
-      shapeIds = shapeIds.concat(store.getQuads(null, 'http://www.w3.org/ns/shapetrees#shape', null, null).map(quad => quad.object.id));
-      return shapeIds;
-    },
-
-    extractShapeHelp(store, id, checked = []) {
-      var quadsWithSubj = store.getQuads(id, null, null, null);
-      for (let quad of quadsWithSubj){
-        if (quad.object.termType === "NamedNode" || quad.object.termType === "BlankNode") {
-          if (quad.object.id && !checked.includes(quad.object.id)){
-            checked.push(quad.object.id);
-            quadsWithSubj = quadsWithSubj.concat(this.extractShapeHelp(store, quad.object.id, checked));
-          }
-        }
-      }
-      return quadsWithSubj;
-    },
-
-    async extractShape(store, id){
-      var quadsWithSubj = this.extractShapeHelp(store, id);
-
-      const store2 = new N3.Store();
-      store2.addQuads(quadsWithSubj);
-      var targetQuads = [];
-      for (let tempTarget of this.shapeTargets){
-        targetQuads = targetQuads.concat(store2.getQuads(null, 'http://www.w3.org/ns/shacl#'+tempTarget, null, null))
-      }
-
-      if (targetQuads.length == 0){
-        // This check for implicit targeting
-        let t1 = store2.getQuads(id, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type','http://www.w3.org/ns/shacl#NodeShape', null);
-        t1 = t1.concat(store2.getQuads(id, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type', 'http://www.w3.org/ns/shacl#PropertyShape', null));
-        let t2 = store2.getQuads(id, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type', 'http://www.w3.org/2000/01/rdf-schema#Class', null);
-
-        // If no target was given for the shape, make it target all tree:member objects
-        if (t1.length == 0 || t2.length == 0){
-          store2.addQuad(
-            namedNode(id),
-            namedNode('http://www.w3.org/ns/shacl#targetObjectsOf'),
-            namedNode('https://w3id.org/tree#member'),
-            defaultGraph()
-          );
-
-          quadsWithSubj = this.extractShapeHelp(store2, id);
-        }
-
-      }
-
-      return rdfSerializer.serialize(streamifyArray(quadsWithSubj), { contentType: 'text/turtle' });
-    },
-
-    extractShapeMembers(store, ids){
-      var quadsWithSubj = [];
-      for (let id of ids){
-        quadsWithSubj = quadsWithSubj.concat(store.getQuads(id, null, null, null));
-        // We need quads with a member as object for shacl targetting
-        quadsWithSubj = quadsWithSubj.concat(store.getQuads(null, null, id, null));
-      }
-      return rdfSerializer.serialize(streamifyArray(quadsWithSubj), { contentType: 'text/turtle' });
-    },
-
-    async getData(url) {
-      //Need to always clear these values before getting new data
-      this.qtext = [];
-      this.remarks = "";
-
-      //var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/a.nt';
-      var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/.root.nt'
-      standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a4.nt';
-      standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/cht_1_2.ttl';
-      // standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/marine1.jsonld';
-      // standardURL = 'https://bag2.basisregistraties.overheid.nl/feed/2020-08-14T16:05';
-      // standardURL = 'https://raw.githubusercontent.com/TREEcg/TREE-LDES-visualizer/main/src/assets/testerfirst.ttl';
-      // standardURL = 'https://raw.githubusercontent.com/TREEcg/TREE-LDES-visualizer/main/src/assets/testerMultipleImports.ttl';
-      // standardURL = 'https://raw.githubusercontent.com/TREEcg/TREE-LDES-visualizer/main/src/assets/testerfirst.ttl';
-      standardURL = 'https://raw.githubusercontent.com/TREEcg/TREE-LDES-visualizer/main/src/assets/implicitShapeTest.ttl';
-
-      if(url){
-        standardURL = url;
-      } else if (this.data_url){
-        standardURL = this.data_url;
-        // This means user gave a url for a new collection so we need to clear whatever data we already had
-        this.clearData();
-        d3.select("#extra").selectAll("svg").remove();
-        this.svgHolder = null;
-      } else {
-        //Fallback
-        this.clearData();
-        d3.select("#extra").selectAll("svg").remove();
-        this.svgHolder = null;
-      }
-
-      const {quads} = await rdfDereferencer.dereference(standardURL);
-      quads.on('data', (quad) => {this.qtext.push(quad); /*console.log(quad)*/})
-      .on('error', (error) => {console.error(error); alert("Error while parsing data at:\n"+standardURL+".\n\n"+error)})
-      .on('end', () => {
-        extractMetadata(this.qtext).then(metadata => {
-
-          console.log("metadata:");
-          console.log(metadata);
-
-          const store = new N3.Store(this.qtext)
-
-          // Having more than one collection is wrong but we can still try drawing a graph
-          if (metadata.collections.size > 1){
-            let errorText = "";
-            errorText += "ERROR: found multiple collections! This is not allowed.\n";
-            errorText += JSON.stringify(metadata.collections, null, '/t');
-            errorText += "\ncheck tree:view, hydra:view, void:subset, dct:isPartOf, as:partOf.";
-            errorText += "\nOther causes: \nmembers/shape are linked not to the collection but the node.";
-            errorText += "\ncheck tree:member, hydra:member, as:items, ldp:contains.";
-            alert(errorText);
-          }
-
-
-          // If no 'new' collection was found, we might already have a collection stored
-          if (metadata.collections.size == 0){
-            if (this.jsondata.collection.length == 0){
-              alert("No collection pre-defined and no collection found on " + standardURL + ".\nPlease provide a different starting URL.");
-              return;
-            }
-
-            if (!this.jsondata[standardURL+"_node"]){
-              this.jsondata[standardURL+"_node"] = [];
-              alert("no collection metadata found at " + standardURL + ".\nWill add an empty node for this URL.");
-              this.jsondata.nodes.push({"id":standardURL+"_node", "name":standardURL, "relation_count":0})
-              if (this.jsondata.links.has(this.jsondata.collection[0].id)){
-                this.jsondata.links.get(this.jsondata.collection[0].id).add(standardURL+"_node");
-              } else {
-                this.jsondata.links.set(this.jsondata.collection[0].id, new Set([standardURL+"_node"]));
-              }
-            }
-          }
-
-
-          // The main data parsing part
-          for (var collectionId of metadata.collections.keys()) {
-            var collectionObj = metadata.collections.get(collectionId);
-
-
-            // If we already had a collection stored, check to make sure the 'new' one is the same as the old one
-            let double = true;
-            if (this.jsondata.collection.length > 0){
-              for (let checker of this.jsondata.collection){
-                if (checker.id != collectionId){
-                  double = false;
-                }
-              }
-            }
-
-
-            // If the new collection is not the same throw an error
-            if (!double){
-              let errorText = "";
-              errorText += "ERROR: new node is linked to a different collection! This is not allowed.";
-              errorText += '\n' + "current URL: " + standardURL;
-              errorText += '\n' + "new collection: " + collectionId;
-              errorText += '\n' + "original collection: " + this.jsondata.collection[0].id;
-              alert(errorText);
-              return;
-            }
-
-
-            // If we did not have a collection stored already add it to jsondata.collection
-            if (this.jsondata.collection.length == 0){
-              let collection = {};
-              collection.id = collectionId;
-              collection.type = "Collection";
-              collection.vocab = collectionObj['@context']["@vocab"];
-
-              for (let pAttr of this.collectionSpecial){
-                if (collectionObj[pAttr]){
-                  collection[pAttr] = collectionObj[pAttr];
-                }
-              }
-
-              this.jsondata.collection.push(collection);
-            }
-
-
-            // Check for new nodes, either defined via collection->view or directly via nodes
-            if (collectionObj.view || metadata.nodes.size > 0){
-              let iter = (metadata.nodes.size > 0) ? metadata.nodes.values() : collectionObj.view;
-              for (var viewNode of iter){
-
-                // Change the id by appending _node because collection and view can have the same URI
-                // We do still want to show them as two separate nodes even though they have the same URL
-
-                let double = false;
-                for (let checker of this.jsondata.nodes){
-                  if (checker.id == viewNode['@id']+"_node"){
-                    double = true;
-                  }
-                }
-
-                if (!double){
-                  let node = {};
-                  node.id = viewNode['@id']+"_node";
-                  node.name = viewNode['@id'];
-                  // the metadata extractor will only find a node if it has at least one property, else it will only show up as a view
-                  if(metadata.nodes && metadata.nodes.get(viewNode['@id']) && metadata.nodes.get(viewNode['@id']).relation){
-                    node.relation_count = metadata.nodes.get(viewNode['@id']).relation.length;
-                  } else {
-                    node.relation_count = 0;
-                  }
-
-
-                  for (let pAttr of this.nodeSpecial){
-                    if (viewNode[pAttr]){
-                      node[pAttr] = viewNode[pAttr];
-                    }
-                  }
-
-                  this.addImportLinks(node);
-
-                  this.jsondata.nodes.push(node)
-                  if (this.jsondata.links.has(collectionId)){
-                    this.jsondata.links.get(collectionId).add(viewNode['@id']+"_node");
-                  } else {
-                    this.jsondata.links.set(collectionId, new Set([viewNode['@id']+"_node"]));
-                  }
-                }
-              }
-            } else {
-              alert("Did not find any nodes linked to this url\n" + standardURL);
-            }
-
-            //TODO This is not a good way of linking the members to the correct node
-            //What if multiple nodes are defined? What if a view & subset is defined?
-            const newNodeMembersId = this.jsondata.nodes[this.jsondata.nodes.length -1].name;
-            this.members[newNodeMembersId] = new Map();
-
-
-            this.importedQuads.forEach((v,k) => {
-              if (this.newImportLinks.has(k)){
-                store.addQuads(v);
-              }
-              this.newImportLinks.delete(k);
-            });
-
-            const importPromises = [...this.newImportLinks].map(url => {new Promise((resolve, reject) => {
-              let newQuads = [];
-              rdfDereferencer.dereference(url).then(v => {v.quads.on('data', (quad) => {newQuads.push(quad)})
-              .on('error', (error) => {console.error(error); alert("Error while parsing import data at:\n"+url+"\n\n" +error); reject})
-              .on('end', () => {
-                this.importedQuads.set(url, newQuads);
-                store.addQuads(newQuads);
-                resolve;
-              })
-            })})})
-
-
-            Promise.all(importPromises).then(() => {
-              if (collectionObj.member){
-                let membIds = [];
-                for (var memb of collectionObj.member){
-                  membIds.push(memb['@id']);
-                  // Need to save id inside loop because used in async push
-                  let tX = memb['@id'];
-                  this.extractId(store, memb['@id']).then(mtemp => {
-                    this.members[newNodeMembersId].set(tX, mtemp);
-                  });
-                }
-                if (this.jsondata.shapes.size > 0 || collectionObj.shape){
-                  this.validateShape(membIds, store, newNodeMembersId);
-                }
-              } else {
-                this.remarks += "Found no members for " + newNodeMembersId + ".\n";
-              }
-            });
-
-          }
-
-          // This does not need a duplicate check since old node relations won't be included in the new metadata
-          // or they will just overwrite with the exact same data as was already present
-          for (var nodeId of metadata.nodes.keys()){
-            this.jsondata.links.delete(nodeId+"_node");
-            var nodeObj = metadata.nodes.get(nodeId);
-            this.jsondata[nodeId+"_node"] = [];
-            for (var relation of nodeObj.relation){
-              this.jsondata[nodeId+"_node"].push({"id":relation['@id'], "name":relation['@id']});
-            }
-          }
-
-          let tempN = [];
-          // If metadata.nodes had no new node, a new empty node still got added to the graph
-          // Need to ensure a link for all relations leading to this node is also created via standardURL_node
-          let it = metadata.nodes.keys();
-          if (metadata.nodes.size == 0){
-            it = [standardURL];
-
-            this.jsondata.links.delete(standardURL+"_node");
-            this.jsondata[standardURL+"_node"] = [];
-          }
-          for (let nodeName of it){
-            let nodeId = nodeName + "_node"
-            //This will hold all newly added nodes to later check if they conform to any already existing relations
-            tempN.push(nodeId);
-            for (var relationJson of this.jsondata[nodeId]){
-              if (metadata.relations.get(relationJson.id)){
-
-                var relationObj = metadata.relations.get(relationJson.id);
-                if (!relationObj.node || !relationObj.node[0]['@id']){
-                  alert("Error: relation from " + nodeId + " has no node defined!\nThis is not allowed!\nRelation: " + JSON.stringify(relationObj, null, '\t'));
-                  break;
-                }
-                relationJson.node = relationObj.node;
-
-                if (this.jsondata.relations.has(nodeId)){
-                  this.jsondata.relations.get(nodeId).add(relationObj.node[0]['@id']+"_node");
-                } else {
-                  this.jsondata.relations.set(nodeId, new Set([relationObj.node[0]['@id']+"_node"]));
-                }
-
-                if(!relationObj['@type']){
-                  this.remarks += "relation from " + nodeName + " to " + relationObj.node[0]['@id'] + " has no type defined\n";
-                } else {
-                  relationJson.type = relationObj['@type'];
-                }
-
-                let wantedAttrs = ["path", "value", "remainingItems"];
-                for (let wAttr of wantedAttrs){
-                  if (relationObj[wAttr]){
-                    relationJson[wAttr] = relationObj[wAttr];
-                  } else if (wAttr != "remainingItems"){
-                    this.remarks += "relation from " + nodeName + " to " + relationObj.node[0]['@id'] + " has no " + wAttr + " defined\n";
-                  }
-                }
-
-                for (let pAttr of this.relationSpecial){
-                  if (relationObj[pAttr]){
-                    relationJson[pAttr] = relationObj[pAttr];
-                  }
-                }
-
-                //This checks if the node this relation links to already exists in the graph
-                if(this.jsondata[relationObj.node[0]['@id']+"_node"]){
-                  if (this.jsondata.links.has(nodeId)){
-                    this.jsondata.links.get(nodeId).add(relationObj.node[0]['@id']+"_node");
-                  } else {
-                    this.jsondata.links.set(nodeId, new Set([relationObj.node[0]['@id']+"_node"]));
-                  }
-                }
-
-              }
-            }
-
-            //This checks if any of the newly added nodes are the target of a relation already on the graph
-            for (let [tempKey, tempSet] of this.jsondata.relations){
-              for (let tempValue of tempSet){
-                if (tempN.includes(tempValue)){
-                  if (this.jsondata.links.has(tempKey)){
-                    this.jsondata.links.get(tempKey).add(tempValue);
-                  } else {
-                    this.jsondata.links.set(tempKey, new Set([tempValue]));
-                  }
-                }
-              }
-            }
-
-          }
-
-          if (this.remarks != ""){
-            alert(this.remarks);
-            console.log(this.remarks);
-          }
-
-          console.log("jsondata:");
-          console.log(this.jsondata);
-
-          console.log("members:");
-          console.log(this.members);
-
-
-          // TODO shape is defined on the collection so shape is never allowed to change
-          if (this.jsondata.shapes.length == 0 && metadata.collections.get(collectionId).shape){
-            const shapeIds = this.getShapeIds(store);
-
-            this.extractShapeId(store, shapeIds[0]).then(res => {
-              this.jsondata.shapes.push({"id":shapeIds[0], "type":"shape", "shape_extra":res});
-              if (this.jsondata.links.has(collectionId)){
-                this.jsondata.links.get(collectionId).add(shapeIds[0]);
-              } else {
-                this.jsondata.links.set(collectionId, new Set([shapeIds[0]]));
-              }
-              this.newImportLinks = new Set();
-              this.drawing();
-            });
-
-          } else {
-            this.newImportLinks = new Set();
-            this.drawing();
-          }
-
-        })
-
-      });
-
-    },
-
-    validateShape(membIds, store, newNodeMembersId){
-      this.membersFailed[newNodeMembersId] = [];
-      this.node_validation[newNodeMembersId] = {};
-      const shapeIds = this.getShapeIds(store);
-
-      if (shapeIds.size > 1){
-        alert("Found multiple shapes, will only validate using the first one.\n" + JSON.stringify(shapeIds));
-      }
-      if (shapeIds.size == 0){
-        this.remarks += "URL did not include a shacl shape given via tree:shape or st:validatedBy.\n"
-      }
-
-      async function loadDatasetX (stream) {
-        const parser = new ParserN3({ factory });
-        return factory.dataset().import(parser.import(await stream));
-      }
-
-      const shapesX = this.extractShape(store, shapeIds[0]);
-      const dataX = this.extractShapeMembers(store, membIds);
-
-      loadDatasetX(shapesX).then(shapes => {
-        loadDatasetX(dataX).then(data => {
-
-          let dtX = [];
-          for (let sX of shapes){
-            if (sX.object.termType == "BlankNode" && !dtX.includes(sX.object.value)){
-              sX.object.value = sX.object.value.slice(3);
-              dtX.push(sX.object.value)
-            }
-            if (sX.subject.termType == "BlankNode" && !dtX.includes(sX.subject.value)){
-              sX.subject.value = sX.subject.value.slice(3);
-              dtX.push(sX.subject.value)
-            }
-          }
-
-          const validator = new SHACLValidator(shapes, { factory });
-          const report = validator.validate(data);
-
-          if (this.shape_validation && this.shape_validation === false){
-            this.shape_validation = false;
-          } else {
-            this.shape_validation = report.conforms;
-          }
-
-          this.shape_report += "\nResult report for "+newNodeMembersId+":\n";
-
-          for (const result of report.results) {
-            // See https://www.w3.org/TR/shacl/#results-validation-result for details about each property
-            let mX = "";
-
-            mX += "\nmessage: \n";
-            for (let mt of result.message){
-              mX += "\t" + mt['value']+"\n";
-            }
-            mX += "path: " + result.path['value'] + "\n";
-            mX += "focusNode: " + result.focusNode['value'] + "\n";
-            this.membersFailed[newNodeMembersId].push(result.focusNode['value']);
-            mX += "severity: " + result.severity['value'] + "\n";
-            mX += "sourceConstraintComponent: " + result.sourceConstraintComponent['value'] + "\n";
-            mX += "sourceShape: " + result.sourceShape['value'] + "\n";
-
-            this.shape_report += mX;
-
-            if (result.focusNode && result.focusNode['value']){
-              this.node_validation[result.focusNode['value']] = mX;
-            }
-          }
-
-          if (report.results.length == 0){
-            this.shape_report += "All checks passed.";
-          }
-
-        });
-      });
-    },
-
 
     drawing() {
       const margin = {top: 10, right: 30, bottom: 10, left: 30};
@@ -1446,8 +965,8 @@ export default {
 
       function tableClick(index, relationData, newG, innerg, table, expand = true){
         if (window.event.ctrlKey) {
-          this.addImportLinks(relationData);
-          this.getData(relationData.node[0]["@id"]);
+          dF.addImportLinks(relationData);
+          this.start(relationData.node[0]["@id"]);
           return;
         }
 

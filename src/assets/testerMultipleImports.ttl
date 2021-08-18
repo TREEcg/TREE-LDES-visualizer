@@ -11,20 +11,20 @@
 
 <https://graph.irail.be/sncb/connections> a hydra:Collection ;
                                           rdfs:label "All arrivals and departures of Trains in Belgium"@en ;
-                                          tree:view <first.ttl> . #From the first page, all elements can be found
+                                          tree:view <testerfirst.ttl> . #From the first page, all elements can be found
 
-<first.ttl> a tree:Node ;
+<testerfirst.ttl> a tree:Node ;
             tree:import <https://raw.githubusercontent.com/TREEcg/specification/master/examples/geospatially-ordered-public-transport/stops.ttl> ;
             tree:import <https://raw.githubusercontent.com/TREEcg/TREE-LDES-visualizer/main/src/assets/testersecond.ttl> ;
             tree:relation   [
                                 a tree:GreaterThanOrEqualToRelation ;
-                                tree:node <second.ttl> ;
+                                tree:node <testersecond.ttl> ;
                                 tree:path lc:departureTime ;
                                 tree:value "2020-03-16T08:30:00.000Z"^^xsd:dateTime
                             ],
                             [
                                 a tree:GeospatiallyContainsRelation ;
-                                tree:node <second.ttl> ;
+                                tree:node <testersecond.ttl> ;
                                 tree:path (lc:departureStop geosparql:asWKT) ;
                                 tree:import <https://raw.githubusercontent.com/TREEcg/specification/master/examples/geospatially-ordered-public-transport/stops.ttl> ;
                                 tree:value "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"^^geosparql:wktLiteral

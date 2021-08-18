@@ -74,8 +74,6 @@ const SHACLValidator = require('rdf-validate-shacl');
 const { DataFactory } = N3;
 const { namedNode, defaultGraph } = DataFactory;
 
-// const { PassThrough } = require('stream');
-
 
 export default {
   name: 'App',
@@ -107,7 +105,6 @@ export default {
       nodeSpecial: ["@type", "import", "importStream", "conditionalImport", "search", "retentionPolicy"],
       // value, path, node, remainingItems are checked in a different way
       relationSpecial: ["import", "importStream", "conditionalImport"],
-      importLinks: new Set(),
       newImportLinks: new Set(),
       importedQuads: new Map()
     }
@@ -130,7 +127,6 @@ export default {
       this.members = {};
       this.membersFailed = [];
       this.shape_report = "";
-      this.importLinks = new Set();
       this.newImportLinks = new Set();
       this.importedQuads = new Map();
     },
@@ -139,6 +135,19 @@ export default {
     },
     open(){
       document.getElementById("windowContainer").style.display = "block";
+    },
+    addImportLinks(data){
+      if (data.import){
+        for (let importX of data.import){
+          this.newImportLinks.add(importX['@id']);
+        }
+      }
+
+      if (data.conditionalImport){
+        for (let importX of data.conditionalImport.import){
+          this.newImportLinks.add(importX['@id']);
+        }
+      }
     },
     async extractId(store, id) {
       const quadsWithSubj = store.getQuads(id, null, null, null);
@@ -217,20 +226,6 @@ export default {
     },
 
     async getData(url) {
-
-      // const concatStreams = (streamArray, streamCounter = streamArray.length) => streamArray
-      // .reduce((mergedStream, stream) => {
-      //   // pipe each stream of the array into the merged stream
-      //   // prevent the automated 'end' event from firing
-      //   mergedStream = stream.pipe(mergedStream, { end: false });
-      //   // rewrite the 'end' event handler
-      //   // Every time one of the stream ends, the counter is decremented.
-      //   // Once the counter reaches 0, the mergedstream can emit its 'end' event.
-      //   stream.once('end', () => --streamCounter === 0 && mergedStream.emit('end'));
-      //   return mergedStream;
-      // }, new PassThrough());
-
-
       //Need to always clear these values before getting new data
       this.qtext = [];
       this.remarks = "";
@@ -242,7 +237,7 @@ export default {
       // standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/marine1.jsonld';
       // standardURL = 'https://bag2.basisregistraties.overheid.nl/feed/2020-08-14T16:05';
       // standardURL = 'https://raw.githubusercontent.com/TREEcg/TREE-LDES-visualizer/main/src/assets/testerfirst.ttl';
-      standardURL = 'https://raw.githubusercontent.com/TREEcg/TREE-LDES-visualizer/main/src/assets/testerMultipleImports.ttl';
+      // standardURL = 'https://raw.githubusercontent.com/TREEcg/TREE-LDES-visualizer/main/src/assets/testerMultipleImports.ttl';
 
       if(url){
         standardURL = url;
@@ -372,17 +367,7 @@ export default {
                     }
                   }
 
-                  if (node.import){
-                    for (let importX of node.import){
-                      this.newImportLinks.add(importX['@id']);
-                    }
-                  }
-
-                  if (node.conditionalImport){
-                    for (let importX of node.conditionalImport.import){
-                      this.newImportLinks.add(importX['@id']);
-                    }
-                  }
+                  this.addImportLinks(node);
 
                   this.jsondata.nodes.push(node)
                   if (this.jsondata.links.has(collectionId)){
@@ -396,18 +381,18 @@ export default {
               alert("Did not find any nodes linked to this url\n" + standardURL);
             }
 
-
+            //TODO This is not a good way of linking the members to the correct node
+            //What if multiple nodes are defined? What if a view & subset is defined?
             const newNodeMembersId = this.jsondata.nodes[this.jsondata.nodes.length -1].name;
             this.members[newNodeMembersId] = new Map();
 
 
-            this.importLinks.forEach(v => {
-              if (this.newImportLinks.has(v)){
-                store.addQuads(this.importedQuads.get(v));
+            this.importedQuads.forEach((v,k) => {
+              if (this.newImportLinks.has(k)){
+                store.addQuads(v);
               }
-              this.newImportLinks.delete(v);
+              this.newImportLinks.delete(k);
             });
-            this.newImportLinks.forEach(v => this.importLinks.add(v));
 
             const importPromises = [...this.newImportLinks].map(url => {new Promise((resolve, reject) => {
               let newQuads = [];
@@ -429,9 +414,7 @@ export default {
                   // Need to save id inside loop because used in async push
                   let tX = memb['@id'];
                   this.extractId(store, memb['@id']).then(mtemp => {
-                    this.members[newNodeMembersId].set(
-                      tX, mtemp
-                    )
+                    this.members[newNodeMembersId].set(tX, mtemp);
                   });
                 }
                 if (this.jsondata.shapes.size > 0 || collectionObj.shape){
@@ -440,30 +423,7 @@ export default {
               } else {
                 this.remarks += "Found no members for " + newNodeMembersId + ".\n";
               }
-            })
-
-
-            //TODO check what happens when as:items comes from a node not the collection
-            // const newNodeMembersId = this.jsondata.nodes[this.jsondata.nodes.length -1].name;
-            // this.members[newNodeMembersId] = new Map();
-            // if (collectionObj.member){
-            //   let membIds = [];
-            //   for (var memb of collectionObj.member){
-            //     membIds.push(memb['@id']);
-            //     // Need to save id inside loop because used in async push
-            //     let tX = memb['@id'];
-            //     this.extractId(store, memb['@id']).then(mtemp => {
-            //       this.members[newNodeMembersId].set(
-            //         tX, mtemp
-            //       )
-            //     });
-            //   }
-            //   if (this.jsondata.shapes.size > 0 || collectionObj.shape){
-            //     this.validateShape(membIds, store, newNodeMembersId);
-            //   }
-            // } else {
-            //   this.remarks += "Found no members for " + newNodeMembersId + ".\n";
-            // }
+            });
 
           }
 
@@ -728,8 +688,6 @@ export default {
       const svgSG = this.svgGHolder[2];
 
 
-
-      //TODO find a way to make the arrowhead on the link-line placed dynamically instead of using refX
       svg.append("marker")
       .attr("id", "arrow")
       .attr("markerUnits","userSpaceOnUse")
@@ -1331,7 +1289,7 @@ export default {
         for (let dataX of tableData){
           let trX = tbody.insertRow();
           trX.id = "small"+count;
-          trX.onclick = tableClick.bind(this, count, this.jsondata[d.id][count].node[0]["@id"], newG, innerg, table, true)
+          trX.onclick = tableClick.bind(this, count, this.jsondata[d.id][count], newG, innerg, table, true)
 
           for(let valueX of Object.values(dataX)){
             let textX = document.createTextNode(valueX);
@@ -1342,7 +1300,7 @@ export default {
           trX = tbody.insertRow();
           trX.style.visibility = "collapse";
           trX.id = "large"+count;
-          trX.onclick = tableClick.bind(this, count, this.jsondata[d.id][count].node[0]["@id"], newG, innerg, table, false)
+          trX.onclick = tableClick.bind(this, count, this.jsondata[d.id][count], newG, innerg, table, false)
 
           let textX = document.createTextNode(createExtraCell.call(this, this.jsondata[d.id][count]));
 
@@ -1458,9 +1416,10 @@ export default {
 
 
 
-      function tableClick(index, url, newG, innerg, table, expand = true){
+      function tableClick(index, relationData, newG, innerg, table, expand = true){
         if (window.event.ctrlKey) {
-          this.getData(url);
+          this.addImportLinks(relationData);
+          this.getData(relationData.node[0]["@id"]);
           return;
         }
 

@@ -10,7 +10,7 @@
 
 <https://graph.irail.be/sncb/connections> a hydra:Collection ;
                                           rdfs:label "All arrivals and departures of Trains in Belgium"@en ;
-                                          tree:view <second.ttl> ;
+                                          tree:view <testersecond.ttl> ;
                                           hydra:member <http://irail.be/connections/8896909/20190723/IC829>,
                                                        <http://irail.be/connections/8896925/20190723/IC807> .
 

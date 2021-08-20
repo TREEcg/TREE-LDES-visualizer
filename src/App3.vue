@@ -1,5 +1,5 @@
 <template>
-
+  <div v-on:click="close()">
   <p style="white-space: pre-line">Click a node, relation or shape to show all attributes<br>
   ctrl+click a relation to add the node to the graph<br>
   shift+mousewheel / shift+pan to zoom or pan<br>
@@ -10,9 +10,32 @@
   <!-- <input type="number" v-model="alpha_decay_rate" placeholder="0.023" name="adecay"><br> -->
 
   <label for="url">Enter URL: </label>
-  <input type="url" v-model="data_url" placeholder="URL" name="url"><br>
-  <!-- Make bigger -->
+  <div id="examplesDiv" style="margin: auto">
+  <input type="url" list="exT" v-model="data_url" placeholder="URL" name="url" v-on:click.stop="open()" v-on:keyup.enter="start(undefined)">
+    <ul id="fakeExamples" tabindex="1" v-on:blur="close()">
+      <li v-on:click="setUrl(valueX)" v-for="[keyX, valueX] in this.exampleMap" v-bind:key="keyX">
+        {{keyX}}
+      </li>
+    </ul>
+  </div>
 
+  <!-- <input type="url" list="exT" v-model="data_url" placeholder="URL" name="url" v-on:keyup.enter="start(undefined)">
+  <datalist id="exT">
+    <option v-on:click="setUrl(valueX)" v-for="[keyX, valueX] in this.exampleMap" v-bind:key="keyX">
+      {{keyX}}
+    </option>
+  </datalist> -->
+
+  <!-- <datalist id="browsers">
+  <option value="Chrome"></option>
+  <option value="Firefox"></option>
+  <option value="Internet Explorer"></option>
+  <option value="Opera"></option>
+  <option value="Safari"></option>
+  <option value="Microsoft Edge"></option>
+</datalist> -->
+
+  <!-- <br> -->
   <button v-on:click="start(undefined)">Go</button>
 
   <div style="white-space: pre">{{collectionStats}}</div>
@@ -71,7 +94,7 @@
       <div id="extra"></div>
     </div>
   </div>
-
+</div>
 </template>
 
 
@@ -106,6 +129,10 @@ export default {
   },
   data(){
     return {
+      exampleMap: new Map([
+        ["cultureelerfgoed", "https://treecg.github.io/demo_data/cht/1.ttl"],
+        ["train stops", "https://github.com/TREEcg/demo_data/blob/master/stops/.root.ttl"]
+      ]),
       qtext: [],
       //easier to clear jsondata in functions without having to copy paste this
       jsondata: null, //this will be set to empty on start of getData
@@ -210,11 +237,15 @@ export default {
     collectionCB(){
       this.collectionAttributes = dF.collectionAttributes;
     },
+    setUrl(value){
+      this.data_url = value;
+      this.start(undefined);
+    },
     close(){
-      document.getElementById("windowContainer").style.display = "none";
+      document.getElementById("fakeExamples").style.display = "none";
     },
     open(){
-      document.getElementById("windowContainer").style.display = "block";
+      document.getElementById("fakeExamples").style.display = "block";
     },
 
     drawExtra(d){
@@ -1656,6 +1687,41 @@ export default {
   height: 100%;
   padding-top: 100px;
   display: none;
+}
+
+#fakeExamples {
+  margin: 0 0 0 0;
+  padding: 1px 0 0 0;
+  text-align: left;
+  list-style-type: none;
+  width: 100%;
+  display: none;
+}
+
+#fakeExamples > li {
+  width: 100%;
+  border-bottom-style: solid;
+  border-left-style: solid;
+  border-right-style: solid;
+  border-width: 1px;
+}
+
+#fakeExamples > li:hover {
+  background-color: #dcdcf7;
+}
+
+#examplesDiv {
+  width: 300px;
+}
+
+#examplesDiv > input {
+  width: 100%;
+  padding: 0 0 0 0;
+  width: 100%;
+  border-bottom-style: solid;
+  border-left-style: solid;
+  border-right-style: solid;
+  border-width: 1px;
 }
 
 .container {

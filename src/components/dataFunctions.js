@@ -173,13 +173,18 @@ async function extractShape(store, id){
   if (id && quadsWithSubj.length == 0){
     let newq = [];
 
-    rdfDereferencer.dereference(id).then(v => {
+    rdfDereferencer.dereference(id)
+    .catch((error) => {
+      alert(error)
+      return extractShapeNext(store2, quadsWithSubj, id);
+    })
+    .then(v => {
     v.quads.on('data', (quad) => {newq.push(quad); /*console.log(quad)*/})
     .on('error', (error) => {console.error(error); alert("Error while parsing SHAPE data at:\n"+id+".\n\n"+error)})
     .on('end', () => {
       store2.addQuads(newq);
       return extractShapeNext(store2, quadsWithSubj, id);
-    })})
+    })}).catch(() => {return extractShapeNext(store2, quadsWithSubj, id)});
 
   } else {
     return extractShapeNext(store2, quadsWithSubj, id);
@@ -235,7 +240,7 @@ function extractShapeMembers(store, ids){
 // fix expects a function and will be called either when shacl validation is done or when no validation is possible (no shape / no members)
 // extraClear expects a function and will be called when clearData() gets called, namely when NO url is passed to this function
 // if extraClear gets called this will happen BEFORE any data gets extracted not after
-export async function getData(url, callBack, fix, extraClear) {
+export async function getData(url, callBack, fix, extraClear, collectionCallBack) {
   //Need to always clear these values before getting new data
   qtext = [];
   remarks = "";
@@ -251,7 +256,7 @@ export async function getData(url, callBack, fix, extraClear) {
   // standardURL = 'https://raw.githubusercontent.com/TREEcg/TREE-LDES-visualizer/main/src/assets/testerfirst.ttl';
   // standardURL = 'https://raw.githubusercontent.com/TREEcg/TREE-LDES-visualizer/main/src/assets/implicitShapeTest.ttl';
   // standardURL = 'https://raw.githubusercontent.com/TREEcg/TREE-LDES-visualizer/main/src/assets/testersecond.ttl';
-  standardURL = 'https://graph.irail.be/sncb/connections/feed';
+  // standardURL = 'https://graph.irail.be/sncb/connections/feed';
 
   if(url){
     standardURL = url;
@@ -315,6 +320,32 @@ export async function getData(url, callBack, fix, extraClear) {
       // avoid never calling this callback
       if (metadata.collections.size == 0){
         fix();
+      } else if (standardURL != Array.from(metadata.collections.keys())[0]){
+        let collectionUrl = Array.from(metadata.collections.keys())[0];
+        console.log("should get collection from: ", collectionUrl);
+        let newq = [];
+        rdfDereferencer.dereference(collectionUrl)
+        .catch((error) => {
+          alert(error)
+          if (collectionCallBack){
+            collectionCallBack();
+          }
+        })
+        .then(v => {
+          console.log("v", v.headers);
+          v.quads.on('data', (quad) => {newq.push(quad); /*console.log(quad)*/})
+          .on('error', (error) => {console.error(error); alert("Error while parsing SHAPE data at:\n"+collectionUrl+".\n\n"+error)})
+          .on('end', () => {
+            console.log("collectionQuads", newq);
+            if (collectionCallBack){
+              collectionCallBack();
+            }
+          })
+        }).catch(() => {
+          if (collectionCallBack){
+            collectionCallBack();
+          }
+        });
       }
 
       // The main data parsing part
@@ -480,69 +511,6 @@ export async function getData(url, callBack, fix, extraClear) {
           }
         }
 
-
-        // // Check for new nodes, either defined via collection->view or directly via nodes
-        // //TODO fix this to do separate check for both
-        // if (collectionObj.view || metadata.nodes.size > 0){
-        //   let iter = (metadata.nodes.size > 0) ? metadata.nodes.values() : collectionObj.view;
-        //   // for (var viewNode of iter){
-        //   for (var viewNode of iter){
-        //
-        //     // Change the id by appending _node because collection and view can have the same URI
-        //     // We do still want to show them as two separate nodes even though they have the same URL
-        //
-        //     let double = false;
-        //     for (let checker of jsondata.nodes){
-        //       if (checker.id == viewNode['@id']+"_node"){
-        //         double = true;
-        //       }
-        //     }
-        //
-        //
-        //     if (!double){
-        //       let node = {};
-        //       node.id = viewNode['@id']+"_node";
-        //       node.name = viewNode['@id'];
-        //       // the metadata extractor will only find a node if it has at least one property, else it will only show up as a view
-        //       if(metadata.nodes && metadata.nodes.get(viewNode['@id']) && metadata.nodes.get(viewNode['@id']).relation){
-        //         node.relation_count = metadata.nodes.get(viewNode['@id']).relation.length;
-        //       } else {
-        //         node.relation_count = 0;
-        //       }
-        //
-        //
-        //       for (let pAttr of nodeSpecial){
-        //         if (viewNode[pAttr]){
-        //           node[pAttr] = viewNode[pAttr];
-        //         }
-        //       }
-        //
-        //       addImportLinks(node);
-        //
-        //       //TODO if this is a view and not a node this should probably not be shown as a node?
-        //       if (metadata.nodes && metadata.nodes.get(viewNode['@id'])){
-        //         jsondata.nodes.push(node)
-        //         if (jsondata.links.has(collectionId)){
-        //           jsondata.links.get(collectionId).add(viewNode['@id']+"_node");
-        //         } else {
-        //           jsondata.links.set(collectionId, new Set([viewNode['@id']+"_node"]));
-        //         }
-        //       } else {
-        //         node.id = viewNode['@id']+"_view";
-        //         jsondata.views.push(node)
-        //         if (jsondata.links.has(collectionId)){
-        //           jsondata.links.get(collectionId).add(viewNode['@id']+"_view");
-        //         } else {
-        //           jsondata.links.set(collectionId, new Set([viewNode['@id']+"_view"]));
-        //         }
-        //       }
-        //
-        //     }
-        //   }
-        // } else {
-        //   alert("Did not find any nodes linked to this url\n" + standardURL);
-        // }
-
         //TODO This is not a good way of linking the members to the correct node
         //What if multiple nodes are defined? What if a view & subset is defined?
         if(metadata.nodes && metadata.nodes.size > 0){
@@ -565,14 +533,23 @@ export async function getData(url, callBack, fix, extraClear) {
 
           const importPromises = [...newImportLinks].map(url => new Promise((resolve, reject) => {
             let newQuads = [];
-            rdfDereferencer.dereference(url).then(v => {v.quads.on('data', (quad) => {newQuads.push(quad)})
-            .on('error', (error) => {console.error(error); alert("Error while parsing import data at:\n"+url+"\n\n" +error); reject()})
-            .on('end', () => {
-              importedQuads.set(url, newQuads);
-              store.addQuads(newQuads);
+            rdfDereferencer.dereference(url)
+            .cath((e) => {
+              alert(e);
               resolve();
             })
-          })}))
+            .then(v => {v.quads.on('data', (quad) => {newQuads.push(quad)})
+              .on('error', (error) => {console.error(error); alert("Error while parsing import data at:\n"+url+"\n\n" +error); reject()})
+              .on('end', () => {
+                importedQuads.set(url, newQuads);
+                store.addQuads(newQuads);
+                resolve();
+              })
+            }).cath((e) => {
+              alert(e);
+              resolve();
+            })
+          }))
 
           Promise.all(importPromises).then(() => {
             if (collectionObj.member){
@@ -588,13 +565,18 @@ export async function getData(url, callBack, fix, extraClear) {
                 })
               );
 
-              Promise.all(memberPromises).then(() => {
+              Promise.all(memberPromises)
+              .catch((e) => {
+                console.error(e);
+                fix()
+              })
+              .then(() => {
                 if (jsondata.shapes.size > 0 || collectionObj.shape){
                   validateShape(membIds, store, newNodeMembersId, fix);
                 } else {
                   fix();
                 }
-              })
+              }).catch(() => fix());
 
             } else {
               remarks += "Found no members for " + newNodeMembersId + ".\n";
@@ -737,6 +719,8 @@ export async function getData(url, callBack, fix, extraClear) {
 
 }
 
+
+
 function validateShape(membIds, store, newNodeMembersId, fix){
   console.log("validating");
   membersFailed[newNodeMembersId] = [];
@@ -762,6 +746,7 @@ function validateShape(membIds, store, newNodeMembersId, fix){
   loadDatasetX(shapesX).then(shapes => {
     loadDatasetX(dataX).then(data => {
 
+      // This makes it so the BlankNode identifiers here are the same as those shown in the shape
       let dtX = [];
       for (let sX of shapes){
         if (sX.object.termType == "BlankNode" && !dtX.includes(sX.object.value)){
@@ -813,7 +798,17 @@ function validateShape(membIds, store, newNodeMembersId, fix){
       if (fix){
         fix();
       }
+    }).catch((e) => {
+      console.error("Error with members while validating\n"+e);
+      if (fix){
+        fix();
+      }
     });
+  }).catch((e) => {
+    console.error("Error with shape while validating\n"+e);
+    if (fix){
+      fix();
+    }
   });
 
 }

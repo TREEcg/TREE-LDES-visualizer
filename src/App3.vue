@@ -15,6 +15,8 @@
 
   <button v-on:click="start(undefined)">Go</button>
 
+  <div style="white-space: pre">{{collectionStats}}</div>
+
   <!-- <button v-on:click="validateAll()">Validate and add all reachable nodes</button><br> -->
 
   <div id="currentPage"></div>
@@ -152,8 +154,13 @@ export default {
       var p2 = new Promise(function(resolve){
         promiseResolve2 = resolve;
       });
+
+      if (url){
+        this.data_url = url;
+      }
+
       dF.setDataUrl(this.data_url);
-      dF.getData(url, this.cB, promiseResolve1, promiseResolve2);
+      dF.getData(url, promiseResolve1, promiseResolve2, this.svgClear, this.collectionCB);
       Promise.all([p1,p2]).then(() => this.cB())
     },
     validateAll(){
@@ -187,8 +194,21 @@ export default {
       this.copyData();
       this.drawGraph();
       if (this.jsondata.nodes.length > 0){
-        this.drawExtra(this.jsondata.nodes[this.jsondata.nodes.length -1]);
+        for (let n of this.jsondata.nodes){
+          if (n.name == dF.data_url){
+            this.drawExtra(n);
+          }
+        }
+      } else if (this.jsondata.views.length > 0){
+        for (let n of this.jsondata.views){
+          if (n.name == dF.data_url){
+            this.drawExtra(n);
+          }
+        }
       }
+    },
+    collectionCB(){
+      this.collectionAttributes = dF.collectionAttributes;
     },
     close(){
       document.getElementById("windowContainer").style.display = "none";
@@ -230,15 +250,41 @@ export default {
 
       this.svgGHolder[0].selectAll("g").remove();
 
-      if (d.relation_count && d.relation_count > 0){
-        expandRelationHolder.bind(this)(d);
+      var newG;
+      var tt;
+
+      if (d.relation_count !== undefined){
+        newG = svgEG.append("g").attr("class", "new_g");
+        tt = newG.append("text");
+        expandRelationHolderNodeInfo.call(this, d, tt);
       }
 
-      function expandRelationHolder(d){
-        let newG = svgEG.append("g").attr("class", "new_g");
-        let tt = newG.append("text");
+      if (d.relation_count && d.relation_count > 0){
+        expandRelationHolder.call(this, d);
+      }
 
-        expandRelationHolderNodeInfo.call(this, d, tt);
+      if (d.relation_count !== undefined){
+        newG.append("rect").attr("x", 0).attr("y", 0).style("stroke", "#69b3a2")
+        .attr("width", newG.node().getBBox().width+30)
+        .attr("height", newG.node().getBBox().height+30)
+        .attr("class", "outer_rect")
+        .lower();
+
+
+        // Make the main svg holding this large enough to show everything
+        let bbox = svgEG.node().getBBox();
+        svgE.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
+        .attr("width", (bbox.width+bbox.x))
+        .attr("height", (bbox.height+bbox.y));
+      }
+
+
+
+      function expandRelationHolder(d){
+        // let newG = svgEG.append("g").attr("class", "new_g");
+        // let tt = newG.append("text");
+
+        // expandRelationHolderNodeInfo.call(this, d, tt);
 
         let offH = tt.node().getBBox().height + 30;
         let innerg = newG.append("svg:foreignObject")
@@ -295,18 +341,18 @@ export default {
         let bboxT = table.node();
         innerg.attr("width", bboxT.offsetWidth).attr("height", bboxT.offsetHeight);
 
-        newG.append("rect").attr("x", 0).attr("y", 0).style("stroke", "#69b3a2")
-        .attr("width", newG.node().getBBox().width+30)
-        .attr("height", newG.node().getBBox().height+30)
-        .attr("class", "outer_rect")
-        .lower();
-
-
-        // Make the main svg holding this large enough to show everything
-        let bbox = svgEG.node().getBBox();
-        svgE.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
-        .attr("width", (bbox.width+bbox.x))
-        .attr("height", (bbox.height+bbox.y));
+        // newG.append("rect").attr("x", 0).attr("y", 0).style("stroke", "#69b3a2")
+        // .attr("width", newG.node().getBBox().width+30)
+        // .attr("height", newG.node().getBBox().height+30)
+        // .attr("class", "outer_rect")
+        // .lower();
+        //
+        //
+        // // Make the main svg holding this large enough to show everything
+        // let bbox = svgEG.node().getBBox();
+        // svgE.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
+        // .attr("width", (bbox.width+bbox.x))
+        // .attr("height", (bbox.height+bbox.y));
       }
 
 
@@ -801,7 +847,7 @@ export default {
 
           d3.select(tg).select("text")
           .append("tspan").text(function(d){
-            if (d.relation_count){
+            if (d.relation_count !== undefined){
               return "relations: " + d.relation_count;
             } else {
               return "View not loaded yet"

@@ -34,6 +34,20 @@ export var relationSpecial = ["import", "importStream", "conditionalImport"];
 export var newImportLinks = new Set();
 export var importedQuads = new Map();
 var myMetadata;
+var collectionRef = {"url":undefined, "collectionStore": undefined};
+export var collectionStats = {};
+const dcterms = 'http://purl.org/dc/terms/';
+const hydra = 'http://www.w3.org/ns/hydra/core#';
+// export const collectionAttributes = ['title', 'creator', 'contributor', 'description', 'license'];
+
+export const collectionAttributes = new Map([
+  ['title', dcterms+'title'],
+  ['creator', dcterms+'creator'],
+  ['contributor', dcterms+'contributor'],
+  ['description', dcterms+'description'],
+  ['license', dcterms+'license'],
+  ['total items', hydra+'totalItems']
+])
 
 
 // Use this function to set the url of a new collection
@@ -134,7 +148,8 @@ function getImportLinks(data){
 }
 
 async function extractId(store, id) {
-  const quadsWithSubj = store.getQuads(id, null, null, null);
+  // const quadsWithSubj = store.getQuads(id, null, null, null);
+  const quadsWithSubj = extractShapeHelp(store, id);
   const textStream = rdfSerializer.serialize(streamifyArray(quadsWithSubj), { contentType: 'text/turtle' });
   return await stringifyStream(textStream);
 }
@@ -226,13 +241,138 @@ function extractShapeNext(store2, quadsWithSubj, id){
 
 function extractShapeMembers(store, ids){
   var quadsWithSubj = [];
+  var checked = [];
   for (let id of ids){
     quadsWithSubj = quadsWithSubj.concat(store.getQuads(id, null, null, null));
     // We need quads with a member as object for shacl targetting
     quadsWithSubj = quadsWithSubj.concat(store.getQuads(null, null, id, null));
+    quadsWithSubj = quadsWithSubj.concat(extractShapeHelp(store, id, checked));
   }
   return rdfSerializer.serialize(streamifyArray(quadsWithSubj), { contentType: 'text/turtle' });
 }
+
+
+async function derefCollection(collectionUrl, collectionCallBack){
+  // This means we do not have to change any data
+  if (collectionRef.url && collectionRef.url == collectionUrl){
+    if(collectionCallBack){
+      collectionCallBack();
+    }
+    return;
+  }
+
+  collectionRef.url = collectionUrl;
+  collectionRef.store = new N3.Store();
+
+  console.log("should get collection data from: ", collectionUrl);
+
+  let newq = [];
+  rdfDereferencer.dereference(collectionUrl)
+  .catch((error) => {
+    alert("Error trying to get the collection root.\nWill be unable to provide extra information about the collection.\n" + error)
+    if (collectionCallBack){
+      collectionCallBack();
+    }
+  })
+  .then(v => {
+    v.quads.on('data', (quad) => {newq.push(quad); /*console.log(quad)*/})
+    .on('error', (error) => {console.error(error); alert("Error while parsing SHAPE data at:\n"+collectionUrl+".\n\n"+error)})
+    .on('end', () => {
+      collectionRef.store.addQuads(newq);
+      parseCollectionTreeData(newq);
+      parseCollection();
+      if (collectionCallBack){
+        collectionCallBack();
+      }
+    })
+  }).catch(() => {
+    if (collectionCallBack){
+      collectionCallBack();
+    }
+  });
+}
+
+
+//TODO still have to get the shape if no shape was defined on current node?
+function parseCollectionTreeData(newq){
+  extractMetadata(newq).then(metadata => {
+
+    if (metadata.collections[0] && metadata.collections[0].view){
+      for (let viewNode of metadata.collections[0].view){
+        let double = false;
+        // Check if this view is present on the actual url we followed first
+        // We do not have to check if this view is already present in jsondata.views
+        // because this function will only get called when we have not yet dereferenced this collection
+        // so jsondata.views should at most contain myMetadata.collections[0].view when this gets called
+        if (myMetadata.collections[0] && myMetadata.collections[0].view){
+          for (let checker of myMetadata.collections[0].view){
+            if (checker.name == viewNode['@id']){
+              double = true;
+            }
+          }
+        }
+        if (!metadata.nodes.has(viewNode['@id'])){
+          for (let checker of jsondata.views.concat(jsondata.nodes)){
+            if (checker.name == viewNode['@id']){
+              double = true;
+            }
+          }
+        }
+
+        let node = {};
+        node.id = viewNode['@id']+"_node";
+        node.name = viewNode['@id'];
+
+        if (!double && !metadata.nodes.has(viewNode['@id'])){
+          jsondata.views.push(node)
+          if (jsondata.links.has(collectionRef.url)){
+            jsondata.links.get(collectionRef.url).add(viewNode['@id']+"_node");
+          } else {
+            jsondata.links.set(collectionRef.url, new Set([viewNode['@id']+"_node"]));
+          }
+
+        } else if (!double && !myMetadata.nodes.has(viewNode['id'])){
+          viewNode = metadata.nodes.get(viewNode['@id']);
+          jsondata.nodes = jsondata.nodes.filter(element => element.name != viewNode['@id']);
+
+          if(metadata.nodes && metadata.nodes.get(viewNode['@id']) && metadata.nodes.get(viewNode['@id']).relation){
+            node.relation_count = metadata.nodes.get(viewNode['@id']).relation.length;
+          } else {
+            node.relation_count = 0;
+          }
+
+          for (let pAttr of nodeSpecial){
+            if (viewNode[pAttr]){
+              node[pAttr] = viewNode[pAttr];
+            }
+          }
+
+          addImportLinks(node);
+
+          jsondata.views.push(node)
+          if (jsondata.links.has(collectionRef.url)){
+            jsondata.links.get(collectionRef.url).add(viewNode['@id']+"_node");
+          } else {
+            jsondata.links.set(collectionRef.url, new Set([viewNode['@id']+"_node"]));
+          }
+        }
+      }
+    }
+  })
+}
+
+function parseCollection(){
+  collectionStats = {};
+  for (let [key, value] of collectionAttributes){
+    let attrX = collectionRef.store.getQuads(null, value, null, null).map(quad => quad.object);
+    if (attrX.length == 1){
+      collectionStats[key] = attrX.id;
+    } else if (attrX.length > 0){
+      collectionStats[key] = JSON.stringify(attrX);
+    }
+  }
+}
+
 
 // pass a url to add a new node OR set data_url to go to a new collection
 // presence of url variable will get checked BEFORE data_url and thus data_url gets ignored if url is not undefined
@@ -274,6 +414,8 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
       extraClear();
     }
   }
+
+  data_url = standardURL;
 
   const {quads} = await rdfDereferencer.dereference(standardURL);
   quads.on('data', (quad) => {qtext.push(quad); /*console.log(quad)*/})
@@ -322,30 +464,11 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
         fix();
       } else if (standardURL != Array.from(metadata.collections.keys())[0]){
         let collectionUrl = Array.from(metadata.collections.keys())[0];
-        console.log("should get collection from: ", collectionUrl);
-        let newq = [];
-        rdfDereferencer.dereference(collectionUrl)
-        .catch((error) => {
-          alert(error)
-          if (collectionCallBack){
-            collectionCallBack();
-          }
-        })
-        .then(v => {
-          console.log("v", v.headers);
-          v.quads.on('data', (quad) => {newq.push(quad); /*console.log(quad)*/})
-          .on('error', (error) => {console.error(error); alert("Error while parsing SHAPE data at:\n"+collectionUrl+".\n\n"+error)})
-          .on('end', () => {
-            console.log("collectionQuads", newq);
-            if (collectionCallBack){
-              collectionCallBack();
-            }
-          })
-        }).catch(() => {
-          if (collectionCallBack){
-            collectionCallBack();
-          }
-        });
+        derefCollection(collectionUrl, collectionCallBack);
+      } else {
+        collectionRef.url = standardURL;
+        collectionRef.store = new N3.Store(qtext);
+        parseCollection();
       }
 
       // The main data parsing part
@@ -410,6 +533,10 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
             node.name = viewNode['@id'];
 
             if (!double && !metadata.nodes.has(viewNode['@id'])){
+              if(standardURL == node.name){
+                console.log("BLUP");
+                node.relation_count = 0;
+              }
               jsondata.views.push(node)
               if (jsondata.links.has(collectionId)){
                 jsondata.links.get(collectionId).add(viewNode['@id']+"_node");
@@ -534,7 +661,7 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
           const importPromises = [...newImportLinks].map(url => new Promise((resolve, reject) => {
             let newQuads = [];
             rdfDereferencer.dereference(url)
-            .cath((e) => {
+            .catch((e) => {
               alert(e);
               resolve();
             })
@@ -545,13 +672,14 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
                 store.addQuads(newQuads);
                 resolve();
               })
-            }).cath((e) => {
+            }).catch((e) => {
               alert(e);
               resolve();
             })
           }))
 
           Promise.all(importPromises).then(() => {
+            console.log("at promise");
             if (collectionObj.member){
               let membIds = [];
 
@@ -583,6 +711,8 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
               fix();
             }
           });
+        } else {
+          fix();
         }
 
       }

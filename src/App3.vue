@@ -105,6 +105,7 @@ import * as dF from './components/dataFunctions.js';
 
 /*
 POSSIBLE TODO OVERVIEW
+  Get rid of using multiple nested promises as a way to observe function completion, I hate myself for coding that stuff
   show what members actually got validated, member might not have correct attributes targeted by shape
   support for multiple collections at the same URL?
   support for multiple nodes (not views) at the same URL?
@@ -113,14 +114,6 @@ POSSIBLE TODO OVERVIEW
   support for working tree:search
   conditionalImport now gets imported without checking conditions
     this means adding a check at function addImportLinks(data)
-  possibility to check every reachable node against current shape
-    a function that calls getData with first every view and then every relation->node
-      do not forget to call addImportLinks(data) for every relation before following a node
-      do not forget to keep a list of checked nodes
-      might be prudent to only call drawing() when all nodes have been traversed (slow & might crash)
-      should probably not throw any alerts while doing the traversal but bundle them in an automatically updating report
-          probably via adding this.remarks to something before calling getData again
-      shacl validation report at the top of the page should already update automatically for every node
 */
 
 export default {
@@ -158,7 +151,8 @@ export default {
       // value, path, node, remainingItems are checked in a different way
       relationSpecial: ["import", "importStream", "conditionalImport"],
       newImportLinks: new Set(),
-      importedQuads: new Map()
+      importedQuads: new Map(),
+      emptyURL: ""
     }
   },
   // watch: {
@@ -168,10 +162,56 @@ export default {
   //     },
   //   }
   // },
+
+  created() {
+    var listUrl = ("" + window.location).split('?p=');
+    this.emptyURL = listUrl.shift();
+    listUrl = listUrl.map(v => decodeURIComponent(v));
+    if (listUrl.length > 0){
+      const lastUrl = listUrl.pop();
+      dF.clearData();
+      const finished = listUrl.map(url => new Promise(resolve => {
+        console.log("mapping");
+        var promiseResolve1;
+        var p1 = new Promise(function(resolve){
+          promiseResolve1 = resolve;
+        });
+
+        var promiseResolve2;
+        var p2 = new Promise(function(resolve){
+          promiseResolve2 = resolve;
+        });
+
+        var promiseResolve3;
+        var p3 = new Promise(function(resolve){
+          promiseResolve3 = resolve;
+        });
+        dF.getData(url, promiseResolve1, promiseResolve2, undefined, promiseResolve3)
+
+        Promise.all([p1, p2, p3]).then(() => {
+          resolve();
+        })
+      }));
+
+      Promise.all(finished).then(() => this.derefUrl(lastUrl));
+
+    }
+  },
   methods : {
 
-    //url = undefined & this.data_url defined if you wish to start a new collection
+    // url = undefined & this.data_url defined if you wish to start a new collection
+    // url = undefined will also reset the path save in the page url
     start(url){
+      this.derefUrl(url);
+
+      if (!url){
+        window.history.pushState({}, document.title, this.emptyURL+"?p="+encodeURIComponent(dF.data_url));
+      } else {
+        window.history.pushState({}, document.title, window.location+"?p="+encodeURIComponent(dF.data_url));
+      }
+
+    },
+    derefUrl(url){
       var promiseResolve1;
       var p1 = new Promise(function(resolve){
         promiseResolve1 = resolve;

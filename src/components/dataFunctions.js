@@ -112,7 +112,7 @@ function validateNext(todo, done, callBack){
 
 }
 
-function clearData(){
+export function clearData(){
   jsondata = {"collection":[], "relations":new Map(), "links":new Map(), "shapes":[], "nodes":[], "views":[]};
   shape_validation = null;
   node_validation = [];

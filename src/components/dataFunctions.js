@@ -16,6 +16,8 @@ const { namedNode, defaultGraph } = DataFactory;
 
 // Exports functions setDataUrl(url), validateAll(url, callBack), addImportLinks(data), getData(url, callBack, fix, extraClear)
 
+//TODO Fix url checks for # identifiers at the end?
+
 export var qtext = [];
 export var jsondata = null;
 export var members = {};
@@ -75,8 +77,6 @@ function validateNext(todo, done, callBack){
         promiseResolve2 = resolve;
       });
 
-      console.log(p1, p2);
-
       Promise.all([p1, p2]).then(() => {
         myMetadata.relations.forEach(v => {
           todo.push({"url":v.node[0]['@id'], "imports":getImportLinks(v)})
@@ -99,7 +99,7 @@ function validateNext(todo, done, callBack){
 }
 
 function clearData(){
-  jsondata = {"collection":[], "relations":new Map(), "links":new Map(), "shapes":[], "nodes":[]};
+  jsondata = {"collection":[], "relations":new Map(), "links":new Map(), "shapes":[], "nodes":[], "views":[]};
   shape_validation = null;
   node_validation = [];
   members = {};
@@ -167,9 +167,27 @@ function extractShapeHelp(store, id, checked = []) {
 }
 
 async function extractShape(store, id){
-  var quadsWithSubj = extractShapeHelp(store, id);
-
   const store2 = new N3.Store();
+  var quadsWithSubj = extractShapeHelp(store, id);
+  console.log(quadsWithSubj);
+  if (id && quadsWithSubj.length == 0){
+    let newq = [];
+
+    rdfDereferencer.dereference(id).then(v => {
+    v.quads.on('data', (quad) => {newq.push(quad); /*console.log(quad)*/})
+    .on('error', (error) => {console.error(error); alert("Error while parsing SHAPE data at:\n"+id+".\n\n"+error)})
+    .on('end', () => {
+      store2.addQuads(newq);
+      return extractShapeNext(store2, quadsWithSubj, id);
+    })})
+
+  } else {
+    return extractShapeNext(store2, quadsWithSubj, id);
+  }
+}
+
+
+function extractShapeNext(store2, quadsWithSubj, id){
   store2.addQuads(quadsWithSubj);
   var targetQuads = [];
   for (let tempTarget of shapeTargets){
@@ -192,12 +210,14 @@ async function extractShape(store, id){
       );
 
       quadsWithSubj = extractShapeHelp(store2, id);
+
     }
 
   }
-
   return rdfSerializer.serialize(streamifyArray(quadsWithSubj), { contentType: 'text/turtle' });
 }
+
+
 
 function extractShapeMembers(store, ids){
   var quadsWithSubj = [];
@@ -230,6 +250,8 @@ export async function getData(url, callBack, fix, extraClear) {
   // standardURL = 'https://raw.githubusercontent.com/TREEcg/TREE-LDES-visualizer/main/src/assets/testerMultipleImports.ttl';
   // standardURL = 'https://raw.githubusercontent.com/TREEcg/TREE-LDES-visualizer/main/src/assets/testerfirst.ttl';
   // standardURL = 'https://raw.githubusercontent.com/TREEcg/TREE-LDES-visualizer/main/src/assets/implicitShapeTest.ttl';
+  // standardURL = 'https://raw.githubusercontent.com/TREEcg/TREE-LDES-visualizer/main/src/assets/testersecond.ttl';
+  standardURL = 'https://graph.irail.be/sncb/connections/feed';
 
   if(url){
     standardURL = url;
@@ -340,32 +362,39 @@ export async function getData(url, callBack, fix, extraClear) {
         }
 
 
-        // Check for new nodes, either defined via collection->view or directly via nodes
-        if (collectionObj.view || metadata.nodes.size > 0){
-          let iter = (metadata.nodes.size > 0) ? metadata.nodes.values() : collectionObj.view;
-          for (var viewNode of iter){
-
-            // Change the id by appending _node because collection and view can have the same URI
-            // We do still want to show them as two separate nodes even though they have the same URL
-
+        // Create view 'nodes' found at the current url
+        if (collectionObj.view){
+          for (let viewNode of collectionObj.view){
             let double = false;
-            for (let checker of jsondata.nodes){
-              if (checker.id == viewNode['@id']+"_node"){
-                double = true;
+            if (!metadata.nodes.has(viewNode['@id'])){
+              for (let checker of jsondata.views.concat(jsondata.nodes)){
+                if (checker.name == viewNode['@id']){
+                  double = true;
+                }
               }
             }
 
-            if (!double){
-              let node = {};
-              node.id = viewNode['@id']+"_node";
-              node.name = viewNode['@id'];
-              // the metadata extractor will only find a node if it has at least one property, else it will only show up as a view
+            let node = {};
+            node.id = viewNode['@id']+"_node";
+            node.name = viewNode['@id'];
+
+            if (!double && !metadata.nodes.has(viewNode['@id'])){
+              jsondata.views.push(node)
+              if (jsondata.links.has(collectionId)){
+                jsondata.links.get(collectionId).add(viewNode['@id']+"_node");
+              } else {
+                jsondata.links.set(collectionId, new Set([viewNode['@id']+"_node"]));
+              }
+
+            } else if (!double){
+              viewNode = metadata.nodes.get(viewNode['@id']);
+              jsondata.nodes = jsondata.nodes.filter(element => element.name != viewNode['@id']);
+
               if(metadata.nodes && metadata.nodes.get(viewNode['@id']) && metadata.nodes.get(viewNode['@id']).relation){
                 node.relation_count = metadata.nodes.get(viewNode['@id']).relation.length;
               } else {
                 node.relation_count = 0;
               }
-
 
               for (let pAttr of nodeSpecial){
                 if (viewNode[pAttr]){
@@ -375,7 +404,7 @@ export async function getData(url, callBack, fix, extraClear) {
 
               addImportLinks(node);
 
-              jsondata.nodes.push(node)
+              jsondata.views.push(node)
               if (jsondata.links.has(collectionId)){
                 jsondata.links.get(collectionId).add(viewNode['@id']+"_node");
               } else {
@@ -383,56 +412,196 @@ export async function getData(url, callBack, fix, extraClear) {
               }
             }
           }
-        } else {
-          alert("Did not find any nodes linked to this url\n" + standardURL);
         }
+
+        let iter = [];
+        if (collectionObj.subset){
+          iter = iter.concat(collectionObj.subset);
+        }
+        if (metadata.nodes){
+          iter = iter.concat(Array.from(metadata.nodes.values()));
+        }
+
+        if (collectionObj.subset || metadata.nodes){
+        // if (metadata.nodes.values() && metadata.nodes.values()){
+          for (let viewNode of iter){
+            if (metadata.nodes.has(viewNode['@id'])){
+              viewNode = metadata.nodes.get(viewNode['@id']);
+            }
+            let double = false;
+            for (let checker of jsondata.nodes){
+              if (checker.name == viewNode['@id']){
+                double = true;
+              }
+            }
+
+            if (!double){
+              let node = {};
+              node.id = viewNode['@id']+"_node";
+              node.name = viewNode['@id'];
+
+              if(metadata.nodes && metadata.nodes.get(viewNode['@id']) && metadata.nodes.get(viewNode['@id']).relation){
+                node.relation_count = metadata.nodes.get(viewNode['@id']).relation.length;
+              } else {
+                node.relation_count = 0;
+              }
+
+              for (let pAttr of nodeSpecial){
+                if (viewNode[pAttr]){
+                  node[pAttr] = viewNode[pAttr];
+                }
+              }
+
+              addImportLinks(node);
+
+
+
+              let found = false;
+              jsondata.views = jsondata.views.filter(v => {
+                if (v.name == node.name){
+                  found = true;
+                }
+                return v.name != node.name;
+              })
+
+              if (found){
+                jsondata.views.push(node);
+              } else {
+                jsondata.nodes.push(node);
+              }
+
+              if (jsondata.links.has(collectionId)){
+                jsondata.links.get(collectionId).add(viewNode['@id']+"_node");
+              } else {
+                jsondata.links.set(collectionId, new Set([viewNode['@id']+"_node"]));
+              }
+
+            }
+          }
+        }
+
+
+        // // Check for new nodes, either defined via collection->view or directly via nodes
+        // //TODO fix this to do separate check for both
+        // if (collectionObj.view || metadata.nodes.size > 0){
+        //   let iter = (metadata.nodes.size > 0) ? metadata.nodes.values() : collectionObj.view;
+        //   // for (var viewNode of iter){
+        //   for (var viewNode of iter){
+        //
+        //     // Change the id by appending _node because collection and view can have the same URI
+        //     // We do still want to show them as two separate nodes even though they have the same URL
+        //
+        //     let double = false;
+        //     for (let checker of jsondata.nodes){
+        //       if (checker.id == viewNode['@id']+"_node"){
+        //         double = true;
+        //       }
+        //     }
+        //
+        //
+        //     if (!double){
+        //       let node = {};
+        //       node.id = viewNode['@id']+"_node";
+        //       node.name = viewNode['@id'];
+        //       // the metadata extractor will only find a node if it has at least one property, else it will only show up as a view
+        //       if(metadata.nodes && metadata.nodes.get(viewNode['@id']) && metadata.nodes.get(viewNode['@id']).relation){
+        //         node.relation_count = metadata.nodes.get(viewNode['@id']).relation.length;
+        //       } else {
+        //         node.relation_count = 0;
+        //       }
+        //
+        //
+        //       for (let pAttr of nodeSpecial){
+        //         if (viewNode[pAttr]){
+        //           node[pAttr] = viewNode[pAttr];
+        //         }
+        //       }
+        //
+        //       addImportLinks(node);
+        //
+        //       //TODO if this is a view and not a node this should probably not be shown as a node?
+        //       if (metadata.nodes && metadata.nodes.get(viewNode['@id'])){
+        //         jsondata.nodes.push(node)
+        //         if (jsondata.links.has(collectionId)){
+        //           jsondata.links.get(collectionId).add(viewNode['@id']+"_node");
+        //         } else {
+        //           jsondata.links.set(collectionId, new Set([viewNode['@id']+"_node"]));
+        //         }
+        //       } else {
+        //         node.id = viewNode['@id']+"_view";
+        //         jsondata.views.push(node)
+        //         if (jsondata.links.has(collectionId)){
+        //           jsondata.links.get(collectionId).add(viewNode['@id']+"_view");
+        //         } else {
+        //           jsondata.links.set(collectionId, new Set([viewNode['@id']+"_view"]));
+        //         }
+        //       }
+        //
+        //     }
+        //   }
+        // } else {
+        //   alert("Did not find any nodes linked to this url\n" + standardURL);
+        // }
 
         //TODO This is not a good way of linking the members to the correct node
         //What if multiple nodes are defined? What if a view & subset is defined?
-        const newNodeMembersId = jsondata.nodes[jsondata.nodes.length -1].name;
-        members[newNodeMembersId] = new Map();
-
-
-        importedQuads.forEach((v,k) => {
-          if (newImportLinks.has(k)){
-            store.addQuads(v);
+        if(metadata.nodes && metadata.nodes.size > 0){
+          var newNodeMembersId;
+          if (metadata.nodes.size > 0){
+            newNodeMembersId = Array.from(metadata.nodes.keys()).pop();
+          } else {
+            newNodeMembersId = standardURL;
           }
-          newImportLinks.delete(k);
-        });
-
-        const importPromises = [...newImportLinks].map(url => {new Promise((resolve, reject) => {
-          let newQuads = [];
-          rdfDereferencer.dereference(url).then(v => {v.quads.on('data', (quad) => {newQuads.push(quad)})
-          .on('error', (error) => {console.error(error); alert("Error while parsing import data at:\n"+url+"\n\n" +error); reject})
-          .on('end', () => {
-            importedQuads.set(url, newQuads);
-            store.addQuads(newQuads);
-            resolve;
-          })
-        })})})
+          // const newNodeMembersId = jsondata.nodes[jsondata.nodes.length -1].name;
+          members[newNodeMembersId] = new Map();
 
 
-        Promise.all(importPromises).then(() => {
-          if (collectionObj.member){
-            let membIds = [];
-            for (var memb of collectionObj.member){
-              membIds.push(memb['@id']);
-              // Need to save id inside loop because used in async push
-              let tX = memb['@id'];
-              extractId(store, memb['@id']).then(mtemp => {
-                members[newNodeMembersId].set(tX, mtemp);
-              });
+          importedQuads.forEach((v,k) => {
+            if (newImportLinks.has(k)){
+              store.addQuads(v);
             }
-            if (jsondata.shapes.size > 0 || collectionObj.shape){
-              validateShape(membIds, store, newNodeMembersId, fix);
+            newImportLinks.delete(k);
+          });
+
+          const importPromises = [...newImportLinks].map(url => new Promise((resolve, reject) => {
+            let newQuads = [];
+            rdfDereferencer.dereference(url).then(v => {v.quads.on('data', (quad) => {newQuads.push(quad)})
+            .on('error', (error) => {console.error(error); alert("Error while parsing import data at:\n"+url+"\n\n" +error); reject()})
+            .on('end', () => {
+              importedQuads.set(url, newQuads);
+              store.addQuads(newQuads);
+              resolve();
+            })
+          })}))
+
+          Promise.all(importPromises).then(() => {
+            if (collectionObj.member){
+              let membIds = [];
+
+              const memberPromises = collectionObj.member.map(m =>
+                new Promise((resolve) => {
+                  membIds.push(m['@id']);
+                  extractId(store, m['@id']).then(mtemp => {
+                    members[newNodeMembersId].set(m['@id'], mtemp);
+                    resolve();
+                  })
+                })
+              );
+
+              Promise.all(memberPromises).then(() => {
+                if (jsondata.shapes.size > 0 || collectionObj.shape){
+                  validateShape(membIds, store, newNodeMembersId, fix);
+                } else {
+                  fix();
+                }
+              })
+
             } else {
+              remarks += "Found no members for " + newNodeMembersId + ".\n";
               fix();
             }
-          } else {
-            remarks += "Found no members for " + newNodeMembersId + ".\n";
-            fix();
-          }
-        });
+          });
+        }
 
       }
 
@@ -535,6 +704,7 @@ export async function getData(url, callBack, fix, extraClear) {
 
       console.log("members:");
       console.log(members);
+      console.log("membs1", JSON.parse(JSON.stringify(members)));
 
 
       // TODO shape is defined on the collection so shape is never allowed to change
@@ -588,6 +758,7 @@ function validateShape(membIds, store, newNodeMembersId, fix){
   const shapesX = extractShape(store, shapeIds[0]);
   const dataX = extractShapeMembers(store, membIds);
 
+
   loadDatasetX(shapesX).then(shapes => {
     loadDatasetX(dataX).then(data => {
 
@@ -639,10 +810,10 @@ function validateShape(membIds, store, newNodeMembersId, fix){
       if (report.results.length == 0){
         shape_report += "All checks passed.";
       }
-
+      if (fix){
+        fix();
+      }
     });
   });
-  if (fix){
-    fix();
-  }
+
 }

@@ -46,23 +46,54 @@
     <div id="graph" style="overflow:scroll; resize: both;"></div>
   </div>
   <div class="flexContainer">
-    <div id="members"></div>
-    <div id="log"></div>
+    <div id="members">
+      <p>Members:</p>
+    </div>
+
+    <div id="log">
+
+      <div id="v-model-radiobutton">
+        <input type="radio" id="one" value="Remarks" v-model="picked" />
+        <label for="one">Remarks</label>
+        <br />
+        <input type="radio" id="two" value="Shape" v-model="picked" />
+        <label for="two">Shape Validation</label>
+        <br />
+      </div>
+
+      <div>
+        <!-- <label for="checkbox_shape">Show shape validation report</label> -->
+        <!-- <input type="checkbox" id="checkbox_shape" v-model="checked_shape"> -->
+        <div v-if="picked === 'Shape'">
+          <div v-if="this.shape_validation == false || this.shape_validation == true">
+            <p>All members conform to shape: {{this.shape_validation}}</p>
+          </div>
+          <div v-if="this.shape_report">
+            <div style="white-space: pre-line">{{this.shape_report}}</div>
+          </div>
+          <div v-else>
+            <p>No report available.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- <label for="checkbox_remarks">Show remarks</label> -->
+      <!-- <input type="checkbox" id="checkbox_remarks" v-model="checked_remarks"> -->
+      <div v-if="picked === 'Remarks'">
+        <div v-if="this.remarks">
+          <div style="white-space: pre-line">{{this.remarks}}</div>
+        </div>
+        <div v-else>
+          <p>No remarks available.</p>
+        </div>
+      </div>
+
+    </div>
   </div>
 
-  <p>All members conform to shape: {{this.shape_validation}}</p>
 
-  <label for="checkbox_shape">Show shape validation report</label>
-  <input type="checkbox" id="checkbox_shape" v-model="checked_shape">
 
-  <div v-if="checked_shape">
-    <div v-if="shape_report">
-      <div style="white-space: pre-line">{{this.shape_report}}</div>
-    </div>
-    <div v-else>
-      <p>No report available.</p>
-    </div>
-  </div>
+
 
 
 
@@ -111,7 +142,7 @@ POSSIBLE TODO OVERVIEW
   Get rid of using multiple nested promises as a way to observe function completion, I hate myself for coding that stuff
   show what members actually got validated, member might not have correct attributes targeted by shape
   support for multiple collections at the same URL?
-  support for multiple nodes (not views) at the same URL?
+  support for multiple nodes at the same URL?
   support for working importStream
     this means adding it to function addImportLinks(data)
   support for working tree:search
@@ -129,16 +160,13 @@ export default {
         ["cultureelerfgoed", "https://treecg.github.io/demo_data/cht/1.ttl"],
         ["train stops", "https://github.com/TREEcg/demo_data/blob/master/stops/.root.ttl"]
       ]),
-      qtext: [],
-      //easier to clear jsondata in functions without having to copy paste this
-      jsondata: null, //this will be set to empty on start of getData
-      members: {},
-      membersFailed : [],
       svgHolder: null,
       svgGHolder: null,
       remarks: "",
       next_url: "",
       checked_shape: false,
+      checked_remarks: false,
+      picked: 'Remarks',
       graph_height: 600,
       graph_width: 1000,
       data_url: null,
@@ -147,14 +175,6 @@ export default {
       shape_report: "",
       selected: 0,
       alpha_decay_rate: 0.5,//1 - Math.pow(0.001, 1 / 300)
-      shapeTargets: ['targetClass', 'targetNode', 'targetSubjectsOf', 'targetObjectsOf'],
-      // Add possible properties from metadata extraction to these arrays
-      collectionSpecial: ["@type", "import", "importStream", "conditionalImport", "totalItems"],
-      nodeSpecial: ["@type", "import", "importStream", "conditionalImport", "search", "retentionPolicy"],
-      // value, path, node, remainingItems are checked in a different way
-      relationSpecial: ["import", "importStream", "conditionalImport"],
-      newImportLinks: new Set(),
-      importedQuads: new Map(),
       emptyURL: "",
       urlList: []
     }
@@ -175,14 +195,17 @@ export default {
     if (listUrl.length > 0){
       const lastUrl = listUrl.pop();
       dF.clearData();
+      if (listUrl.length > 0){
+        var promiseResolve;
+        var p = new Promise(function(resolve){
+          promiseResolve = resolve;
+        });
+        this.derefList(listUrl.shift(), listUrl, promiseResolve);
 
-      var promiseResolve;
-      var p = new Promise(function(resolve){
-        promiseResolve = resolve;
-      });
-      this.derefList(listUrl.shift(), listUrl, promiseResolve);
-
-      p.then(() => this.derefUrl(lastUrl));
+        p.then(() => this.derefUrl(lastUrl));
+      } else {
+        this.derefUrl(lastUrl);
+      }
     }
   },
   methods : {
@@ -250,21 +273,11 @@ export default {
     },
     copyData(){
       // TODO at some point these should probably just get fixed in the code instead of copying them over
-      this.qtext = dF.qtext;
-      this.jsondata = dF.jsondata;
-      this.members = dF.members;
-      this.membersFailed = dF.membersFailed;
       this.remarks = dF.remarks;
       this.data_url = dF.data_url;
       this.shape_validation = dF.shape_validation;
       this.node_validation = dF.node_validation;
       this.shape_report = dF.shape_report;
-      this.shapeTargets = dF.shapeTargets;
-      this.collectionSpecial = dF.collectionSpecial;
-      this.nodeSpecial = dF.nodeSpecial;
-      this.relationSpecial = dF.relationSpecial;
-      this.newImportLinks = dF.newImportLinks;
-      this.importedQuads = dF.importedQuads;
     },
     svgClear(){
       d3.selectAll("div").selectAll("svg").remove();
@@ -284,8 +297,8 @@ export default {
     },
     findLastNode(lastUrl){
       let found = false;
-      if (this.jsondata.nodes.length > 0){
-        for (let n of this.jsondata.nodes){
+      if (dF.jsondata.nodes.length > 0){
+        for (let n of dF.jsondata.nodes){
           if (n.name == lastUrl){
             n.selected = true;
             this.drawExtra(n);
@@ -296,8 +309,8 @@ export default {
         }
       }
 
-      if (this.jsondata.views.length > 0){
-        for (let n of this.jsondata.views){
+      if (dF.jsondata.views.length > 0){
+        for (let n of dF.jsondata.views){
           if (n.name == lastUrl){
             n.selected = true;
             this.drawExtra(n);
@@ -311,6 +324,7 @@ export default {
     },
     collectionCB(){
       this.collectionAttributes = dF.collectionAttributes;
+      this.remarks = dF.remarks;
     },
     setUrl(value){
       this.data_url = value;
@@ -416,7 +430,7 @@ export default {
         for (let dataX of tableData){
           let trX = tbody.insertRow();
           trX.id = "small"+count;
-          trX.onclick = tableClick.bind(this, count, this.jsondata[d.id][count], newG, innerg, table, true)
+          trX.onclick = tableClick.bind(this, count, dF.jsondata[d.id][count], newG, innerg, table, true)
 
           for(let valueX of Object.values(dataX)){
             let textX = document.createTextNode(valueX);
@@ -427,9 +441,9 @@ export default {
           trX = tbody.insertRow();
           trX.style.visibility = "collapse";
           trX.id = "large"+count;
-          trX.onclick = tableClick.bind(this, count, this.jsondata[d.id][count], newG, innerg, table, false)
+          trX.onclick = tableClick.bind(this, count, dF.jsondata[d.id][count], newG, innerg, table, false)
 
-          let textX = document.createTextNode(createExtraCell.call(this, this.jsondata[d.id][count]));
+          let textX = document.createTextNode(createExtraCell.call(this, dF.jsondata[d.id][count]));
 
           let tdX = trX.insertCell();
           tdX.classList.add('spacing');
@@ -460,7 +474,7 @@ export default {
         .attr("x",0)
         .attr("dx",15);
 
-        for (let pAttr of this.nodeSpecial){
+        for (let pAttr of dF.nodeSpecial){
           if (d[pAttr]){
             tt.append("tspan").text(`${pAttr}:`)
             .attr("dy", 22)
@@ -488,7 +502,7 @@ export default {
 
       function parseTableData(d){
         var tableData = [];
-        for (let relX of this.jsondata[d.id]){
+        for (let relX of dF.jsondata[d.id]){
           let rowData = {};
           if(relX.type){
             rowData.type = (relX.type + "").split('#').pop();
@@ -632,7 +646,7 @@ export default {
           }
         }
 
-        for (let pAttr of this.relationSpecial){
+        for (let pAttr of dF.relationSpecial){
           if (relX[pAttr]){
             textX += `${pAttr}:` + "\n";
             for (const value of Object.values(relX[pAttr])) {
@@ -803,9 +817,9 @@ export default {
       d3.select("#graph").selectAll("svg").remove();
 
       const linkData = [];
-      this.jsondata.links.forEach((s, k) => {s.forEach(v => linkData.push({"source":k,"target":v}))});
+      dF.jsondata.links.forEach((s, k) => {s.forEach(v => linkData.push({"source":k,"target":v}))});
       // console.log("linkData: ", linkData);
-      var all = this.jsondata.collection.concat(this.jsondata.shapes.concat(this.jsondata.nodes.concat(this.jsondata.views)));
+      var all = dF.jsondata.collection.concat(dF.jsondata.shapes.concat(dF.jsondata.nodes.concat(dF.jsondata.views)));
 
       // append the svg object to the body of the page
       const svg = d3.select("#graph")
@@ -839,10 +853,10 @@ export default {
       .attr("marker-mid", "url(#arrow)" );
 
 
-      if (this.jsondata.collection.length > 0){
+      if (dF.jsondata.collection.length > 0){
         const collection = svg
         .selectAll("gcollection")
-        .data(this.jsondata.collection)
+        .data(dF.jsondata.collection)
         .join("g")
         .attr("class", "collection_g main_g")
         .attr("expanded", "false")
@@ -870,10 +884,10 @@ export default {
         .lower();
       }
 
-      if (this.jsondata.views.length > 0){
+      if (dF.jsondata.views.length > 0){
         const view = svg
         .selectAll("gview")
-        .data(this.jsondata.views)
+        .data(dF.jsondata.views)
         .join("g")
         .attr("class", "view_g main_g")
         .on("click", function(e, d) {
@@ -935,10 +949,10 @@ export default {
 
 
 
-      if (this.jsondata.shapes.length > 0){
+      if (dF.jsondata.shapes.length > 0){
         const shape = svg
         .selectAll("gshape")
-        .data(this.jsondata.shapes)
+        .data(dF.jsondata.shapes)
         .join("g")
         .attr("class", "shape_g main_g")
         .attr("expanded", "false")
@@ -968,10 +982,10 @@ export default {
 
 
 
-      if (this.jsondata.nodes.length > 0){
+      if (dF.jsondata.nodes.length > 0){
         const node = svg
         .selectAll("gnode")
-        .data(this.jsondata.nodes)
+        .data(dF.jsondata.nodes)
         .join("g")
         .attr("class", "node_g main_g")
         .on("click", function(e, d) {
@@ -1140,21 +1154,13 @@ export default {
       svg.call(zoom);
 
 
-      // function clickView(e,d){
-      //   if (e.ctrlKey){
-      //     this.start(d.name);
-      //     return;
-      //   }
-      // }
-
-
       function clickCollection(e, d){
         let currentg = d3.select(e.target.parentNode);
         if (!currentg.classed("collection_g")){
           currentg = d3.select(currentg._groups.pop().pop().parentNode);
         }
 
-        expandCollection.bind(this)(currentg, d);
+        expandCollection.call(this,currentg, d);
 
         ticked();
       }
@@ -1163,7 +1169,7 @@ export default {
         if(currentg.attr("expanded") == "false"){
           currentg.attr("expanded", "true");
 
-          expandCollectionTrue.bind(this)(currentg, d);
+          expandCollectionTrue.call(this,currentg, d);
 
         } else {
           currentg.attr("expanded", "false");
@@ -1188,7 +1194,7 @@ export default {
         tt.append("tspan").text(d.id)
         .attr("dx",15);
 
-        for (let pAttr of this.collectionSpecial){
+        for (let pAttr of dF.collectionSpecial){
           if (d[pAttr]){
             tt.append("tspan").text(`${pAttr}:`)
             .attr("dx",5);
@@ -1207,12 +1213,12 @@ export default {
           }
         }
 
-        tt.selectAll("tspan").attr("dy", 22);
+        tt.selectAll("tspan").attr("dy", 22).attr("x",0);
 
         currentg.select("rect")
         .attr("height", 10 + currentg.select("text").node().getBBox().height)
 
-        currentg.select("rect").attr("width", currentg.node().getBBox().width + 10);
+        currentg.select("rect").attr("width", currentg.select("text").node().getBBox().width + 10);
       }
 
 
@@ -1222,7 +1228,7 @@ export default {
           currentg = d3.select(currentg._groups.pop().pop().parentNode);
         }
 
-        expandShape.bind(this)(currentg, d);
+        expandShape.call(this,currentg, d);
         ticked();
       }
 
@@ -1230,17 +1236,16 @@ export default {
         if(currentg.attr("expanded") == "false"){
           currentg.attr("expanded", "true");
 
-          expandShapeTrue.bind(this)(currentg, d);
+          expandShapeTrue.call(this,currentg, d);
 
         } else {
           currentg.attr("expanded", "false");
 
           currentg.select("text").text((d.type + "").split('#').pop())
-          currentg.select("rect").attr("width", 1);
 
           currentg.select("rect")
           .attr("height", 30)
-          .attr("width", currentg.node().getBBox().width + 10);
+          .attr("width", currentg.select("text").node().getBBox().width + 10);
         }
       }
 
@@ -1248,9 +1253,6 @@ export default {
         currentg.raise();
 
         let textArray = d.shape_extra.split('\n');
-
-        currentg.select("rect")
-        .attr("height", 10 + 20*textArray.length)
 
         currentg.select("text").text("");
 
@@ -1261,8 +1263,10 @@ export default {
           .attr("dy", 20)
           .attr("dx", indent + 5);
         }
-
-        currentg.select("rect").attr("width", currentg.node().getBBox().width + 10);
+        currentg.select("text").selectAll("tspan").attr("x",0);
+        currentg.select("rect")
+        .attr("height", currentg.select("text").node().getBBox().height + 10)
+        .attr("width", currentg.select("text").node().getBBox().width + 10);
       }
 
 

@@ -18,7 +18,7 @@ const { namedNode, defaultGraph } = DataFactory;
 
 //TODO Fix url checks for # identifiers at the end?
 
-export var qtext = [];
+var qtext = [];
 export var jsondata = null;
 export var members = {};
 export var membersFailed = [];
@@ -31,8 +31,8 @@ export var shapeTargets = ['targetClass', 'targetNode', 'targetSubjectsOf', 'tar
 export var collectionSpecial = ["@type", "import", "importStream", "conditionalImport", "totalItems"];
 export var nodeSpecial = ["@type", "import", "importStream", "conditionalImport", "search", "retentionPolicy"];
 export var relationSpecial = ["import", "importStream", "conditionalImport"];
-export var newImportLinks = new Set();
-export var importedQuads = new Map();
+var newImportLinks = new Set();
+var importedQuads = new Map();
 export var myMetadata;
 var collectionRef = {"url":undefined, "collectionStore": undefined};
 export var collectionStats = {};
@@ -121,6 +121,7 @@ export function clearData(){
   shape_report = "";
   newImportLinks = new Set();
   importedQuads = new Map();
+  remarks = "";
 }
 
 
@@ -195,7 +196,7 @@ async function extractShape(store, id){
     })
     .then(v => {
     v.quads.on('data', (quad) => {newq.push(quad); /*console.log(quad)*/})
-    .on('error', (error) => {console.error(error); alert("Error while parsing SHAPE data at:\n"+id+".\n\n"+error)})
+    .on('error', (error) => {console.error(error); let errM = "Error while parsing SHAPE data at:\n"+id+".\n\n"+error+"\n"; remarks += errM; alert(errM);})
     .on('end', () => {
       store2.addQuads(newq);
       return extractShapeNext(store2, quadsWithSubj, id);
@@ -264,19 +265,20 @@ async function derefCollection(collectionUrl, collectionCallBack){
   collectionRef.url = collectionUrl;
   collectionRef.store = new N3.Store();
 
-  console.log("should get collection data from: ", collectionUrl);
+  // console.log("should get collection data from: ", collectionUrl);
 
   let newq = [];
   rdfDereferencer.dereference(collectionUrl)
   .catch((error) => {
     alert("Error trying to get the collection root.\nWill be unable to provide extra information about the collection.\n" + error)
+    remarks += "Error trying to get the collection root.\nWill be unable to provide extra information about the collection.\n" + error + "\n";
     if (collectionCallBack){
       collectionCallBack();
     }
   })
   .then(v => {
     v.quads.on('data', (quad) => {newq.push(quad); /*console.log(quad)*/})
-    .on('error', (error) => {console.error(error); alert("Error while parsing SHAPE data at:\n"+collectionUrl+".\n\n"+error)})
+    .on('error', (error) => {console.error(error); let errM = "Error while parsing SHAPE data at:\n"+collectionUrl+".\n\n"+error+"\n"; remarks += errM; alert(errM);})
     .on('end', () => {
       collectionRef.store.addQuads(newq);
       parseCollectionTreeData(newq);
@@ -383,14 +385,14 @@ function parseCollection(){
 export async function getData(url, callBack, fix, extraClear, collectionCallBack) {
   //Need to always clear these values before getting new data
   qtext = [];
-  remarks = "";
+
 
   //var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/a.nt';
   var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/.root.nt'
   standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a4.nt';
   standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/cht_1_2.ttl';
   // standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/marine1.jsonld';
-  standardURL = 'https://bag2.basisregistraties.overheid.nl/feed/2020-08-14T16:05';
+  // standardURL = 'https://bag2.basisregistraties.overheid.nl/feed/2020-08-14T16:05';
   // standardURL = 'https://raw.githubusercontent.com/TREEcg/TREE-LDES-visualizer/main/src/assets/testerfirst.ttl';
   // standardURL = 'https://raw.githubusercontent.com/TREEcg/TREE-LDES-visualizer/main/src/assets/testerMultipleImports.ttl';
   // standardURL = 'https://raw.githubusercontent.com/TREEcg/TREE-LDES-visualizer/main/src/assets/testerfirst.ttl';
@@ -417,9 +419,11 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
 
   data_url = standardURL;
 
+  remarks += "\nRemarks for "+data_url+":\n";
+
   const {quads} = await rdfDereferencer.dereference(standardURL);
   quads.on('data', (quad) => {qtext.push(quad); /*console.log(quad)*/})
-  .on('error', (error) => {console.error(error); alert("Error while parsing data at:\n"+standardURL+".\n\n"+error)})
+  .on('error', (error) => {console.error(error); let errM = "Error while parsing data at:\n"+standardURL+".\n\n"+error+"\n";remarks += errM; alert(errM);})
   .on('end', () => {
     extractMetadata(qtext).then(metadata => {
       console.log("metadata:");
@@ -437,6 +441,7 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
         errorText += "\ncheck tree:view, hydra:view, void:subset, dct:isPartOf, as:partOf.";
         errorText += "\nOther causes: \nmembers/shape are linked not to the collection but the node.";
         errorText += "\ncheck tree:member, hydra:member, as:items, ldp:contains.";
+        remarks += errorText + "\n";
         alert(errorText);
       }
 
@@ -444,13 +449,17 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
       // If no 'new' collection was found, we might already have a collection stored
       if (metadata.collections.size == 0){
         if (jsondata.collection.length == 0){
-          alert("No collection pre-defined and no collection found on " + standardURL + ".\nPlease provide a different starting URL.");
+          let errM = "No collection pre-defined and no collection found on " + standardURL + ".\nPlease provide a different starting URL.\n";
+          remarks += errM;
+          alert(errM);
           return;
         }
 
         if (!jsondata[standardURL+"_node"]){
           jsondata[standardURL+"_node"] = [];
-          alert("no collection metadata found at " + standardURL + ".\nWill add an empty node for this URL.");
+          let errM = "no collection metadata found at " + standardURL + ".\nWill add an empty node for this URL.\n";
+          remarks += errM;
+          alert(errM);
           jsondata.nodes.push({"id":standardURL+"_node", "name":standardURL, "relation_count":0})
           if (jsondata.links.has(jsondata.collection[0].id)){
             jsondata.links.get(jsondata.collection[0].id).add(standardURL+"_node");
@@ -495,6 +504,7 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
           errorText += '\n' + "current URL: " + standardURL;
           errorText += '\n' + "new collection: " + collectionId;
           errorText += '\n' + "original collection: " + jsondata.collection[0].id;
+          remarks += errorText+"\n";
           alert(errorText);
           return;
         }
@@ -667,24 +677,23 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
             let newQuads = [];
             rdfDereferencer.dereference(url)
             .catch((e) => {
-              alert(e);
+              console.error(e);
               resolve();
             })
             .then(v => {v.quads.on('data', (quad) => {newQuads.push(quad)})
-              .on('error', (error) => {console.error(error); alert("Error while parsing import data at:\n"+url+"\n\n" +error); reject()})
+              .on('error', (error) => {console.error(error); let errM = "Error while parsing import data at:\n"+url+"\n\n" +error+"\n"; remarks+= errM;alert(errM); reject()})
               .on('end', () => {
                 importedQuads.set(url, newQuads);
                 store.addQuads(newQuads);
                 resolve();
               })
             }).catch((e) => {
-              alert(e);
+              console.error(e);
               resolve();
             })
           }))
 
           Promise.all(importPromises).then(() => {
-            console.log("at promise");
             if (collectionObj.member){
               let membIds = [];
 
@@ -754,7 +763,9 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
 
             var relationObj = metadata.relations.get(relationJson.id);
             if (!relationObj.node || !relationObj.node[0]['@id']){
-              alert("Error: relation from " + nodeId + " has no node defined!\nThis is not allowed!\nRelation: " + JSON.stringify(relationObj, null, '\t'));
+              let errM = "Error: relation from " + nodeId + " has no node defined!\nThis is not allowed!\nRelation: " + JSON.stringify(relationObj, null, '\t') + "\n\n";
+              remarks += errM;
+              alert(errM);
               break;
             }
             relationJson.node = relationObj.node;
@@ -813,10 +824,10 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
 
       }
 
-      if (remarks != ""){
-        alert(remarks);
-        console.log(remarks);
-      }
+      // if (remarks != ""){
+      //   alert(remarks);
+      //   console.log(remarks);
+      // }
 
       console.log("jsondata:");
       console.log(jsondata);
@@ -867,7 +878,9 @@ function validateShape(membIds, store, newNodeMembersId, fix){
   const shapeIds = getShapeIds(store);
 
   if (shapeIds.size > 1){
-    alert("Found multiple shapes, will only validate using the first one.\n" + JSON.stringify(shapeIds));
+    let errM = "Found multiple shapes, will only validate using the first one.\n" + JSON.stringify(shapeIds);
+    alert(errM);
+    remarks += errM;
   }
   if (shapeIds.size == 0){
     remarks += "URL did not include a shacl shape given via tree:shape or st:validatedBy.\n"

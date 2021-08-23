@@ -41,11 +41,14 @@
   <div style="white-space: pre">{{collectionStats}}</div>
 
   <!-- <button v-on:click="validateAll()">Validate and add all reachable nodes</button><br> -->
-
-  <div id="currentPage"></div>
-  <div id="graph" style="overflow:scroll; resize: both;"></div>
-  <div id="members"></div>
-  <div id="log"></div>
+  <div class="flexContainer">
+    <div id="currentPage"></div>
+    <div id="graph" style="overflow:scroll; resize: both;"></div>
+  </div>
+  <div class="flexContainer">
+    <div id="members"></div>
+    <div id="log"></div>
+  </div>
 
   <p>All members conform to shape: {{this.shape_validation}}</p>
 
@@ -152,7 +155,8 @@ export default {
       relationSpecial: ["import", "importStream", "conditionalImport"],
       newImportLinks: new Set(),
       importedQuads: new Map(),
-      emptyURL: ""
+      emptyURL: "",
+      urlList: []
     }
   },
   // watch: {
@@ -165,36 +169,20 @@ export default {
 
   created() {
     var listUrl = ("" + window.location).split('?p=');
+    this.urlList = JSON.parse(JSON.stringify(listUrl));
     this.emptyURL = listUrl.shift();
     listUrl = listUrl.map(v => decodeURIComponent(v));
     if (listUrl.length > 0){
       const lastUrl = listUrl.pop();
       dF.clearData();
-      const finished = listUrl.map(url => new Promise(resolve => {
-        console.log("mapping");
-        var promiseResolve1;
-        var p1 = new Promise(function(resolve){
-          promiseResolve1 = resolve;
-        });
 
-        var promiseResolve2;
-        var p2 = new Promise(function(resolve){
-          promiseResolve2 = resolve;
-        });
+      var promiseResolve;
+      var p = new Promise(function(resolve){
+        promiseResolve = resolve;
+      });
+      this.derefList(listUrl.shift(), listUrl, promiseResolve);
 
-        var promiseResolve3;
-        var p3 = new Promise(function(resolve){
-          promiseResolve3 = resolve;
-        });
-        dF.getData(url, promiseResolve1, promiseResolve2, undefined, promiseResolve3)
-
-        Promise.all([p1, p2, p3]).then(() => {
-          resolve();
-        })
-      }));
-
-      Promise.all(finished).then(() => this.derefUrl(lastUrl));
-
+      p.then(() => this.derefUrl(lastUrl));
     }
   },
   methods : {
@@ -206,10 +194,36 @@ export default {
 
       if (!url){
         window.history.pushState({}, document.title, this.emptyURL+"?p="+encodeURIComponent(dF.data_url));
-      } else {
+        this.urlList = [dF.data_url];
+      } else if (!this.urlList.includes(dF.data_url)){
         window.history.pushState({}, document.title, window.location+"?p="+encodeURIComponent(dF.data_url));
+        this.urlList.push(dF.data_url);
       }
 
+    },
+    derefList(url, list, promiseResolve){
+      var promiseResolve1;
+      var p1 = new Promise(function(resolve){
+        promiseResolve1 = resolve;
+      });
+
+      var promiseResolve2;
+      var p2 = new Promise(function(resolve){
+        promiseResolve2 = resolve;
+      });
+
+      var promiseResolve3;
+      var p3 = new Promise(function(resolve){
+        promiseResolve3 = resolve;
+      });
+      dF.getData(url, promiseResolve1, promiseResolve2, undefined, promiseResolve3)
+      Promise.all([p1, p2, p3]).then(() => {
+        if (list.length == 0){
+          promiseResolve();
+        } else {
+          this.derefList(list.shift(), list, promiseResolve);
+        }
+      });
     },
     derefUrl(url){
       var promiseResolve1;
@@ -253,26 +267,47 @@ export default {
       this.importedQuads = dF.importedQuads;
     },
     svgClear(){
-      d3.select("#extra").selectAll("svg").remove();
+      d3.selectAll("div").selectAll("svg").remove();
       this.svgHolder = null;
       this.svgGHolder = null;
     },
     cB(){
       this.copyData();
+
+      if (!this.findLastNode(dF.data_url)){
+        if (dF.myMetadata.nodes && dF.myMetadata.nodes.size > 0){
+          this.findLastNode(Array.from(dF.myMetadata.nodes.keys())[0])
+        }
+      }
+
       this.drawGraph();
+    },
+    findLastNode(lastUrl){
+      let found = false;
       if (this.jsondata.nodes.length > 0){
         for (let n of this.jsondata.nodes){
-          if (n.name == dF.data_url){
+          if (n.name == lastUrl){
+            n.selected = true;
             this.drawExtra(n);
-          }
-        }
-      } else if (this.jsondata.views.length > 0){
-        for (let n of this.jsondata.views){
-          if (n.name == dF.data_url){
-            this.drawExtra(n);
+            found = true;
+          } else {
+            n.selected = false;
           }
         }
       }
+
+      if (this.jsondata.views.length > 0){
+        for (let n of this.jsondata.views){
+          if (n.name == lastUrl){
+            n.selected = true;
+            this.drawExtra(n);
+            found = true;
+          } else {
+            n.selected = false;
+          }
+        }
+      }
+      return found;
     },
     collectionCB(){
       this.collectionAttributes = dF.collectionAttributes;
@@ -352,11 +387,6 @@ export default {
 
 
       function expandRelationHolder(d){
-        // let newG = svgEG.append("g").attr("class", "new_g");
-        // let tt = newG.append("text");
-
-        // expandRelationHolderNodeInfo.call(this, d, tt);
-
         let offH = tt.node().getBBox().height + 30;
         let innerg = newG.append("svg:foreignObject")
           .attr("x", 50)
@@ -411,19 +441,6 @@ export default {
 
         let bboxT = table.node();
         innerg.attr("width", bboxT.offsetWidth).attr("height", bboxT.offsetHeight);
-
-        // newG.append("rect").attr("x", 0).attr("y", 0).style("stroke", "#69b3a2")
-        // .attr("width", newG.node().getBBox().width+30)
-        // .attr("height", newG.node().getBBox().height+30)
-        // .attr("class", "outer_rect")
-        // .lower();
-        //
-        //
-        // // Make the main svg holding this large enough to show everything
-        // let bbox = svgEG.node().getBBox();
-        // svgE.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
-        // .attr("width", (bbox.width+bbox.x))
-        // .attr("height", (bbox.height+bbox.y));
       }
 
 
@@ -787,7 +804,7 @@ export default {
 
       const linkData = [];
       this.jsondata.links.forEach((s, k) => {s.forEach(v => linkData.push({"source":k,"target":v}))});
-      console.log("linkData: ", linkData);
+      // console.log("linkData: ", linkData);
       var all = this.jsondata.collection.concat(this.jsondata.shapes.concat(this.jsondata.nodes.concat(this.jsondata.views)));
 
       // append the svg object to the body of the page
@@ -796,40 +813,6 @@ export default {
       .attr("width", "100%")
       .attr("height", "100%")
       .attr("pointer-events", "all");
-
-      // check if the extra info svgs exist, if not create them
-      // This gets cleared in getData if we change collections
-      if (!this.svgHolder){
-        this.svgHolder =
-        [
-          d3.select("#currentPage")
-          .append("svg")
-          .attr("pointer-events", "all"),
-          d3.select("#members")
-          .append("svg")
-          .attr("pointer-events", "all"),
-          d3.select("#extra")
-          .append("svg")
-          .attr("pointer-events", "all")
-        ]
-        this.svgGHolder =
-        [
-          this.svgHolder[0].append("g"),
-          this.svgHolder[1].append("g"),
-          this.svgHolder[2].append("g")
-        ]
-        d3.select("#graph")
-        .style("width", width + margin.left + margin.right+"px")
-        .style("height", height + margin.top + margin.bottom+"px");
-      }
-
-      const svgE = this.svgHolder[0];
-      const svgM = this.svgHolder[1];
-      // const svgS = this.svgHolder[2];
-
-      const svgEG = this.svgGHolder[0];
-      const svgMG = this.svgGHolder[1];
-      // const svgSG = this.svgGHolder[2];
 
 
       svg.append("marker")
@@ -893,7 +876,12 @@ export default {
         .data(this.jsondata.views)
         .join("g")
         .attr("class", "view_g main_g")
-        .on("click", function(e, d) {drawCurrentPageBound(d); drawMembersBound(d)})
+        .on("click", function(e, d) {
+          svg.selectAll("rect").style("stroke-width", "1");
+          drawCurrentPageBound(d);
+          drawMembersBound(d);
+          d3.select(this).selectAll("rect").style("stroke-width", "3");
+        })
         .call(d3.drag()
         .on("start", dragstartX)
         .on("end", dragendX)
@@ -934,6 +922,13 @@ export default {
           .attr("width", d3.select(tg).select("text").node().getBBox().width+15)
           .attr("height", d3.select(tg).select("text").node().getBBox().height+10)
           .style("stroke", "#69b3a2")
+          .style("stroke-width", function(d){
+            if (d.selected){
+              return "3";
+            } else {
+              return "1";
+            }
+          })
           .lower();
         }
       }
@@ -979,7 +974,12 @@ export default {
         .data(this.jsondata.nodes)
         .join("g")
         .attr("class", "node_g main_g")
-        .on("click", function(e, d) {drawCurrentPageBound(d); drawMembersBound(d)})
+        .on("click", function(e, d) {
+          svg.selectAll("rect").style("stroke-width", "1");
+          drawCurrentPageBound(d);
+          drawMembersBound(d);
+          d3.select(this).selectAll("rect").style("stroke-width", "3");
+        })
         .call(d3.drag()
         .on("start", dragstartX)
         .on("end", dragendX)
@@ -1013,6 +1013,13 @@ export default {
           .attr("width", d3.select(tg).select("text").node().getBBox().width+15)
           .attr("height", d3.select(tg).select("text").node().getBBox().height+10)
           .style("stroke", "#69b3a2")
+          .style("stroke-width", function(d){
+            if (d.selected){
+              return "3";
+            } else {
+              return "1";
+            }
+          })
           .lower();
         }
       }
@@ -1258,442 +1265,6 @@ export default {
         currentg.select("rect").attr("width", currentg.node().getBBox().width + 10);
       }
 
-      console.log(clickRelationHolder);
-      // Only d is used and only for id, name, relation_count so standalone would be possible, with access to the extracted data ofcourse
-      function clickRelationHolder(e, d){
-        // Remove all previous showing details
-        for (let sX of this.svgGHolder){
-          sX.selectAll("g").remove();
-        }
-
-        // Display everything first so they have a correct viewbox attribute to use in calculations
-        for (let sX of this.svgHolder){
-          sX.attr("display", "inline");
-        }
-        this.open();
-
-        if (d.relation_count && d.relation_count > 0){
-          expandRelationHolder.bind(this)(d);
-        }
-
-        showMemberHolder.call(this, d);
-      }
-
-
-      function showMemberHolder(d, offsetH = 0){
-        let newG = svgMG.append("g").attr("class", "new_g");
-        let sortIndex = 0;
-
-        if (this.membersFailed && this.membersFailed[d.name]){
-          for (let tempA of this.membersFailed[d.name]){
-            let innerG = newG.append("g")
-            .attr("sortIndex", sortIndex)
-            .attr("expanded", "false")
-            .attr("class", "member_g")
-            .attr("y", 22+44*sortIndex + offsetH);
-
-            let tt = innerG.append("text").text(tempA)
-            .attr("sortIndex", sortIndex)
-            .attr("y", 22+44*sortIndex + offsetH);
-
-            tt.style("fill", "#FF0000");
-
-            innerG.on("click", expandMember.bind(this, d, innerG, tempA, newG, false));
-
-            sortIndex++;
-          }
-        }
-
-        if (this.members[d.name]){
-          for (let tempA of this.members[d.name].keys()){
-            if (!this.membersFailed[d.name].includes(tempA)){
-              let innerG = newG.append("g")
-              .attr("sortIndex", sortIndex)
-              .attr("expanded", "false")
-              .attr("class", "member_g")
-              .attr("y", 22+44*sortIndex + offsetH);
-
-              innerG.append("text").text(tempA)
-              .attr("sortIndex", sortIndex)
-              .attr("y", 22+44*sortIndex + offsetH);
-
-              innerG.on("click", expandMember.bind(this, d, innerG, tempA, newG, true));
-
-              sortIndex++;
-            }
-          }
-        }  else if (!this.members[d.name]){
-          newG.append("g").append("text").text("This node has no members.")
-          .attr("dy", 20)
-          .attr("dx", 5)
-          .attr("x", 0)
-          .attr("y", 22 + offsetH);
-        }
-
-        let bbox = svgMG.node().getBBox();
-        svgM.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
-        .attr("width", (bbox.width+bbox.x))
-        .attr("height", (bbox.height+bbox.y));
-      }
-
-
-      function expandMember(d, innerG, k, newG, showAll){
-        let heightStart = innerG.node().getBBox().height;
-
-        if (innerG.attr("expanded") == "false"){
-          innerG.attr("expanded", "true");
-          let textArray = [];
-          let tempA = this.members[d.name].get(k)
-          if (tempA.includes('\n')){
-            for (let tempB of tempA.split('\n')){
-              textArray.push(tempB);
-            }
-          } else {
-            textArray.push(tempA);
-          }
-
-
-          innerG.select("text").text("");
-
-          for (let textX of textArray){
-            let indent = (textX.split('\t').length -1) * 20;
-            innerG.select("text").append('tspan')
-            .text(" " + textX)
-            .attr("dy", 20)
-            .attr("dx", indent + 5)
-            .attr("x", 0);
-          }
-
-          if (showAll === false && this.node_validation[k]){
-            textArray = this.node_validation[k].split('\n');
-
-            //Empty line between member & report
-            innerG.select("text").append('tspan')
-            .text(" ")
-            .attr("dy", 20)
-            .attr("dx", 25)
-            .attr("x", 0);
-
-            for (let textX of textArray){
-              let indent = (textX.split('\t').length -1) * 20;
-              innerG.select("text").append('tspan')
-              .text(" " + textX)
-              .attr("dy", 20)
-              .attr("dx", indent + 25)
-              .attr("x", 0);
-            }
-          }
-
-
-        } else {
-          innerG.attr("expanded", "false");
-          innerG.select("text").text(k);
-          heightStart += 44;
-        }
-
-        let heightNew = innerG.node().getBBox().height - heightStart + 22;
-
-        for(let tn of newG.selectAll(".member_g")){
-          if (Number(d3.select(tn).attr("sortIndex")) > Number(innerG.attr("sortIndex"))){
-            d3.select(tn).attr("y", heightNew + Number(d3.select(tn).attr("y")));
-            d3.select(tn).selectAll("text").attr("y", d3.select(tn).attr("y"));
-
-          }
-        }
-
-        let bbox = svgMG.node().getBBox();
-        svgM.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
-        .attr("width", (bbox.width+bbox.x))
-        .attr("height", (bbox.height+bbox.y));
-      }
-
-
-      function expandRelationHolder(d){
-        let newG = svgEG.append("g").attr("class", "new_g");
-        let tt = newG.append("text");
-
-        expandRelationHolderNodeInfo.call(this, d, tt);
-
-        let offH = tt.node().getBBox().height + 30;
-        let innerg = newG.append("svg:foreignObject")
-          .attr("x", 50)
-          .attr("y", offH)
-          .attr("width", 600)
-          .attr("height", 600);
-
-        var table = innerg.append('xhtml:table');
-        var thead = table.append('thead');
-        var	tbody = table.append('tbody').attr("id", "my_tbody");
-
-        var tableColumns = ["type", "value", "path"];
-        var tableData = parseTableData.call(this, d);
-
-
-        // append the header row
-        thead.append('tr')
-        .selectAll('th')
-        .data(tableColumns).enter()
-        .append('th')
-        .text(function (column) { return column; });
-
-
-        tbody = document.getElementById("my_tbody")
-
-        let count = 0;
-        for (let dataX of tableData){
-          let trX = tbody.insertRow();
-          trX.id = "small"+count;
-          trX.onclick = tableClick.bind(this, count, this.jsondata[d.id][count], newG, innerg, table, true)
-
-          for(let valueX of Object.values(dataX)){
-            let textX = document.createTextNode(valueX);
-            let tdX = trX.insertCell();
-            tdX.appendChild(textX);
-          }
-
-          trX = tbody.insertRow();
-          trX.style.visibility = "collapse";
-          trX.id = "large"+count;
-          trX.onclick = tableClick.bind(this, count, this.jsondata[d.id][count], newG, innerg, table, false)
-
-          let textX = document.createTextNode(createExtraCell.call(this, this.jsondata[d.id][count]));
-
-          let tdX = trX.insertCell();
-          tdX.classList.add('spacing');
-          tdX.colSpan = tableColumns.length;
-          tdX.appendChild(textX);
-
-          count++;
-        }
-
-        let bboxT = table.node();
-        innerg.attr("width", bboxT.offsetWidth).attr("height", bboxT.offsetHeight);
-
-        newG.append("rect").attr("x", 0).attr("y", 0).style("stroke", "#69b3a2")
-        .attr("width", newG.node().getBBox().width+30)
-        .attr("height", newG.node().getBBox().height+30)
-        .attr("class", "outer_rect")
-        .lower();
-
-
-        // Make the main svg holding this large enough to show everything
-        let bbox = svgEG.node().getBBox();
-        svgE.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
-        .attr("width", (bbox.width+bbox.x))
-        .attr("height", (bbox.height+bbox.y));
-      }
-
-
-
-      function expandRelationHolderNodeInfo(d, tt){
-        tt.append("tspan").text("Node")
-        .attr("dy", 22)
-        .attr("dx",5);
-
-        tt.append("tspan").text(d.name)
-        .attr("dy", 22)
-        .attr("x",0)
-        .attr("dx",5);
-
-        tt.append("tspan").text("relations: " + d.relation_count)
-        .attr("dy", 22)
-        .attr("x",0)
-        .attr("dx",15);
-
-        for (let pAttr of this.nodeSpecial){
-          if (d[pAttr]){
-            tt.append("tspan").text(`${pAttr}:`)
-            .attr("dy", 22)
-            .attr("x",0)
-            .attr("dx",5);
-            for (const value of Object.values(d[pAttr])) {
-              let textArray = JSON.stringify(value, null, '\t').split('\n');
-              let regex = /^(\t*{\t*)|(\t*}\t*)|(\t*],*\t*)$/g;
-              for (let textX of textArray){
-                if (!textX.match(regex)){
-                  let indent = (textX.split('\t').length -1) * 20;
-                  tt.append('tspan')
-                  .text(" " + textX.replace(': [',': '))
-                  .attr("dy", 22)
-                  .attr("dx", indent + 5)
-                  .attr("x", 0);
-                }
-
-              }
-            }
-          }
-        }
-      }
-
-
-      function parseTableData(d){
-        var tableData = [];
-        for (let relX of this.jsondata[d.id]){
-          let rowData = {};
-          if(relX.type){
-            rowData.type = (relX.type + "").split('#').pop();
-          } else {
-            rowData.type = "No Type";
-          }
-
-          if (relX.value){
-            let tempV = ""
-            for (let v of relX.value){
-              if(!v['@value']){
-                tempV += 'Nested value, expand to view';
-              } else {
-                tempV += v['@value'] + ", ";
-              }
-            }
-            rowData.value = tempV.slice(0,-2);
-          } else {
-            rowData.value = "No Value";
-          }
-
-          if (relX.path){
-            let tempP = ""
-            for (let v of relX.path){
-              if(!v['@id']){
-                tempP += 'Nested path, expand to view';
-              } else {
-                tempP += v['@id'];
-              }
-            }
-            rowData.path = tempP;
-          } else {
-            rowData.path = "No Path";
-          }
-          tableData.push(rowData);
-        }
-        return tableData;
-      }
-
-
-
-      function tableClick(index, relationData, newG, innerg, table, expand = true){
-        if (window.event.ctrlKey) {
-          dF.addImportLinks(relationData);
-          this.start(relationData.node[0]["@id"]);
-          return;
-        }
-
-        if (expand === true){
-          document.getElementById("large"+index).style.visibility = "visible";
-          document.getElementById("small"+index).style.visibility = "collapse";
-        } else {
-          document.getElementById("small"+index).style.visibility = "visible";
-          document.getElementById("large"+index).style.visibility = "collapse";
-        }
-
-        newG.selectAll(".outer_rect").attr("width", 0).attr("height", 0);
-        let bboxT = table.node();
-        innerg.attr("width", bboxT.offsetWidth).attr("height", bboxT.offsetHeight);
-
-        newG.selectAll(".outer_rect").attr("width", newG.node().getBBox().width+30)
-        .attr("height", newG.node().getBBox().height+30);
-
-        let bbox = svgEG.node().getBBox();
-        svgE.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
-        .attr("width", (bbox.width+bbox.x))
-        .attr("height", (bbox.height+bbox.y));
-      }
-
-
-
-      function createExtraCell(relX){
-        const regex = /^(\t*{\t*)|(\t*}\t*)|(\t*],*\t*)$/g;
-        let textX = "";
-        if (relX.type){
-          textX += "type: " + relX.type + "\n";
-        } else {
-          textX += "Relation has no type" + "\n";
-        }
-
-        if (relX.value){
-          for (let v of relX.value){
-            if(!v['@value']){
-              textX += "value: " + "\n";
-              let textArray = JSON.stringify(v, null, '\t').split('\n');
-              for (let textXX of textArray){
-                if (!textXX.match(regex)){
-                  if (textXX.slice(-1) == '['){
-                    textX += textXX.slice(0,-1) + "\n";
-                  } else {
-                    textX += textXX + "\n";
-                  }
-                }
-              }
-            } else {
-              textX += "value: " + v['@value'] + "\n";
-            }
-          }
-        } else {
-          textX += "Relation has no value" + "\n";
-        }
-
-
-        if (relX.path){
-          for (let v of relX.path){
-            if(!v['@id']){
-              textX += "path: " + "\n";
-              let textArray = JSON.stringify(v, null, '\t').split('\n');
-              for (let textXX of textArray){
-                if (!textXX.match(regex)){
-                  if (textXX.slice(-1) == '['){
-                    textX += textXX.slice(0,-1) + "\n";
-                  } else {
-                    textX += textXX + "\n";
-                  }
-                }
-              }
-            } else {
-              textX += "path: " + v['@id'] + "\n";
-            }
-          }
-        } else {
-          textX += "Relation has no path" + "\n";
-        }
-
-        if (relX.node){
-          for (let v of relX.node){
-            textX += "node: " + v['@id'] + "\n";
-          }
-        } else {
-          textX += "Relation has no node" + "\n";
-        }
-
-
-        if (relX.remainingItems){
-          for (let v of relX.remainingItems){
-            textX += "remainingItems: " + v['@value'] + "\n";
-            if(v['@type']){
-              textX += "remainingItemsType: " + v['@type'] + "\n";
-            }
-          }
-        }
-
-        for (let pAttr of this.relationSpecial){
-          if (relX[pAttr]){
-            textX += `${pAttr}:` + "\n";
-            for (const value of Object.values(relX[pAttr])) {
-              let textArray = JSON.stringify(value, null, '\t').split('\n');
-              for (let textXX of textArray){
-                if (!textXX.match(regex)){
-                  if (textXX.slice(-1) == '['){
-                    textX += textXX.slice(0,-1) + "\n";
-                  } else {
-                    textX += textXX + "\n";
-                  }
-                }
-
-              }
-            }
-          }
-        }
-        return textX;
-      }
-
-
 
     }
 
@@ -1762,6 +1333,38 @@ export default {
   border-left-style: solid;
   border-right-style: solid;
   border-width: 1px;
+}
+
+/* <div id="currentPage"></div>
+<div id="graph" style="overflow:scroll; resize: both;"></div>
+<div id="members"></div>
+<div id="log"></div> */
+
+#currentPage, #graph, #members, #log {
+  height: 50vh;
+  resize: both;
+  overflow:scroll;
+  width: 40vw;
+  margin-right: 3.3vw;
+  margin-top: 3.5vh;
+}
+
+#currentPage{
+
+}
+#graph{
+
+}
+#members{
+
+}
+#log{
+
+}
+
+.flexContainer {
+  display: flex;
+  flex-direction: row;
 }
 
 .container {

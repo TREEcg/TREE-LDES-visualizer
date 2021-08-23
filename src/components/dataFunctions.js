@@ -33,7 +33,7 @@ export var nodeSpecial = ["@type", "import", "importStream", "conditionalImport"
 export var relationSpecial = ["import", "importStream", "conditionalImport"];
 export var newImportLinks = new Set();
 export var importedQuads = new Map();
-var myMetadata;
+export var myMetadata;
 var collectionRef = {"url":undefined, "collectionStore": undefined};
 export var collectionStats = {};
 const dcterms = 'http://purl.org/dc/terms/';
@@ -390,7 +390,7 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
   standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/stops_a4.nt';
   standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/cht_1_2.ttl';
   // standardURL = 'https://raw.githubusercontent.com/Mikxox/visualizer/main/src/assets/marine1.jsonld';
-  // standardURL = 'https://bag2.basisregistraties.overheid.nl/feed/2020-08-14T16:05';
+  standardURL = 'https://bag2.basisregistraties.overheid.nl/feed/2020-08-14T16:05';
   // standardURL = 'https://raw.githubusercontent.com/TREEcg/TREE-LDES-visualizer/main/src/assets/testerfirst.ttl';
   // standardURL = 'https://raw.githubusercontent.com/TREEcg/TREE-LDES-visualizer/main/src/assets/testerMultipleImports.ttl';
   // standardURL = 'https://raw.githubusercontent.com/TREEcg/TREE-LDES-visualizer/main/src/assets/testerfirst.ttl';
@@ -422,9 +422,10 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
   .on('error', (error) => {console.error(error); alert("Error while parsing data at:\n"+standardURL+".\n\n"+error)})
   .on('end', () => {
     extractMetadata(qtext).then(metadata => {
-      myMetadata = metadata;
       console.log("metadata:");
       console.log(metadata);
+
+      myMetadata = metadata;
 
       const store = new N3.Store(qtext)
 
@@ -432,7 +433,7 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
       if (metadata.collections.size > 1){
         let errorText = "";
         errorText += "ERROR: found multiple collections! This is not allowed.\n";
-        errorText += JSON.stringify(metadata.collections, null, '/t');
+        errorText += JSON.stringify(Array.from(metadata.collections.entries()), null, '/t');
         errorText += "\ncheck tree:view, hydra:view, void:subset, dct:isPartOf, as:partOf.";
         errorText += "\nOther causes: \nmembers/shape are linked not to the collection but the node.";
         errorText += "\ncheck tree:member, hydra:member, as:items, ldp:contains.";
@@ -572,6 +573,7 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
           }
         }
 
+        //NOTICE a node can be in both .subset and .view!
         let iter = [];
         if (collectionObj.subset){
           iter = iter.concat(collectionObj.subset);
@@ -643,12 +645,15 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
         if(metadata.nodes && metadata.nodes.size > 0){
           var newNodeMembersId;
           if (metadata.nodes.size > 0){
-            newNodeMembersId = Array.from(metadata.nodes.keys()).pop();
+            newNodeMembersId = Array.from(metadata.nodes.keys());
           } else {
-            newNodeMembersId = standardURL;
+            newNodeMembersId = [standardURL];
           }
           // const newNodeMembersId = jsondata.nodes[jsondata.nodes.length -1].name;
-          members[newNodeMembersId] = new Map();
+          for (let mId of newNodeMembersId){
+            members[mId] = new Map();
+          }
+
 
 
           importedQuads.forEach((v,k) => {
@@ -687,7 +692,9 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
                 new Promise((resolve) => {
                   membIds.push(m['@id']);
                   extractId(store, m['@id']).then(mtemp => {
-                    members[newNodeMembersId].set(m['@id'], mtemp);
+                    for (let mId of newNodeMembersId){
+                      members[mId].set(m['@id'], mtemp);
+                    }
                     resolve();
                   })
                 })
@@ -707,7 +714,7 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
               }).catch(() => fix());
 
             } else {
-              remarks += "Found no members for " + newNodeMembersId + ".\n";
+              remarks += "Found no members at " + standardURL + ".\n";
               fix();
             }
           });
@@ -816,7 +823,6 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
 
       console.log("members:");
       console.log(members);
-      console.log("membs1", JSON.parse(JSON.stringify(members)));
 
 
       // TODO shape is defined on the collection so shape is never allowed to change
@@ -853,8 +859,11 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
 
 function validateShape(membIds, store, newNodeMembersId, fix){
   console.log("validating");
-  membersFailed[newNodeMembersId] = [];
-  node_validation[newNodeMembersId] = {};
+  for (let mId of newNodeMembersId){
+    membersFailed[mId] = [];
+    node_validation[mId] = {};
+  }
+
   const shapeIds = getShapeIds(store);
 
   if (shapeIds.size > 1){
@@ -898,7 +907,7 @@ function validateShape(membIds, store, newNodeMembersId, fix){
         shape_validation = report.conforms;
       }
 
-      shape_report += "\nResult report for "+newNodeMembersId+":\n";
+      shape_report += "\nResult report for "+data_url+":\n";
 
       for (const result of report.results) {
         // See https://www.w3.org/TR/shacl/#results-validation-result for details about each property
@@ -910,7 +919,9 @@ function validateShape(membIds, store, newNodeMembersId, fix){
         }
         mX += "path: " + result.path['value'] + "\n";
         mX += "focusNode: " + result.focusNode['value'] + "\n";
-        membersFailed[newNodeMembersId].push(result.focusNode['value']);
+        for (let mId of newNodeMembersId){
+          membersFailed[mId].push(result.focusNode['value']);
+        }
         mX += "severity: " + result.severity['value'] + "\n";
         mX += "sourceConstraintComponent: " + result.sourceConstraintComponent['value'] + "\n";
         mX += "sourceShape: " + result.sourceShape['value'] + "\n";

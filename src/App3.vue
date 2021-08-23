@@ -19,26 +19,18 @@
     </ul>
   </div>
 
-  <!-- <input type="url" list="exT" v-model="data_url" placeholder="URL" name="url" v-on:keyup.enter="start(undefined)">
-  <datalist id="exT">
-    <option v-on:click="setUrl(valueX)" v-for="[keyX, valueX] in this.exampleMap" v-bind:key="keyX">
-      {{keyX}}
-    </option>
-  </datalist> -->
-
-  <!-- <datalist id="browsers">
-  <option value="Chrome"></option>
-  <option value="Firefox"></option>
-  <option value="Internet Explorer"></option>
-  <option value="Opera"></option>
-  <option value="Safari"></option>
-  <option value="Microsoft Edge"></option>
-</datalist> -->
-
   <!-- <br> -->
   <button v-on:click="start(undefined)">Go</button>
 
-  <div style="white-space: pre">{{collectionStats}}</div>
+  <div id="information" style="white-space: pre">
+    <p>{{this.rootInfo}}</p>
+    <p>{{this.mainInfo}}</p>
+    <p>{{this.collectionStats}}</p><br>
+    <p>{{this.identifies}}</p>
+    <p>{{this.remaining}}</p>
+    <p>{{this.remainingMembers}}</p>
+  </div>
+
 
   <!-- <button v-on:click="validateAll()">Validate and add all reachable nodes</button><br> -->
   <div class="flexContainer">
@@ -157,8 +149,17 @@ export default {
   data(){
     return {
       exampleMap: new Map([
-        ["cultureelerfgoed", "https://treecg.github.io/demo_data/cht/1.ttl"],
-        ["train stops", "https://github.com/TREEcg/demo_data/blob/master/stops/.root.ttl"]
+        // ["cultureelerfgoed", "https://treecg.github.io/demo_data/cht/1.ttl"],
+        // ["train stops", "https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/.root.ttl"],
+        ["Streets of Flemish Address Registry", "https://tree.linkeddatafragments.org/data/addressregister/streetnames/"],
+        ["Visual Thesaurus for Fashion & Costumes", "https://treecg.github.io/demo_data/vtmk.ttl"],
+        ["Municipalities of Flemish Address Registry", "https://tree.linkeddatafragments.org/data/addressregister/municipalities/"],
+        ["Cultural Historic Thesaurus", "https://treecg.github.io/demo_data/cht.ttl"],
+        ["Public Transport Stops in Flanders", "https://treecg.github.io/demo_data/stops.ttl"],
+        ["Digital Heritage Fragments about WW2", "https://demo.netwerkdigitaalerfgoed.nl/fragments/wo2/"],
+        ["Demo data Shacl validation", "https://raw.githubusercontent.com/TREEcg/TREE-LDES-visualizer/main/src/assets/cht_1_2.ttl"],
+        ["Demo data Import statements", "https://raw.githubusercontent.com/TREEcg/TREE-LDES-visualizer/main/src/assets/testerMultipleImports.ttl"],
+        ["Demo data ldes stream", "https://graph.irail.be/sncb/connections/feed"]
       ]),
       svgHolder: null,
       svgGHolder: null,
@@ -176,16 +177,21 @@ export default {
       selected: 0,
       alpha_decay_rate: 0.5,//1 - Math.pow(0.001, 1 / 300)
       emptyURL: "",
-      urlList: []
+      urlList: [],
+      rootInfo: "",
+      mainInfo: "",
+      remaining: "",
+      remainingMembers: "",
+      identifies: ""
     }
   },
-  // watch: {
-  //   selected: {
-  //     handler() {
-  //       this.drawing.setVisible();
-  //     },
-  //   }
-  // },
+  watch: {
+    picked: {
+      handler() {
+        this.remarks = dF.remarks;
+      },
+    }
+  },
 
   created() {
     var listUrl = ("" + window.location).split('?p=');
@@ -272,12 +278,15 @@ export default {
       dF.validateAll(this.data_url, this.cB);
     },
     copyData(){
-      // TODO at some point these should probably just get fixed in the code instead of copying them over
-      this.remarks = dF.remarks;
+      this.remaining = undefined;
       this.data_url = dF.data_url;
       this.shape_validation = dF.shape_validation;
       this.node_validation = dF.node_validation;
       this.shape_report = dF.shape_report;
+      this.collectionAttributes = dF.collectionAttributes;
+      this.remarks = dF.remarks;
+      this.mainInfo = dF.mainInfo;
+      this.rootInfo = dF.rootInfo;
     },
     svgClear(){
       d3.selectAll("div").selectAll("svg").remove();
@@ -293,6 +302,9 @@ export default {
         }
       }
 
+      this.mainInfo = dF.mainInfo;
+      this.rootInfo = dF.rootInfo;
+
       this.drawGraph();
     },
     findLastNode(lastUrl){
@@ -303,6 +315,10 @@ export default {
             n.selected = true;
             this.drawExtra(n);
             found = true;
+            if (dF.jsondata[n.id] && dF.jsondata[n.id].remainingItems > 0){
+              this.remaining = "Remaining items identified via relation properties for selected resource: " + dF.jsondata[n.id].remainingItems + ".\n";
+            }
+            this.identifies = "Selected resource identifies a node.\n";
           } else {
             n.selected = false;
           }
@@ -315,6 +331,10 @@ export default {
             n.selected = true;
             this.drawExtra(n);
             found = true;
+            if (dF.jsondata[n.id] && dF.jsondata[n.id].remainingItems > 0){
+              this.remaining = "Remaining items identified via relation properties for selected resource: " + dF.jsondata[n.id].remainingItems + ".\n";
+            }
+            this.identifies = "Selected resource identifies a view.\n";
           } else {
             n.selected = false;
           }
@@ -325,6 +345,8 @@ export default {
     collectionCB(){
       this.collectionAttributes = dF.collectionAttributes;
       this.remarks = dF.remarks;
+      this.mainInfo = dF.mainInfo;
+      this.rootInfo = dF.rootInfo;
     },
     setUrl(value){
       this.data_url = value;
@@ -369,6 +391,10 @@ export default {
       const svgEG = this.svgGHolder[0];
 
       this.svgGHolder[0].selectAll("g").remove();
+      this.remaining = undefined;
+      if (dF.jsondata[d.id] && dF.jsondata[d.id].remainingItems > 0){
+        this.remaining = "Remaining items identified via relation properties for selected resource: " + dF.jsondata[d.id].remainingItems + ".\n";
+      }
 
       var newG;
       var tt;
@@ -673,6 +699,12 @@ export default {
       const svgM = this.svgHolder[1];
       const svgMG = this.svgGHolder[1];
 
+      if (dF.members[d.name]){
+        this.remainingMembers = "Number of members found for selected resource: " + dF.members[d.name].size + ".\n";
+      } else {
+        this.remainingMembers = "Number of members found for selected resource: 0.\n";
+      }
+
       this.svgGHolder[1].selectAll("g").remove();
       showMemberHolder.call(this, d);
 
@@ -718,7 +750,8 @@ export default {
               sortIndex++;
             }
           }
-        }  else {
+        }
+        if(!dF.members[d.name] || !dF.members[d.name] || dF.members[d.name].size == 0) {
           newG.append("g").append("text").text("This node has no members.")
           .attr("dy", 20)
           .attr("dx", 5)
@@ -1326,7 +1359,7 @@ export default {
 }
 
 #examplesDiv {
-  width: 300px;
+  width: 500px;
 }
 
 #examplesDiv > input {
@@ -1364,6 +1397,15 @@ export default {
 }
 #log{
 
+}
+
+#information {
+  margin: .75em 0 .75em 0;
+  min-height: 10em;
+}
+
+#information > p{
+  margin: 0 0 0 0;
 }
 
 .flexContainer {

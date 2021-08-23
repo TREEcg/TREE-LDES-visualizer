@@ -23,6 +23,8 @@ export var jsondata = null;
 export var members = {};
 export var membersFailed = [];
 export var remarks = "";
+export var rootInfo = "";
+export var mainInfo = "";
 export var data_url = null;
 export var shape_validation = null;
 export var node_validation = [];
@@ -31,6 +33,7 @@ export var shapeTargets = ['targetClass', 'targetNode', 'targetSubjectsOf', 'tar
 export var collectionSpecial = ["@type", "import", "importStream", "conditionalImport", "totalItems"];
 export var nodeSpecial = ["@type", "import", "importStream", "conditionalImport", "search", "retentionPolicy"];
 export var relationSpecial = ["import", "importStream", "conditionalImport"];
+export var nodeRemainingItems = Number(0);
 var newImportLinks = new Set();
 var importedQuads = new Map();
 export var myMetadata;
@@ -38,6 +41,12 @@ var collectionRef = {"url":undefined, "collectionStore": undefined};
 export var collectionStats = {};
 const dcterms = 'http://purl.org/dc/terms/';
 const hydra = 'http://www.w3.org/ns/hydra/core#';
+const rdf = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
+const shacl = 'http://www.w3.org/ns/shacl#';
+const rdfs = 'http://www.w3.org/2000/01/rdf-schema#';
+const tree = 'https://w3id.org/tree#';
+const ldes = 'https://w3id.org/ldes#';
+const st = 'http://www.w3.org/ns/shapetrees#';
 // export const collectionAttributes = ['title', 'creator', 'contributor', 'description', 'license'];
 
 export const collectionAttributes = new Map([
@@ -54,6 +63,10 @@ export const collectionAttributes = new Map([
 // Setting this and then calling getData with url undefined will then clear all data and start a new collection
 export function setDataUrl(url){
   data_url = url;
+}
+
+export function addMainInfo(str){
+  mainInfo += str;
 }
 
 
@@ -163,9 +176,9 @@ async function extractShapeId(store, id){
 
 function getShapeIds(store){
   var shapeIds = [];
-  shapeIds = shapeIds.concat(store.getQuads(null, 'https://w3id.org/tree#shape', null, null).map(quad => quad.object.id));
-  shapeIds = shapeIds.concat(store.getQuads(null, 'http://www.w3.org/ns/shapetrees#validatedBy', null, null).map(quad => quad.object.id));
-  shapeIds = shapeIds.concat(store.getQuads(null, 'http://www.w3.org/ns/shapetrees#shape', null, null).map(quad => quad.object.id));
+  shapeIds = shapeIds.concat(store.getQuads(null, tree+'shape', null, null).map(quad => quad.object.id));
+  shapeIds = shapeIds.concat(store.getQuads(null, st+'validatedBy', null, null).map(quad => quad.object.id));
+  shapeIds = shapeIds.concat(store.getQuads(null, st+'shape', null, null).map(quad => quad.object.id));
   return shapeIds;
 }
 
@@ -185,13 +198,14 @@ function extractShapeHelp(store, id, checked = []) {
 async function extractShape(store, id){
   const store2 = new N3.Store();
   var quadsWithSubj = extractShapeHelp(store, id);
-  console.log(quadsWithSubj);
+  // console.log(quadsWithSubj);
   if (id && quadsWithSubj.length == 0){
     let newq = [];
 
     rdfDereferencer.dereference(id)
     .catch((error) => {
-      alert(error)
+      remarks += "Error while parsing SHAPE data at:\n"+id+".\n\n"+error+"\n";
+      alert(error);
       return extractShapeNext(store2, quadsWithSubj, id);
     })
     .then(v => {
@@ -212,21 +226,21 @@ function extractShapeNext(store2, quadsWithSubj, id){
   store2.addQuads(quadsWithSubj);
   var targetQuads = [];
   for (let tempTarget of shapeTargets){
-    targetQuads = targetQuads.concat(store2.getQuads(null, 'http://www.w3.org/ns/shacl#'+tempTarget, null, null))
+    targetQuads = targetQuads.concat(store2.getQuads(null, shacl+tempTarget, null, null))
   }
 
   if (targetQuads.length == 0){
     // This check for implicit targeting
-    let t1 = store2.getQuads(id, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type','http://www.w3.org/ns/shacl#NodeShape', null);
-    t1 = t1.concat(store2.getQuads(id, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type', 'http://www.w3.org/ns/shacl#PropertyShape', null));
-    let t2 = store2.getQuads(id, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type', 'http://www.w3.org/2000/01/rdf-schema#Class', null);
+    let t1 = store2.getQuads(id, rdf+'type', shacl+'NodeShape', null);
+    t1 = t1.concat(store2.getQuads(id, rdf+'type', shacl+'PropertyShape', null));
+    let t2 = store2.getQuads(id, rdf+'type', rdfs+'Class', null);
 
     // If no target was given for the shape, make it target all tree:member objects
     if (t1.length == 0 || t2.length == 0){
       store2.addQuad(
         namedNode(id),
-        namedNode('http://www.w3.org/ns/shacl#targetObjectsOf'),
-        namedNode('https://w3id.org/tree#member'),
+        namedNode(shacl+'targetObjectsOf'),
+        namedNode(tree+'member'),
         defaultGraph()
       );
 
@@ -270,8 +284,10 @@ async function derefCollection(collectionUrl, collectionCallBack){
   let newq = [];
   rdfDereferencer.dereference(collectionUrl)
   .catch((error) => {
-    alert("Error trying to get the collection root.\nWill be unable to provide extra information about the collection.\n" + error)
-    remarks += "Error trying to get the collection root.\nWill be unable to provide extra information about the collection.\n" + error + "\n";
+    let errM = "Error trying to get the collection root.\nWill be unable to provide extra information about the collection.\n" + error+"\n";
+    alert(errM)
+    remarks += errM;
+    fallBackNoType();
     if (collectionCallBack){
       collectionCallBack();
     }
@@ -288,10 +304,17 @@ async function derefCollection(collectionUrl, collectionCallBack){
       }
     })
   }).catch(() => {
+    fallBackNoType();
     if (collectionCallBack){
       collectionCallBack();
     }
   });
+
+  function fallBackNoType(){
+    if (!myMetadata.collections || !myMetadata.collections.size > 0 || !Array.from(myMetadata.collections.values())[0]['@type']){
+      mainInfo = "No type property was defined for this collection.\n";
+    }
+  }
 }
 
 
@@ -363,15 +386,26 @@ function parseCollectionTreeData(newq){
   })
 }
 
-function parseCollection(){
+function parseCollection(collectionCallBack){
+  if (!myMetadata.collections || !myMetadata.collections.size > 0 || !Array.from(myMetadata.collections.values())[0]['@type']){
+    let typeX = Array.from(collectionRef.store.getQuads(collectionRef.url, rdf+'type', null, null).map(quad => quad.object.id))[0];
+    if (typeX){
+      mainInfo = "Collection type: " + typeX + "\n";
+    } else {
+      mainInfo = "No type property was defined for this collection.\n";
+    }
+  }
   collectionStats = {};
   for (let [key, value] of collectionAttributes){
-    let attrX = collectionRef.store.getQuads(null, value, null, null).map(quad => quad.object);
+    let attrX = collectionRef.store.getQuads(collectionRef.url, value, null, null).map(quad => quad.object);
     if (attrX.length == 1){
       collectionStats[key] = attrX.id;
     } else if (attrX.length > 0){
       collectionStats[key] = JSON.stringify(attrX);
     }
+  }
+  if(collectionCallBack){
+    collectionCallBack();
   }
 }
 
@@ -385,6 +419,7 @@ function parseCollection(){
 export async function getData(url, callBack, fix, extraClear, collectionCallBack) {
   //Need to always clear these values before getting new data
   qtext = [];
+  nodeRemainingItems = 0;
 
 
   //var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/a.nt';
@@ -418,7 +453,6 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
   }
 
   data_url = standardURL;
-
   remarks += "\nRemarks for "+data_url+":\n";
 
   const {quads} = await rdfDereferencer.dereference(standardURL);
@@ -430,7 +464,7 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
       console.log(metadata);
 
       myMetadata = metadata;
-
+      var newNodeMembersId;
       const store = new N3.Store(qtext)
 
       // Having more than one collection is wrong but we can still try drawing a graph
@@ -470,22 +504,34 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
       }
 
       // avoid never calling this callback
+      rootInfo = "";
       if (metadata.collections.size == 0){
         fix();
+        if(collectionCallBack){
+          collectionCallBack();
+        }
       } else if (standardURL != Array.from(metadata.collections.keys())[0]){
+        // mainInfo = "";
         let collectionUrl = Array.from(metadata.collections.keys())[0];
         derefCollection(collectionUrl, collectionCallBack);
       } else {
+        // mainInfo = "";
+        rootInfo = "Your IRI points towards the root of this collection.\n";
         collectionRef.url = standardURL;
         collectionRef.store = new N3.Store(qtext);
-        parseCollection();
+        parseCollection(collectionCallBack);
       }
 
       // The main data parsing part
       for (var collectionId of metadata.collections.keys()) {
         var collectionObj = metadata.collections.get(collectionId);
 
-
+        if (collectionObj['@type']){
+          mainInfo = "Collection type: " + collectionObj['@type'][0] + "\n";
+          if (collectionObj['@type'][0] == ldes+"EventStream"){
+            mainInfo = "This is an event stream, all members are immutable";
+          }
+        }
         // If we already had a collection stored, check to make sure the 'new' one is the same as the old one
         let double = true;
         if (jsondata.collection.length > 0){
@@ -653,7 +699,7 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
         //TODO This is not a good way of linking the members to the correct node
         //What if multiple nodes are defined? What if a view & subset is defined?
         if(metadata.nodes && metadata.nodes.size > 0){
-          var newNodeMembersId;
+          newNodeMembersId = [];
           if (metadata.nodes.size > 0){
             newNodeMembersId = Array.from(metadata.nodes.keys());
           } else {
@@ -758,6 +804,7 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
         let nodeId = nodeName + "_node"
         //This will hold all newly added nodes to later check if they conform to any already existing relations
         tempN.push(nodeId);
+        jsondata[nodeId].remainingItems = 0;
         for (var relationJson of jsondata[nodeId]){
           if (metadata.relations.get(relationJson.id)){
 
@@ -780,6 +827,10 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
               remarks += "relation from " + nodeName + " to " + relationObj.node[0]['@id'] + " has no type defined\n";
             } else {
               relationJson.type = relationObj['@type'];
+            }
+
+            if (relationObj["remainingItems"]){
+              jsondata[nodeId].remainingItems += Number(relationObj["remainingItems"][0]["@value"]);
             }
 
             let wantedAttrs = ["path", "value", "remainingItems"];
@@ -868,8 +919,8 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
 
 
 
-function validateShape(membIds, store, newNodeMembersId, fix){
-  console.log("validating");
+async function validateShape(membIds, store, newNodeMembersId, fix){
+  // console.log("validating");
   for (let mId of newNodeMembersId){
     membersFailed[mId] = [];
     node_validation[mId] = {};
@@ -893,7 +944,6 @@ function validateShape(membIds, store, newNodeMembersId, fix){
 
   const shapesX = extractShape(store, shapeIds[0]);
   const dataX = extractShapeMembers(store, membIds);
-
 
   loadDatasetX(shapesX).then(shapes => {
     loadDatasetX(dataX).then(data => {

@@ -50,12 +50,12 @@ const st = 'http://www.w3.org/ns/shapetrees#';
 // export const collectionAttributes = ['title', 'creator', 'contributor', 'description', 'license'];
 
 export const collectionAttributes = new Map([
-  ['title', dcterms+'title'],
-  ['creator', dcterms+'creator'],
-  ['contributor', dcterms+'contributor'],
-  ['description', dcterms+'description'],
-  ['license', dcterms+'license'],
-  ['total items', hydra+'totalItems']
+  ['Title', dcterms+'title'],
+  ['Creator', dcterms+'creator'],
+  ['Contributor', dcterms+'contributor'],
+  ['Description', dcterms+'description'],
+  ['License', dcterms+'license'],
+  ['Total items', hydra+'totalItems']
 ])
 
 
@@ -496,11 +496,11 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
           remarks += errM;
           alert(errM);
           jsondata.nodes.push({"id":standardURL+"_node", "name":standardURL, "relation_count":0, "type":"Node"})
-          if (jsondata.links.has(jsondata.collection[0].id)){
-            jsondata.links.get(jsondata.collection[0].id).add(standardURL+"_node");
-          } else {
-            jsondata.links.set(jsondata.collection[0].id, new Set([standardURL+"_node"]));
-          }
+          // if (jsondata.links.has(jsondata.collection[0].id)){
+          //   jsondata.links.get(jsondata.collection[0].id).add(standardURL+"_node");
+          // } else {
+          //   jsondata.links.set(jsondata.collection[0].id, new Set([standardURL+"_node"]));
+          // }
         }
       }
 
@@ -684,16 +684,21 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
               if (found){
                 node.type = "View";
                 jsondata.views.push(node);
+                if (jsondata.links.has(collectionId)){
+                  jsondata.links.get(collectionId).add(viewNode['@id']+"_node");
+                } else {
+                  jsondata.links.set(collectionId, new Set([viewNode['@id']+"_node"]));
+                }
               } else {
                 node.type = "Node";
                 jsondata.nodes.push(node);
               }
 
-              if (jsondata.links.has(collectionId)){
-                jsondata.links.get(collectionId).add(viewNode['@id']+"_node");
-              } else {
-                jsondata.links.set(collectionId, new Set([viewNode['@id']+"_node"]));
-              }
+              // if (jsondata.links.has(collectionId)){
+              //   jsondata.links.get(collectionId).add(viewNode['@id']+"_node");
+              // } else {
+              //   jsondata.links.set(collectionId, new Set([viewNode['@id']+"_node"]));
+              // }
 
             }
           }

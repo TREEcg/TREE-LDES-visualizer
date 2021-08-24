@@ -1,31 +1,28 @@
 <template>
-  <div v-on:click="close()">
-  <p style="white-space: pre-line">Click a node, relation or shape to show all attributes<br>
-  ctrl+click a relation to add the node to the graph<br>
-  shift+mousewheel / shift+pan to zoom or pan<br>
-  Drag screen corner to resize views<br>
-  An arrowhead next to a node means the node has a relation with itself as the node</p>
+<!-- <myHeader></myHeader> -->
+<h1>Visualizer</h1>
+<div id="visualizerContainer">
+  <div class="textContent">
+  <h2>A tool to visualize and validate a tree:collection</h2>
 
-  <!-- <label for="adecay">Enter graph convergence speed, between 0 and 1</label> -->
-  <!-- <input type="number" v-model="alpha_decay_rate" placeholder="0.023" name="adecay"><br> -->
-
-  <label for="url">Enter URL: </label>
-  <div id="examplesDiv" style="margin: auto">
-  <input type="url" list="exT" v-model="data_url" placeholder="URL" name="url" v-on:click.stop="open()" v-on:keyup.enter="start(undefined)">
-    <ul id="fakeExamples" tabindex="1" v-on:blur="close()">
-      <li v-on:click="setUrl(valueX)" v-for="[keyX, valueX] in this.exampleMap" v-bind:key="keyX">
-        {{keyX}}
-      </li>
-    </ul>
+  <div>
+    <label style="vertical-align: top;" for="url">Enter URL: </label>
+    <div id="examplesDiv" style="margin: auto; display: inline-block; vertical-align: top;">
+      <input type="url" list="exT" v-model="data_url" placeholder="URL" name="url" v-on:click.stop="open()" v-on:keyup.enter="start(undefined)" v-on:blur="close()">
+      <ul id="fakeExamples" tabindex="1" v-on:blur="close()">
+        <li v-on:mousedown="setUrl(valueX)" v-for="[keyX, valueX] in this.exampleMap" v-bind:key="keyX">
+          {{keyX}}
+        </li>
+      </ul>
+    </div>
+    <button style="vertical-align: top; margin-left: 4px; margin-top: 1px;" v-on:click="start(undefined)">Go</button>
   </div>
 
-  <!-- <br> -->
-  <button v-on:click="start(undefined)">Go</button>
+
 
   <div id="information" style="white-space: pre">
     <p>{{this.rootInfo}}</p>
     <p>{{this.mainInfo}}</p>
-    <!-- <p>{{this.collectionStats}}</p><br> -->
     <li v-for="[keyX, valueX] in Object.entries(this.collectionStats)" v-bind:key="keyX">
       {{keyX}}: {{valueX}}
     </li>
@@ -37,19 +34,19 @@
     <p>{{this.remaining}}</p>
     <p>{{this.remainingMembers}}</p>
   </div>
+  </div>
 
 
-  <!-- <button v-on:click="validateAll()">Validate and add all reachable nodes</button><br> -->
   <div class="flexContainer">
-    <div id="currentPage"></div>
+    <div id="currentPage" class="textContent"></div>
     <div id="graph" style="overflow:scroll; resize: both;"></div>
   </div>
   <div class="flexContainer">
-    <div id="members">
+    <div id="members" class="textContent">
       <p>Members:</p>
     </div>
 
-    <div id="log">
+    <div id="log" class="textContent">
 
       <div id="v-model-radiobutton">
         <input type="radio" id="one" value="Remarks" v-model="picked" />
@@ -61,11 +58,9 @@
       </div>
 
       <div>
-        <!-- <label for="checkbox_shape">Show shape validation report</label> -->
-        <!-- <input type="checkbox" id="checkbox_shape" v-model="checked_shape"> -->
         <div v-if="picked === 'Shape'">
           <div v-if="this.shape_validation == false || this.shape_validation == true">
-            <p>All members conform to shape: {{this.shape_validation}}</p>
+            <br><p>All members conform to shape: {{this.shape_validation}}</p>
           </div>
           <div v-if="this.shape_report">
             <div style="white-space: pre-line">{{this.shape_report}}</div>
@@ -76,8 +71,6 @@
         </div>
       </div>
 
-      <!-- <label for="checkbox_remarks">Show remarks</label> -->
-      <!-- <input type="checkbox" id="checkbox_remarks" v-model="checked_remarks"> -->
       <div v-if="picked === 'Remarks'">
         <div v-if="this.remarks">
           <div style="white-space: pre-line">{{this.remarks}}</div>
@@ -91,43 +84,11 @@
   </div>
 
 
-
-
-
-
-
-  <!-- <label for="checkbox_remarks">Show data remarks</label>
-  <input type="checkbox" id="checkbox_remarks" v-model="checked_remarks">
-
-  <div v-if="checked_remarks">
-    <div v-if="remarks">
-      <div style="white-space: pre-line">{{remarks}}</div>
-    </div>
-    <div v-else>
-      <p>No remarks to report.</p>
-    </div>
-  </div> -->
-
-
-
 <!-- This empty div allows user to resize extra info screen easily -->
   <div style="height: 100px;"></div>
 
-  <div id="windowContainer">
-    <div class="divFloat" id="scrollContainer">
-      <div v-on:click="close()" class="close"></div>
-      <div class="container">
-
-        <select v-model="selected">
-          <option value=0>Node</option>
-          <option value=1>Members</option>
-          <option value=2>Shape validation</option>
-        </select>
-      </div>
-      <div id="extra"></div>
-    </div>
-  </div>
 </div>
+<!-- <myFooter></myFooter> -->
 </template>
 
 
@@ -135,6 +96,10 @@
 
 import * as d3 from "d3";
 import * as dF from './components/dataFunctions.js';
+
+// import header from './components/header.html'
+// import footer from './components/footer.html'
+// import footer from 'https://raw.githubusercontent.com/TREEcg/site/master/_includes/footer.html'
 
 /*
 POSSIBLE TODO OVERVIEW
@@ -152,6 +117,8 @@ POSSIBLE TODO OVERVIEW
 export default {
   name: 'App',
   components: {
+    // 'myHeader':header,
+    // 'myFooter':footer
   },
   data(){
     return {
@@ -192,7 +159,8 @@ export default {
       identifies: "",
       collectionStats: {},
       shapeInformation: "",
-      shapePresent: undefined
+      shapePresent: undefined,
+      myGreen: "rgba(0, 128, 0, 0.5)"
     }
   },
   watch: {
@@ -373,7 +341,7 @@ export default {
       document.getElementById("fakeExamples").style.display = "none";
     },
     open(){
-      document.getElementById("fakeExamples").style.display = "block";
+      document.getElementById("fakeExamples").style.display = "inline-block";
     },
     openShape(){
       document.getElementById("shapeClosed").style.display = "none";
@@ -435,7 +403,7 @@ export default {
       }
 
       if (d.relation_count !== undefined){
-        newG.append("rect").attr("x", 0).attr("y", 0).style("stroke", "#69b3a2")
+        newG.append("rect").attr("x", 0).attr("y", 0).style("stroke", this.myGreen)//.style("stroke", "#69b3a2")
         .attr("width", newG.node().getBBox().width+30)
         .attr("height", newG.node().getBBox().height+30)
         .attr("class", "outer_rect")
@@ -454,7 +422,7 @@ export default {
       function expandRelationHolder(d){
         let offH = tt.node().getBBox().height + 30;
         let innerg = newG.append("svg:foreignObject")
-          .attr("x", 50)
+          .attr("x", 22)
           .attr("y", offH)
           .attr("width", 600)
           .attr("height", 600);
@@ -886,6 +854,11 @@ export default {
       .attr("height", "100%")
       .attr("pointer-events", "all");
 
+      // The event.transform does not change during session, it simply gets added onto every time
+      // So just safe the value on the main svg so we can use it in calculations
+      // We can't use this with transform directly because links depend on actual x and y data, not the translated attributes
+      svg.attr("prevTX", 0).attr("prevTY", 0).attr("scaleAllX", 1);
+
 
       svg.append("marker")
       .attr("id", "arrow")
@@ -938,7 +911,8 @@ export default {
         .attr("class", "collection_rect main_rect")
         .attr("width", collection.select("text").node().getBBox().width+15)
         .attr("height", collection.select("text").node().getBBox().height+10)
-        .style("stroke", "#5fd145")
+        // .style("stroke", "#5fd145")
+        .style("stroke", "#2cbe16")
         .lower();
       }
 
@@ -973,8 +947,14 @@ export default {
           .attr("dx",5);
 
           d3.select(tg).select("text")
-          .append("tspan").text(function(d){return d.name})
-          .attr("dx",5);
+          .append("tspan").text(function(d){
+            if (d.name.length > 25){
+              return d.name.slice(0,18)+"..."+d.name.slice(-5);
+            }
+            return d.name
+          })
+          .attr("dx",5)
+          .append("title").text(function(d){return d.name})
 
           d3.select(tg).select("text")
           .append("tspan").text(function(d){
@@ -993,7 +973,10 @@ export default {
           .attr("class", "view_rect main_rect")
           .attr("width", d3.select(tg).select("text").node().getBBox().width+15)
           .attr("height", d3.select(tg).select("text").node().getBBox().height+10)
-          .style("stroke", "#69b3a2")
+          // .style("stroke", "#69b3a2")
+          .style("stroke", this.myGreen)
+          .style('stroke-dasharray', '10,5')
+          .style('stroke-linecap', 'butt')
           .style("stroke-width", function(d){
             if (d.selected){
               return "3";
@@ -1071,8 +1054,14 @@ export default {
           .attr("dx",5);
 
           d3.select(tg).select("text")
-          .append("tspan").text(function(d){return d.name})
-          .attr("dx",5);
+          .append("tspan").text(function(d){
+            if (d.name.length > 25){
+              return d.name.slice(0,18)+"..."+d.name.slice(-5);
+            }
+            return d.name
+          })
+          .attr("dx",5)
+          .append("title").text(function(d){return d.name})
 
           d3.select(tg).select("text")
           .append("tspan").text(function(d){return "relations: " + d.relation_count})
@@ -1084,7 +1073,10 @@ export default {
           .attr("class", "node_rect main_rect")
           .attr("width", d3.select(tg).select("text").node().getBBox().width+15)
           .attr("height", d3.select(tg).select("text").node().getBBox().height+10)
-          .style("stroke", "#69b3a2")
+          // .style("stroke", "#69b3a2")
+          .style("stroke", this.myGreen)
+          .style('stroke-dasharray', '10,5')
+          .style('stroke-linecap', 'butt')
           .style("stroke-width", function(d){
             if (d.selected){
               return "3";
@@ -1136,7 +1128,7 @@ export default {
 
 
       function fixLinks(){
-        link.attr("transform", "scale("+d3.select("svg").attr("scaleAll")+")");
+        link.attr("transform", "scale("+svg.attr("scaleAll")+")");
         // Calculate start, mid, end
         link.attr("points", function(d) {
              return [
@@ -1172,40 +1164,30 @@ export default {
         ticked();
       }
 
-
-
-      // The event.transform does not change during session, it simply gets added onto every time
-      // So just safe the value on the main svg so we can use it in calculations
-      // We can't use this with transform directly because links depend on actual x and y data, not the translated attributes
-      svg.attr("prevTX", 0).attr("prevTY", 0).attr("scaleAll", 1);
-
       // d3 sees zooming and panning as the same thing, strange design choice
       const zoom = d3.zoom()
 
       //while panning links wont move because we use translate instead of changing x and y
       zoom.on("zoom", function(e) {
-        if (e.sourceEvent.shiftKey){
-          d3.selectAll(".main_g")
-          .attr("transform", function(){return "translate("+(e.transform.x- d3.select("svg").attr("prevTX"))+","+(e.transform.y- d3.select("svg").attr("prevTY"))+")scale("+e.transform.k+")"});
+        d3.selectAll(".main_g")
+        .attr("transform", function(){return "translate("+(e.transform.x - svg.attr("prevTX"))+","+(e.transform.y - svg.attr("prevTY"))+")scale("+e.transform.k+")"});
 
-          fixLinks();
-          link.attr("transform", function(){return "translate("+(e.transform.x- d3.select("svg").attr("prevTX"))+","+(e.transform.y- d3.select("svg").attr("prevTY"))+")scale("+e.transform.k+")"});
-        }
+        fixLinks();
+        link.attr("transform", function(){return "translate("+(e.transform.x - svg.attr("prevTX"))+","+(e.transform.y - svg.attr("prevTY"))+")scale("+e.transform.k+")"});
       });
 
       // At the end of a zoom we only keep scale attribute and calculate the correct x and y attributes based of the translation
       zoom.on("end", function(e) {
-        if (e.sourceEvent.shiftKey){
-          d3.selectAll(".main_g")
-          .attr("transform", function(){return "scale("+e.transform.k+")"})
-          .attr("x", function(d) { d.x += e.transform.x - d3.select("svg").attr("prevTX")})
-          .attr("y", function(d) { d.y += e.transform.y - d3.select("svg").attr("prevTY")})
+        d3.selectAll(".main_g")
+        .attr("x", function(d) { d.x += e.transform.x*(1/e.transform.k) - svg.attr("prevTX")*(1/e.transform.k)})
+        .attr("y", function(d) { d.y += e.transform.y*(1/e.transform.k) - svg.attr("prevTY")*(1/e.transform.k)})
+        .attr("transform", function(){return "scale("+e.transform.k+")"});
 
-          svg.attr("prevTX", e.transform.x).attr("prevTY", e.transform.y).attr("scaleAll", e.transform.k);
 
-          fixGroupChildren()
-          fixLinks();
-        }
+        svg.attr("prevTX", e.transform.x).attr("prevTY", e.transform.y).attr("scaleAll", e.transform.k);
+
+        fixGroupChildren()
+        fixLinks();
       });
 
       // connect the zoom function to the main svg element
@@ -1338,15 +1320,31 @@ export default {
 
 
 <style>
-#app {
+/* #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-}
+} */
 
-#extra {
+/* #visualizerContainer {
+  position: inherit;
+  padding-left: -1000px;
+  margin-left: -1000px;
+  left: 0;
+} */
+
+/* #visualizerContainer:after {
+  content: " ";
+  padding-bottom: 1000px;
+} */
+
+/* body {
+  max-width: 100vw;
+} */
+
+/* #extra {
   width:100%;
   height:75vh;
 }
@@ -1360,7 +1358,8 @@ export default {
   height: 100%;
   padding-top: 100px;
   display: none;
-}
+} */
+
 
 #fakeExamples {
   margin: 0 0 0 0;
@@ -1438,18 +1437,18 @@ export default {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  /* margin: auto; */
-  width: 98%;
+  width: 98vw;
+  margin-left: calc(-50vw + 430px);
   /* justify-content: space-evenly; */
 }
 
-.container {
+/* .container {
   margin-bottom: 10px;
   position: sticky;
   left: 0%;
-}
+} */
 
-.divFloat {
+/* .divFloat {
   margin: 0 auto;
   background-color: #FFF;
   color: #000;
@@ -1464,9 +1463,9 @@ export default {
   display: block;
   resize: both;
   overflow:scroll;
-}
+} */
 
-.close {
+/* .close {
   position: sticky;
   left: 100%;
   width: 20px;
@@ -1491,7 +1490,7 @@ export default {
 }
 .close:after {
   transform: rotate(-45deg);
-}
+}*/
 .spacing {
   white-space: pre;
 }
@@ -1510,21 +1509,23 @@ rect {
   height: 600px;
 } */
 
- table {
+table {
   /* width: 100%; */
   border-collapse: collapse;
 }
 tr:nth-of-type(odd) {
   background: #eee;
 }
+
 th {
   background: #333;
   color: white;
   font-weight: bold;
   cursor: s-resize;
   background-repeat: no-repeat;
-      background-position: 3% center;
+    background-position: 3% center;
 }
+
 td, th {
   padding: 6px;
   border: 1px solid #ccc;
@@ -1532,16 +1533,16 @@ td, th {
 }
 
 th.des:after {
-    content: "\21E9";
-  }
+  content: "\21E9";
+}
 
-  th.aes:after {
-    content: "\21E7";
-  }
+th.aes:after {
+  content: "\21E7";
+}
 
-  th {
-    text-align: left;
-    font-weight: bold;
+th {
+  text-align: left;
+  font-weight: bold;
 }
 
 /* table {

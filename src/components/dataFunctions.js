@@ -39,6 +39,7 @@ var importedQuads = new Map();
 export var myMetadata;
 var collectionRef = {"url":undefined, "collectionStore": undefined};
 export var collectionStats = {};
+const urlMappings = new Map();
 const dcterms = 'http://purl.org/dc/terms/';
 const hydra = 'http://www.w3.org/ns/hydra/core#';
 const rdf = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
@@ -417,7 +418,7 @@ function parseCollection(collectionCallBack){
 // fix expects a function and will be called either when shacl validation is done or when no validation is possible (no shape / no members)
 // extraClear expects a function and will be called when clearData() gets called, namely when NO url is passed to this function
 // if extraClear gets called this will happen BEFORE any data gets extracted not after
-export async function getData(url, callBack, fix, extraClear, collectionCallBack) {
+export async function getData(urlX, callBack, fix, extraClear, collectionCallBack) {
   //Need to always clear these values before getting new data
   qtext = [];
   nodeRemainingItems = 0;
@@ -436,8 +437,8 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
   // standardURL = 'https://raw.githubusercontent.com/TREEcg/TREE-LDES-visualizer/main/src/assets/testersecond.ttl';
   // standardURL = 'https://graph.irail.be/sncb/connections/feed';
 
-  if(url){
-    standardURL = url;
+  if(urlX){
+    standardURL = urlX;
   } else if (data_url){
     standardURL = data_url;
     // This means user gave a url for a new collection so we need to clear whatever data we already had
@@ -456,7 +457,10 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
   data_url = standardURL;
   remarks += "\nRemarks for "+data_url+":\n";
 
-  const {quads} = await rdfDereferencer.dereference(standardURL);
+  const {quads, url} = await rdfDereferencer.dereference(standardURL);
+  // console.log(urlX, url);
+  // console.log(urlMappings);
+  urlMappings.set(url, standardURL);
   quads.on('data', (quad) => {qtext.push(quad); /*console.log(quad)*/})
   .on('error', (error) => {console.error(error); let errM = "Error while parsing data at:\n"+standardURL+".\n\n"+error+"\n";remarks += errM; alert(errM);})
   .on('end', () => {
@@ -799,6 +803,8 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
       }
 
       let tempN = [];
+      let tempN2 = [];
+      let tempNMapping = new Map();
       // If metadata.nodes had no new node, a new empty node still got added to the graph
       // Need to ensure a link for all relations leading to this node is also created via standardURL_node
       let it = metadata.nodes.keys();
@@ -812,6 +818,10 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
         let nodeId = nodeName + "_node"
         //This will hold all newly added nodes to later check if they conform to any already existing relations
         tempN.push(nodeId);
+        if(urlMappings.has(nodeName)){
+          tempNMapping.set(urlMappings.get(nodeName)+"_node", nodeId);
+          tempN2.push(urlMappings.get(nodeName)+"_node");
+        }
         jsondata[nodeId].remainingItems = 0;
         for (var relationJson of jsondata[nodeId]){
           if (metadata.relations.get(relationJson.id)){
@@ -865,6 +875,14 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
               }
             }
 
+            if(urlMappings.has(relationObj.node[0]['@id']) && jsondata[urlMappings.get(relationObj.node[0]['@id'])+"_node"]){
+              if (jsondata.links.has(nodeId)){
+                jsondata.links.get(nodeId).add(urlMappings.get(relationObj.node[0]['@id'])+"_node");
+              } else {
+                jsondata.links.set(nodeId, new Set([urlMappings.get(relationObj.node[0]['@id'])+"_node"]));
+              }
+            }
+
           }
         }
 
@@ -876,6 +894,12 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
                 jsondata.links.get(tempKey).add(tempValue);
               } else {
                 jsondata.links.set(tempKey, new Set([tempValue]));
+              }
+            } else if (tempN2.includes(tempValue)){
+              if (jsondata.links.has(tempKey)){
+                jsondata.links.get(tempKey).add(tempNMapping.get(tempValue));
+              } else {
+                jsondata.links.set(tempKey, new Set([tempNMapping.get(tempValue)]));
               }
             }
           }

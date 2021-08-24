@@ -1,94 +1,94 @@
 <template>
-<!-- <myHeader></myHeader> -->
-<h1>Visualizer</h1>
-<div id="visualizerContainer">
-  <div class="textContent">
-  <h2>A tool to visualize and validate a tree:collection</h2>
-
-  <div>
-    <label style="vertical-align: top;" for="url">Enter URL: </label>
-    <div id="examplesDiv" style="margin: auto; display: inline-block; vertical-align: top;">
-      <input type="url" list="exT" v-model="data_url" placeholder="URL" name="url" v-on:click.stop="open()" v-on:keyup.enter="start(undefined)" v-on:blur="close()">
-      <ul id="fakeExamples" tabindex="1" v-on:blur="close()">
-        <li v-on:mousedown="setUrl(valueX)" v-for="[keyX, valueX] in this.exampleMap" v-bind:key="keyX">
-          {{keyX}}
-        </li>
-      </ul>
-    </div>
-    <button style="vertical-align: top; margin-left: 4px; margin-top: 1px;" v-on:click="start(undefined)">Go</button>
-  </div>
-
-
-
-  <div id="information" style="white-space: pre">
-    <p>{{this.rootInfo}}</p>
-    <p>{{this.mainInfo}}</p>
-    <li v-for="[keyX, valueX] in Object.entries(this.collectionStats)" v-bind:key="keyX">
-      {{keyX}}: {{valueX}}
-    </li>
-    <div v-if="this.shapePresent">
-      <p id="shapeClosed" v-on:click="openShape">Click to show shape.</p>
-      <p id="shapeOpened" v-on:click="closeShape" style="display:none;">{{this.shapeInformation}}</p>
-    </div>
-    <p>{{this.identifies}}</p>
-    <p>{{this.remaining}}</p>
-    <p>{{this.remainingMembers}}</p>
-  </div>
-  </div>
-
-
-  <div class="flexContainer">
-    <div id="currentPage" class="textContent"></div>
-    <div id="graph" style="overflow:scroll; resize: both;"></div>
-  </div>
-  <div class="flexContainer">
-    <div id="members" class="textContent">
-      <p>Members:</p>
-    </div>
-
-    <div id="log" class="textContent">
-
-      <div id="v-model-radiobutton">
-        <input type="radio" id="one" value="Remarks" v-model="picked" />
-        <label for="one">Remarks</label>
-        <br />
-        <input type="radio" id="two" value="Shape" v-model="picked" />
-        <label for="two">Shape Validation</label>
-        <br />
-      </div>
+  <!-- <myHeader></myHeader> -->
+  <h1>Visualizer</h1>
+  <div id="visualizerContainer">
+    <div class="textContent">
+      <h2>A tool to visualize and validate a tree:collection</h2>
 
       <div>
-        <div v-if="picked === 'Shape'">
-          <div v-if="this.shape_validation == false || this.shape_validation == true">
-            <br><p>All members conform to shape: {{this.shape_validation}}</p>
-          </div>
-          <div v-if="this.shape_report">
-            <div style="white-space: pre-line">{{this.shape_report}}</div>
-          </div>
-          <div v-else>
-            <p>No report available.</p>
-          </div>
+        <label style="vertical-align: top;" for="url">Enter URL: </label>
+        <div id="examplesDiv" style="margin: auto; display: inline-block; vertical-align: top;">
+          <input type="url" list="exT" v-model="data_url" placeholder="URL" name="url" v-on:click.stop="open()" v-on:keyup.enter="start(undefined)" v-on:blur="close()">
+          <ul id="fakeExamples" tabindex="1" v-on:blur="close()">
+            <li v-on:mousedown="setUrl(valueX)" v-for="[keyX, valueX] in this.exampleMap" v-bind:key="keyX" :title=valueX>
+              {{keyX}}
+            </li>
+          </ul>
         </div>
+        <button style="vertical-align: top; margin-left: 4px; margin-top: 1px;" v-on:click="start(undefined)">Go</button>
       </div>
 
-      <div v-if="picked === 'Remarks'">
-        <div v-if="this.remarks">
-          <div style="white-space: pre-line">{{this.remarks}}</div>
-        </div>
-        <div v-else>
-          <p>No remarks available.</p>
-        </div>
-      </div>
 
+      <div id="information" style="white-space: pre">
+        <p>{{this.rootInfo}}</p>
+        <p>{{this.mainInfo}}</p>
+        <li v-for="[keyX, valueX] in Object.entries(this.collectionStats)" v-bind:key="keyX">
+          {{keyX}}: {{valueX}}
+        </li>
+        <div v-if="this.shapePresent">
+          <p id="shapeClosed" v-on:click="openShape">Click to show shape.</p>
+          <p id="shapeOpened" v-on:click="closeShape" style="display:none;">{{this.shapeInformation}}</p>
+        </div>
+        <p>{{this.identifies}}</p>
+        <p>{{this.remaining}}</p>
+        <p>{{this.remainingMembers}}</p>
+      </div>
     </div>
+
+    <div v-if="this.data_url">
+
+
+      <div class="flexContainer">
+        <div id="currentPage" class="textContent"></div>
+        <div id="graph" style="overflow:scroll; resize: both;"></div>
+      </div>
+      <div class="flexContainer">
+        <div id="members" class="textContent">
+          <p>Members:</p>
+        </div>
+
+        <div id="log" class="textContent">
+
+          <div id="v-model-radiobutton">
+            <input type="radio" id="one" value="Remarks" v-model="picked" />
+            <label for="one">Remarks</label>
+            <br />
+            <input type="radio" id="two" value="Shape" v-model="picked" />
+            <label for="two">Shape Validation</label>
+            <br />
+          </div>
+
+          <div>
+            <div v-if="picked === 'Shape'">
+              <div v-if="this.shape_validation == false || this.shape_validation == true">
+                <br><p>All members conform to shape: {{this.shape_validation}}</p>
+              </div>
+              <div v-if="this.shape_report">
+                <div style="white-space: pre-line">{{this.shape_report}}</div>
+              </div>
+              <div v-else>
+                <p>No report available.</p>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="picked === 'Remarks'">
+            <div v-if="this.remarks">
+              <div style="white-space: pre-line">{{this.remarks}}</div>
+            </div>
+            <div v-else>
+              <p>No remarks available.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <!-- This empty div allows user to resize extra info screen easily -->
+      <div style="height: 100px;"></div>
+    </div>
+
   </div>
-
-
-<!-- This empty div allows user to resize extra info screen easily -->
-  <div style="height: 100px;"></div>
-
-</div>
-<!-- <myFooter></myFooter> -->
+  <!-- <myFooter></myFooter> -->
 </template>
 
 
@@ -123,8 +123,6 @@ export default {
   data(){
     return {
       exampleMap: new Map([
-        // ["cultureelerfgoed", "https://treecg.github.io/demo_data/cht/1.ttl"],
-        // ["train stops", "https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/.root.ttl"],
         ["Streets of Flemish Address Registry", "https://tree.linkeddatafragments.org/data/addressregister/streetnames/"],
         ["Visual Thesaurus for Fashion & Costumes", "https://treecg.github.io/demo_data/vtmk.ttl"],
         ["Municipalities of Flemish Address Registry", "https://tree.linkeddatafragments.org/data/addressregister/municipalities/"],
@@ -144,7 +142,7 @@ export default {
       picked: 'Remarks',
       graph_height: 600,
       graph_width: 1000,
-      data_url: null,
+      data_url: undefined,
       shape_validation: null,
       node_validation: [],
       shape_report: "",
@@ -199,12 +197,15 @@ export default {
     start(url){
       this.derefUrl(url);
 
-      if (!url){
+      if (!url && dF.data_url){
         window.history.pushState({}, document.title, this.emptyURL+"?p="+encodeURIComponent(dF.data_url));
         this.urlList = [dF.data_url];
-      } else if (!this.urlList.includes(dF.data_url)){
+      } else if (dF.data_url && !this.urlList.includes(dF.data_url)){
         window.history.pushState({}, document.title, window.location+"?p="+encodeURIComponent(dF.data_url));
         this.urlList.push(dF.data_url);
+      } else if (!dF.data_url){
+        window.history.pushState({}, document.title, this.emptyURL);
+        this.urlList = [];
       }
 
     },
@@ -233,6 +234,13 @@ export default {
       });
     },
     derefUrl(url){
+      if (!url && !this.data_url){
+        this.svgClear();
+        dF.setDataUrl(undefined);
+        alert("Please define a starting point");
+        return;
+      }
+
       var promiseResolve1;
       var p1 = new Promise(function(resolve){
         promiseResolve1 = resolve;
@@ -267,6 +275,13 @@ export default {
       this.rootInfo = dF.rootInfo;
     },
     svgClear(){
+      this.rootInfo = undefined;
+      this.mainInfo = undefined;
+      this.shapePresent = undefined;
+      this.shapeInformation = undefined;
+      this.identifies = undefined;
+      this.remaining = undefined;
+      this.remainingMembers = undefined;
       d3.selectAll("div").selectAll("svg").remove();
       this.svgHolder = null;
       this.svgGHolder = null;
@@ -844,6 +859,16 @@ export default {
 
       const linkData = [];
       dF.jsondata.links.forEach((s, k) => {s.forEach(v => linkData.push({"source":k,"target":v}))});
+
+      let targets = linkData.map(v => v.target);
+      //Every node should have a link that ends in that node, if not connect it to the collection
+      dF.jsondata.nodes.forEach(v => {
+        if (!targets.includes(v.id)){
+          linkData.push({"source":dF.jsondata.collection[0].id,"target":v.id,"fakeLink":true});
+        }
+      });
+
+
       // console.log("linkData: ", linkData);
       var all = dF.jsondata.collection.concat(dF.jsondata.shapes.concat(dF.jsondata.nodes.concat(dF.jsondata.views)));
 
@@ -881,6 +906,12 @@ export default {
       .style("stroke","gray")
       .style("pointer-events", "none")
       .style("stroke-width",0.5)
+      .style('stroke-dasharray', function(d){
+        if (d.fakeLink){
+          return '10, 5';
+        }
+        return '10, 0';
+      })
       .attr("marker-mid", "url(#arrow)" );
 
 

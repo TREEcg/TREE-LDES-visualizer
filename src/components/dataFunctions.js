@@ -313,7 +313,8 @@ async function derefCollection(collectionUrl, collectionCallBack){
 
   function fallBackNoType(){
     if (!myMetadata.collections || !myMetadata.collections.size > 0 || !Array.from(myMetadata.collections.values())[0]['@type']){
-      mainInfo = "No type property was defined for this collection.\n";
+      // mainInfo = "No type property was defined for this collection.\n";
+      mainInfo = "";
     }
   }
 }
@@ -394,7 +395,8 @@ function parseCollection(collectionCallBack){
     if (typeX){
       mainInfo = "Collection type: " + typeX + "\n";
     } else {
-      mainInfo = "No type property was defined for this collection.\n";
+      // mainInfo = "No type property was defined for this collection.\n";
+      mainInfo = "";
     }
   }
   collectionStats = {};

@@ -544,7 +544,7 @@ _:b1    <http://www.w3.org/1999/02/22-rdf-syntax-ns#first>  <http://www.w3.org/2
 
 _:b2    <http://www.w3.org/ns/shacl#alternativePath>  _:b0 .
 
-<https://treecg.github.io/demo_data/cht/>
+<https://raw.githubusercontent.com/TREEcg/TREE-LDES-visualizer/main/src/assets/cht_root.ttl>
         <https://w3id.org/tree#shape>  _:b3 .
 
 _:b3    <http://www.w3.org/ns/shacl#property>  _:b4 .

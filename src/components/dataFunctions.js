@@ -398,9 +398,9 @@ function parseCollection(collectionCallBack){
   }
   collectionStats = {};
   for (let [key, value] of collectionAttributes){
-    let attrX = collectionRef.store.getQuads(collectionRef.url, value, null, null).map(quad => quad.object);
+    let attrX = collectionRef.store.getQuads(collectionRef.url, value, null, null).map(quad => quad.object.id);
     if (attrX.length == 1){
-      collectionStats[key] = attrX.id;
+      collectionStats[key] = attrX[0];
     } else if (attrX.length > 0){
       collectionStats[key] = JSON.stringify(attrX);
     }

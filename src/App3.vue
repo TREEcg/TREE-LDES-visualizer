@@ -25,7 +25,10 @@
   <div id="information" style="white-space: pre">
     <p>{{this.rootInfo}}</p>
     <p>{{this.mainInfo}}</p>
-    <p>{{this.collectionStats}}</p><br>
+    <!-- <p>{{this.collectionStats}}</p><br> -->
+    <li v-for="[keyX, valueX] in Object.entries(this.collectionStats)" v-bind:key="keyX">
+      {{keyX}}: {{valueX}}
+    </li>
     <p>{{this.identifies}}</p>
     <p>{{this.remaining}}</p>
     <p>{{this.remainingMembers}}</p>
@@ -182,7 +185,8 @@ export default {
       mainInfo: "",
       remaining: "",
       remainingMembers: "",
-      identifies: ""
+      identifies: "",
+      collectionStats: {}
     }
   },
   watch: {
@@ -283,7 +287,7 @@ export default {
       this.shape_validation = dF.shape_validation;
       this.node_validation = dF.node_validation;
       this.shape_report = dF.shape_report;
-      this.collectionAttributes = dF.collectionAttributes;
+      this.collectionStats = dF.collectionStats;
       this.remarks = dF.remarks;
       this.mainInfo = dF.mainInfo;
       this.rootInfo = dF.rootInfo;
@@ -343,7 +347,7 @@ export default {
       return found;
     },
     collectionCB(){
-      this.collectionAttributes = dF.collectionAttributes;
+      this.collectionStats = dF.collectionStats;
       this.remarks = dF.remarks;
       this.mainInfo = dF.mainInfo;
       this.rootInfo = dF.rootInfo;

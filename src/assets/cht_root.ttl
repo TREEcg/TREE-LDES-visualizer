@@ -1,0 +1,451 @@
+<https://treecg.github.io/demo_data/cht/>
+        <http://rdfs.org/ns/void#subset>  <https://treecg.github.io/demo_data/cht/> ;
+        <http://purl.org/dc/terms/title> "Cultural Historic Thesaurus" ;
+        <http://purl.org/dc/terms/creator> "Demo data creator" ;
+        <http://purl.org/dc/terms/description> "This is a demo data set to help visualize possible data properties" ;
+        <http://www.w3.org/ns/hydra/core#totalItems> "123456"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+_:b0    <http://www.w3.org/1999/02/22-rdf-syntax-ns#first>  <http://www.w3.org/2004/02/skos/core#prefLabel> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>  _:b1 .
+
+_:b1    <http://www.w3.org/1999/02/22-rdf-syntax-ns#first>  <http://www.w3.org/2004/02/skos/core#altLabel> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>  <http://www.w3.org/1999/02/22-rdf-syntax-ns#nil> .
+
+_:b2    <http://www.w3.org/ns/shacl#alternativePath>  _:b0 .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#shape>  _:b3 .
+
+_:b3    <http://www.w3.org/ns/shacl#property>  _:b4 .
+
+_:b4    <http://www.w3.org/ns/shacl#path>  _:b2 ;
+        <http://www.w3.org/ns/shacl#minCount>  "1"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b5 .
+
+_:b5    <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/0.ttl> ;
+        <https://w3id.org/tree#value>  "0" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "3"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b6 .
+
+_:b6    <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/1.ttl> ;
+        <https://w3id.org/tree#value>  "1" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "129"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b7 .
+
+_:b7    <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/2.ttl> ;
+        <https://w3id.org/tree#value>  "2" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "83"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b8 .
+
+_:b8    <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/β.ttl> ;
+        <https://w3id.org/tree#value>  "β" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "1"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b9 .
+
+_:b9    <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/3.ttl> ;
+        <https://w3id.org/tree#value>  "3" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "20"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b10 .
+
+_:b10   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/γ.ttl> ;
+        <https://w3id.org/tree#value>  "γ" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "1"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b11 .
+
+_:b11   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/4.ttl> ;
+        <https://w3id.org/tree#value>  "4" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "15"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b12 .
+
+_:b12   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/5.ttl> ;
+        <https://w3id.org/tree#value>  "5" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "7"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b13 .
+
+_:b13   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/6.ttl> ;
+        <https://w3id.org/tree#value>  "6" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "13"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b14 .
+
+_:b14   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/7.ttl> ;
+        <https://w3id.org/tree#value>  "7" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "7"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b15 .
+
+_:b15   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/8.ttl> ;
+        <https://w3id.org/tree#value>  "8" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "18"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b16 .
+
+_:b16   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/9.ttl> ;
+        <https://w3id.org/tree#value>  "9" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "4"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b17 .
+
+_:b17   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/ß.ttl> ;
+        <https://w3id.org/tree#value>  "ß" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "1"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b18 .
+
+_:b18   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/a.ttl> ;
+        <https://w3id.org/tree#value>  "a" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "4107"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b19 .
+
+_:b19   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/b.ttl> ;
+        <https://w3id.org/tree#value>  "b" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "7093"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b20 .
+
+_:b20   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/c.ttl> ;
+        <https://w3id.org/tree#value>  "c" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "3227"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b21 .
+
+_:b21   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/d.ttl> ;
+        <https://w3id.org/tree#value>  "d" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "4428"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b22 .
+
+_:b22   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/e.ttl> ;
+        <https://w3id.org/tree#value>  "e" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "2144"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b23 .
+
+_:b23   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/f.ttl> ;
+        <https://w3id.org/tree#value>  "f" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "1765"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b24 .
+
+_:b24   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/g.ttl> ;
+        <https://w3id.org/tree#value>  "g" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "4270"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b25 .
+
+_:b25   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/h.ttl> ;
+        <https://w3id.org/tree#value>  "h" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "3782"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b26 .
+
+_:b26   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/i.ttl> ;
+        <https://w3id.org/tree#value>  "i" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "1444"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b27 .
+
+_:b27   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/j.ttl> ;
+        <https://w3id.org/tree#value>  "j" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "607"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b28 .
+
+_:b28   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/k.ttl> ;
+        <https://w3id.org/tree#value>  "k" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "5952"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b29 .
+
+_:b29   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/l.ttl> ;
+        <https://w3id.org/tree#value>  "l" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "3248"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b30 .
+
+_:b30   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/m.ttl> ;
+        <https://w3id.org/tree#value>  "m" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "4531"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b31 .
+
+_:b31   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/n.ttl> ;
+        <https://w3id.org/tree#value>  "n" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "1582"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b32 .
+
+_:b32   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/o.ttl> ;
+        <https://w3id.org/tree#value>  "o" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "2589"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b33 .
+
+_:b33   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/p.ttl> ;
+        <https://w3id.org/tree#value>  "p" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "5197"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b34 .
+
+_:b34   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/q.ttl> ;
+        <https://w3id.org/tree#value>  "q" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "88"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b35 .
+
+_:b35   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/r.ttl> ;
+        <https://w3id.org/tree#value>  "r" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "3887"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b36 .
+
+_:b36   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/s.ttl> ;
+        <https://w3id.org/tree#value>  "s" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "10358"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b37 .
+
+_:b37   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/t.ttl> ;
+        <https://w3id.org/tree#value>  "t" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "4186"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b38 .
+
+_:b38   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/u.ttl> ;
+        <https://w3id.org/tree#value>  "u" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "570"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b39 .
+
+_:b39   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/v.ttl> ;
+        <https://w3id.org/tree#value>  "v" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "4789"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b40 .
+
+_:b40   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/w.ttl> ;
+        <https://w3id.org/tree#value>  "w" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "3240"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b41 .
+
+_:b41   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/x.ttl> ;
+        <https://w3id.org/tree#value>  "x" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "23"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b42 .
+
+_:b42   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/y.ttl> ;
+        <https://w3id.org/tree#value>  "y" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "19"^^<http://www.w3.org/2001/XMLSchema#int> .
+
+<https://treecg.github.io/demo_data/cht/>
+        <https://w3id.org/tree#relation>  _:b43 .
+
+_:b43   <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <https://w3id.org/tree#SubstringRelation> ;
+        <https://w3id.org/tree#node>   <https://treecg.github.io/demo_data/cht/z.ttl> ;
+        <https://w3id.org/tree#value>  "z" ;
+        <https://w3id.org/tree#path>   _:b2 ;
+        <http://www.w3.org/ns/shacl#pattern>  "[\\p{L}\\p{N}]+" ;
+        <http://www.w3.org/ns/shacl#flags>  "i" ;
+        <https://w3id.org/tree#remainingItems>  "2043"^^<http://www.w3.org/2001/XMLSchema#int> .

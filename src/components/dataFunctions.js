@@ -347,6 +347,7 @@ function parseCollectionTreeData(newq){
         let node = {};
         node.id = viewNode['@id']+"_node";
         node.name = viewNode['@id'];
+        node.type = "View";
 
         if (!double && !metadata.nodes.has(viewNode['@id'])){
           jsondata.views.push(node)
@@ -494,7 +495,7 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
           let errM = "no collection metadata found at " + standardURL + ".\nWill add an empty node for this URL.\n";
           remarks += errM;
           alert(errM);
-          jsondata.nodes.push({"id":standardURL+"_node", "name":standardURL, "relation_count":0})
+          jsondata.nodes.push({"id":standardURL+"_node", "name":standardURL, "relation_count":0, "type":"Node"})
           if (jsondata.links.has(jsondata.collection[0].id)){
             jsondata.links.get(jsondata.collection[0].id).add(standardURL+"_node");
           } else {
@@ -529,7 +530,7 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
         if (collectionObj['@type']){
           mainInfo = "Collection type: " + collectionObj['@type'][0] + "\n";
           if (collectionObj['@type'][0] == ldes+"EventStream"){
-            mainInfo = "This is an event stream, all members are immutable";
+            mainInfo += "This is an LDES event stream, all members are immutable";
           }
         }
         // If we already had a collection stored, check to make sure the 'new' one is the same as the old one
@@ -588,10 +589,10 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
             let node = {};
             node.id = viewNode['@id']+"_node";
             node.name = viewNode['@id'];
+            node.type = "View";
 
             if (!double && !metadata.nodes.has(viewNode['@id'])){
               if(standardURL == node.name){
-                console.log("BLUP");
                 node.relation_count = 0;
               }
               jsondata.views.push(node)
@@ -681,8 +682,10 @@ export async function getData(url, callBack, fix, extraClear, collectionCallBack
               })
 
               if (found){
+                node.type = "View";
                 jsondata.views.push(node);
               } else {
+                node.type = "Node";
                 jsondata.nodes.push(node);
               }
 

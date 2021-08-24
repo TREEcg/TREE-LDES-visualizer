@@ -486,7 +486,7 @@ export default {
 
 
       function expandRelationHolderNodeInfo(d, tt){
-        tt.append("tspan").text("Node")
+        tt.append("tspan").text(d.type)
         .attr("dy", 22)
         .attr("dx",5);
 
@@ -944,7 +944,7 @@ export default {
 
         for (let tg of d3.selectAll(".view_g")){
           d3.select(tg).select("text")
-          .append("tspan").text("View")
+          .append("tspan").text(function(d){return d.type})
           .attr("dx",5);
 
           d3.select(tg).select("text")
@@ -1042,7 +1042,7 @@ export default {
 
         for (let tg of d3.selectAll(".node_g")){
           d3.select(tg).select("text")
-          .append("tspan").text("Node")
+          .append("tspan").text(function(d){return d.type})
           .attr("dx",5);
 
           d3.select(tg).select("text")
@@ -1381,8 +1381,8 @@ export default {
   height: 50vh;
   resize: both;
   overflow:scroll;
-  width: 40vw;
-  margin-right: 3.3vw;
+  width: 40%;
+  margin-left: 7%;
   margin-top: 3.5vh;
 }
 
@@ -1411,6 +1411,10 @@ export default {
 .flexContainer {
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
+  /* margin: auto; */
+  width: 98%;
+  /* justify-content: space-evenly; */
 }
 
 .container {
@@ -1510,7 +1514,7 @@ th.des:after {
   }
 
   th {
-    text-align: right;
+    text-align: left;
     font-weight: bold;
 }
 

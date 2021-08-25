@@ -11,14 +11,17 @@ var link;
 var myLinkData;
 var linkLabel;
 var parentIdString;
+var start;
 
-export function setValues(_myGreen, _jsondata, _drawCurrentPage, _drawMembers, _parentIdString, _linkData){
+export function setValues(_myGreen, _jsondata, _drawCurrentPage, _drawMembers, _parentIdString, _linkData, _start){
   myGreen = _myGreen;
   jsondata = _jsondata;
   drawCurrentPage = _drawCurrentPage;
   drawMembers = _drawMembers;
   parentIdString = _parentIdString;
   myLinkData = _linkData;
+  start = _start;
+  console.log(start);
 }
 
 
@@ -28,6 +31,8 @@ export function drawGraph() {
 
   const drawCurrentPageBound = (d) => drawCurrentPage(d);
   const drawMembersBound = (d) => drawMembers(d);
+
+  // console.log(drawCurrentPageBound, drawMembersBound);
 
   //clear the graph on redrawing
   d3.select("#"+parentIdString).selectAll("svg").remove();
@@ -139,6 +144,8 @@ export function drawGraph() {
       svg.selectAll("rect").style("stroke-width", "1");
       drawCurrentPageBound(d);
       drawMembersBound(d);
+      // console.log(e,d);
+      // start(d.name);
       d3.select(this).selectAll("rect").style("stroke-width", "3");
     })
     .call(d3.drag()
@@ -247,6 +254,8 @@ export function drawGraph() {
       svg.selectAll("rect").style("stroke-width", "1");
       drawCurrentPageBound(d);
       drawMembersBound(d);
+      // console.log(e,d);
+      // start(d.name);
       d3.select(this).selectAll("rect").style("stroke-width", "3");
     })
     .call(d3.drag()

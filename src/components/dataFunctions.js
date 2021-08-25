@@ -14,11 +14,8 @@ const SHACLValidator = require('rdf-validate-shacl');
 const { DataFactory } = N3;
 const { namedNode, defaultGraph } = DataFactory;
 
-// Exports functions setDataUrl(url), validateAll(url, callBack), addImportLinks(data), getData(url, callBack, fix, extraClear)
 
-//TODO Fix url checks for # identifiers at the end?
 
-var qtext = [];
 export var jsondata = null;
 export var members = {};
 export var membersFailed = [];
@@ -29,18 +26,26 @@ export var data_url = null;
 export var shape_validation = null;
 export var node_validation = [];
 export var shape_report = "";
-export var shapeTargets = ['targetClass', 'targetNode', 'targetSubjectsOf', 'targetObjectsOf'];
-export var collectionSpecial = ["@type", "import", "importStream", "conditionalImport", "totalItems"];
-export var nodeSpecial = ["@type", "import", "importStream", "conditionalImport", "search", "retentionPolicy"];
-export var relationSpecial = ["import", "importStream", "conditionalImport"];
-export var nodeRemainingItems = Number(0);
-var newImportLinks = new Set();
-var importedQuads = new Map();
-export var myMetadata;
-var collectionRef = {"url":undefined, "collectionStore": undefined};
 export var collectionStats = {};
 export var relationLabelMap = new Map();
-const urlMappings = new Map();
+export var redirectMappings = new Map();
+
+
+var urlMappings = new Map();
+var qtext = [];
+var newImportLinks = new Set();
+var importedQuads = new Map();
+var collectionRef = {"url":undefined, "collectionStore": undefined};
+var myMetadata;
+var loaded = new Set();
+
+
+export const shapeTargets = ['targetClass', 'targetNode', 'targetSubjectsOf', 'targetObjectsOf'];
+export const collectionSpecial = ["@type", "import", "importStream", "conditionalImport", "totalItems"];
+export const nodeSpecial = ["@type", "import", "importStream", "conditionalImport", "search", "retentionPolicy"];
+export const relationSpecial = ["import", "importStream", "conditionalImport"];
+
+
 const dcterms = 'http://purl.org/dc/terms/';
 const hydra = 'http://www.w3.org/ns/hydra/core#';
 const rdf = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
@@ -49,7 +54,7 @@ const rdfs = 'http://www.w3.org/2000/01/rdf-schema#';
 const tree = 'https://w3id.org/tree#';
 const ldes = 'https://w3id.org/ldes#';
 const st = 'http://www.w3.org/ns/shapetrees#';
-// export const collectionAttributes = ['title', 'creator', 'contributor', 'description', 'license'];
+
 
 export const collectionAttributes = new Map([
   ['Title', dcterms+'title'],
@@ -138,6 +143,8 @@ export function clearData(){
   importedQuads = new Map();
   remarks = "";
   relationLabelMap = new Map();
+  urlMappings = new Map();
+  redirectMappings = new Map();
 }
 
 
@@ -355,11 +362,7 @@ function parseCollectionTreeData(newq){
 
         if (!double && !metadata.nodes.has(viewNode['@id'])){
           jsondata.views.push(node)
-          if (jsondata.links.has(collectionRef.url)){
-            jsondata.links.get(collectionRef.url).add(viewNode['@id']+"_node");
-          } else {
-            jsondata.links.set(collectionRef.url, new Set([viewNode['@id']+"_node"]));
-          }
+          mapAddToSet(jsondata.links, collectionRef.url, viewNode['@id']+"_node");
 
         } else if (!double && !myMetadata.nodes.has(viewNode['id'])){
           viewNode = metadata.nodes.get(viewNode['@id']);
@@ -380,11 +383,7 @@ function parseCollectionTreeData(newq){
           addImportLinks(node);
 
           jsondata.views.push(node)
-          if (jsondata.links.has(collectionRef.url)){
-            jsondata.links.get(collectionRef.url).add(viewNode['@id']+"_node");
-          } else {
-            jsondata.links.set(collectionRef.url, new Set([viewNode['@id']+"_node"]));
-          }
+          mapAddToSet(jsondata.links, collectionRef.url, viewNode['@id']+"_node");
         }
       }
     }
@@ -416,6 +415,15 @@ function parseCollection(collectionCallBack){
 }
 
 
+function mapAddToSet(myMap, myKey, myValue){
+  if (myMap.has(myKey)){
+    myMap.get(myKey).add(myValue);
+  } else {
+    myMap.set(myKey, new Set([myValue]));
+  }
+}
+
+
 function dummyFunction(){
   return;
 }
@@ -423,15 +431,16 @@ function dummyFunction(){
 
 // pass a url to add a new node OR set data_url to go to a new collection
 // presence of url variable will get checked BEFORE data_url and thus data_url gets ignored if url is not undefined
+// All callback functions will be called even when function quits with errors
 // callBack expects a funtion and will call it when all data has been extracted into jsondata, members, ..
 // fix expects a function and will be called either when shacl validation is done or when no validation is possible (no shape / no members)
 // extraClear expects a function and will be called when clearData() gets called, namely when NO url is passed to this function
 // if extraClear gets called this will happen BEFORE any data gets extracted not after
+// CollectionCallBack will be called when the actual collection root has been dereferenced
 export async function getData(urlX, callBack = dummyFunction, fix = dummyFunction, extraClear = dummyFunction, collectionCallBack = dummyFunction) {
   //Need to always clear these values before getting new data
   qtext = [];
-  nodeRemainingItems = 0;
-  var standardURL;
+
 
 
   //var standardURL = 'https://raw.githubusercontent.com/TREEcg/demo_data/master/stops/a.nt';
@@ -448,9 +457,8 @@ export async function getData(urlX, callBack = dummyFunction, fix = dummyFunctio
   // standardURL = 'https://graph.irail.be/sncb/connections/feed';
 
   if(urlX){
-    standardURL = urlX;
+    data_url = urlX;
   } else if (data_url){
-    standardURL = data_url;
     // This means user gave a url for a new collection so we need to clear whatever data we already had
     clearData();
     extraClear();
@@ -458,77 +466,95 @@ export async function getData(urlX, callBack = dummyFunction, fix = dummyFunctio
     //Fallback
     alert("No starting point defined.")
     clearData();
-    extraClear();
     callBack();
     fix();
+    extraClear();
     collectionCallBack();
   }
 
-  data_url = standardURL;
+  if (loaded.has(data_url)){
+    return;
+  }
+  if (redirectMappings.has(data_url)){
+    for (let tX of redirectMappings.get(data_url)){
+      if (loaded.has(tX)){
+        return;
+      }
+    }
+  }
+
   remarks += "\nRemarks for "+data_url+":\n";
 
-  const {quads, url} = await rdfDereferencer.dereference(standardURL);
-  // console.log(urlX, url);
-  // console.log(urlMappings);
-  urlMappings.set(url, standardURL);
+  const {quads, url} = await rdfDereferencer.dereference(data_url);
+  urlMappings.set(url, data_url);
   quads.on('data', (quad) => {qtext.push(quad); /*console.log(quad)*/})
-  .on('error', (error) => {console.error(error); let errM = "Error while parsing data at:\n"+standardURL+".\n\n"+error+"\n";remarks += errM; /*alert(errM);*/})
+  .on('error', (error) => {console.error(error); let errM = "Error while parsing data at:\n"+data_url+".\n\n"+error+"\n";remarks += errM; /*alert(errM);*/})
   .on('end', () => {
     extractMetadata(qtext).then(metadata => {
       console.log("metadata:");
       console.log(metadata);
 
+      if (data_url != url){
+        mapAddToSet(redirectMappings, data_url, url);
+      }
+
+      if (metadata.nodes && metadata.nodes.size > 0){
+        mapAddToSet(redirectMappings, data_url, Array.from(metadata.nodes.keys())[0]);
+      }
+
       myMetadata = metadata;
-      // var newNodeMembersId;
       const store = new N3.Store(qtext)
 
-      // Having more than one collection is wrong but we can still try drawing a graph
+      // Having more than one collection is not supported but we can still try drawing a graph
       if (metadata.collections.size > 1){
         let errorText = "";
-        errorText += "ERROR: found multiple collections! This is not allowed.\n";
+        errorText += "Warning: found multiple collections. This is not supported.\n";
         errorText += JSON.stringify(Array.from(metadata.collections.entries()), null, '/t');
         errorText += "\ncheck tree:view, hydra:view, void:subset, dct:isPartOf, as:partOf.";
         errorText += "\nOther causes: \nmembers/shape are linked not to the collection but the node.";
         errorText += "\ncheck tree:member, hydra:member, as:items, ldp:contains.";
+        errorText += "Will try creating a graph using only the first collection.\n"
         remarks += errorText + "\n";
-        // alert(errorText);
+        alert(errorText);
       }
 
 
       // If no 'new' collection was found, we might already have a collection stored
       if (metadata.collections.size == 0){
         if (jsondata.collection.length == 0){
-          let errM = "No collection pre-defined and no collection found on " + standardURL + ".\nPlease provide a different starting URL.\n";
+          let errM = "No collection pre-defined and no collection found at " + data_url + ".\nPlease provide a different starting URL.\n";
           remarks += errM;
-          // alert(errM);
+          alert(errM);
           return;
         }
 
-        if (!jsondata[standardURL+"_node"]){
-          jsondata[standardURL+"_node"] = [];
-          let errM = "no collection metadata found at " + standardURL + ".\nWill add an empty node for this URL.\n";
+        if (!jsondata[data_url+"_node"] && !jsondata[url+"_node"]){
+          jsondata[data_url+"_node"] = [];
+          let errM = "no collection metadata found at " + data_url + ".\nWill add an empty node for this URL.\n";
           remarks += errM;
-          // alert(errM);
-          jsondata.nodes.push({"id":standardURL+"_node", "name":standardURL, "relation_count":0, "type":"Node"})
+          jsondata.nodes.push({"id":data_url+"_node", "name":data_url, "relation_count":0, "type":"Node"})
         }
       }
 
-      // avoid never calling this callback
+
       rootInfo = "";
       if (metadata.collections.size == 0){
+        // avoid never calling these, callback() will be called after trying to check shape aswell
         fix();
+        extraClear();
         collectionCallBack();
-      } else if (standardURL != Array.from(metadata.collections.keys())[0]){
+      } else if (data_url != Array.from(metadata.collections.keys())[0]){
         let collectionUrl = Array.from(metadata.collections.keys())[0];
         derefCollection(collectionUrl, collectionCallBack);
       } else {
         rootInfo = "Your IRI points towards the root of this collection.\n";
-        collectionRef.url = standardURL;
+        collectionRef.url = data_url;
         collectionRef.store = new N3.Store(qtext);
         parseCollection(collectionCallBack);
       }
 
-      // The main data parsing part, for loop avoids throwing an undefined error
+      // The main data parsing part, for loop to avoid throwing an undefined error
+      // Maybe add support for multiple collections later?
       for (var collectionId of metadata.collections.keys()) {
         var collectionObj = metadata.collections.get(collectionId);
 
@@ -538,51 +564,19 @@ export async function getData(urlX, callBack = dummyFunction, fix = dummyFunctio
             mainInfo += "This is an LDES event stream, all members are immutable";
           }
         }
-        // If we already had a collection stored, check to make sure the 'new' one is the same as the old one
-        let double = true;
-        if (jsondata.collection.length > 0){
-          for (let checker of jsondata.collection){
-            if (checker.id != collectionId){
-              double = false;
-            }
-          }
-        }
 
-
-        // If the new collection is not the same throw an error
-        if (!double){
-          let errorText = "";
-          errorText += "ERROR: new node is linked to a different collection! This is not allowed.";
-          errorText += '\n' + "current URL: " + standardURL;
-          errorText += '\n' + "new collection: " + collectionId;
-          errorText += '\n' + "original collection: " + jsondata.collection[0].id;
-          remarks += errorText+"\n";
-          // alert(errorText);
+        // If we did not have a collection stored already add it to jsondata.collection
+        if (jsondata.collection.length == 0){
+          parseNewCollection(collectionId, collectionObj);
+        } else if (testDoubleCollection(collectionId)){
           return;
         }
 
 
-        // If we did not have a collection stored already add it to jsondata.collection
-        if (jsondata.collection.length == 0){
-          let collection = {};
-          collection.id = collectionId;
-          collection.type = "Collection";
-          collection.vocab = collectionObj['@context']["@vocab"];
-
-          for (let pAttr of collectionSpecial){
-            if (collectionObj[pAttr]){
-              collection[pAttr] = collectionObj[pAttr];
-            }
-          }
-
-          jsondata.collection.push(collection);
-        }
-
-
-        // Create view 'nodes' found at the current url
+        // Create view 'nodes' found at the current url this includes nodes not yet dereferenced
         parseViewNodes(collectionObj, metadata, collectionId);
 
-        //Create regular nodes found at the current url
+        //Create regular nodes found at the current url, also try and fill any empty view nodes
         parseRegularNodes(collectionObj, metadata, collectionId);
 
         //Get the data behind all needed import statements then collect all members then call validator function
@@ -590,9 +584,9 @@ export async function getData(urlX, callBack = dummyFunction, fix = dummyFunctio
       }
 
       // This does not need a duplicate check since old node relations won't be included in the new metadata
-      // or they will just overwrite with the exact same data as was already present
+      // or they will just overwrite with newer data if the node was already present
       for (var nodeId of metadata.nodes.keys()){
-        // Since we might be overwriting delete old links for this node if already existed to avoid double linking (User wont see this but slowdown)
+        // Since we might be overwriting, delete old links for this node if already existed to avoid double linking
         jsondata.links.delete(nodeId+"_node");
         var nodeObj = metadata.nodes.get(nodeId);
         jsondata[nodeId+"_node"] = [];
@@ -601,7 +595,8 @@ export async function getData(urlX, callBack = dummyFunction, fix = dummyFunctio
         }
       }
 
-
+      // This will loop through new nodes and add their relations with their attributes
+      // This will also link the new nodes to old nodes and vice versa
       parseRelationsAndLinks(metadata);
 
       console.log("jsondata:");
@@ -618,11 +613,7 @@ export async function getData(urlX, callBack = dummyFunction, fix = dummyFunctio
 
         extractShapeId(store, shapeIds[0]).then(res => {
           jsondata.shapes.push({"id":shapeIds[0], "type":"shape", "shape_extra":res});
-          if (jsondata.links.has(collectionId)){
-            jsondata.links.get(collectionId).add(shapeIds[0]);
-          } else {
-            jsondata.links.set(collectionId, new Set([shapeIds[0]]));
-          }
+          mapAddToSet(jsondata.links, collectionId, shapeIds[0]);
           newImportLinks = new Set();
           callBack();
         });
@@ -638,6 +629,47 @@ export async function getData(urlX, callBack = dummyFunction, fix = dummyFunctio
 
 }
 
+
+function testDoubleCollection(collectionId){
+  // If we already had a collection stored, check to make sure the 'new' one is the same as the old one
+  let double = false;
+  if (jsondata.collection.length > 0){
+    for (let checker of jsondata.collection){
+      if (checker.id != collectionId){
+        double = true;
+      }
+    }
+  }
+
+
+  // If the new collection is not the same throw an error
+  if (double){
+    let errorText = "";
+    errorText += "Warning: new node is linked to a different collection. This is not supported.";
+    errorText += '\n' + "current URL: " + data_url;
+    errorText += '\n' + "new collection: " + collectionId;
+    errorText += '\n' + "original collection: " + jsondata.collection[0].id;
+    remarks += errorText+"\n";
+    alert(errorText);
+  }
+  return double;
+}
+
+
+function parseNewCollection(collectionId, collectionObj){
+  let collection = {};
+  collection.id = collectionId;
+  collection.type = "Collection";
+  collection.vocab = collectionObj['@context']["@vocab"];
+
+  for (let pAttr of collectionSpecial){
+    if (collectionObj[pAttr]){
+      collection[pAttr] = collectionObj[pAttr];
+    }
+  }
+
+  jsondata.collection.push(collection);
+}
 
 
 function parseRelationsAndLinks(metadata){
@@ -681,13 +713,15 @@ function parseRelationsAndLinksHelper(relationJson, metadata, nodeId, nodeName){
     // alert(errM);
     return;
   }
+
+  // UNCOMMENT FOR AUTOFOLLOW
+  // jsondata.nodes.push({"id":relationObj.node[0]["@id"]+"_node", "name":relationObj.node[0]["@id"]});
+  // mapAddToSet(jsondata.links, nodeId, relationObj.node[0]["@id"]+"_node");
+
+
   relationJson.node = relationObj.node;
 
-  if (jsondata.relations.has(nodeId)){
-    jsondata.relations.get(nodeId).add(relationObj.node[0]['@id']+"_node");
-  } else {
-    jsondata.relations.set(nodeId, new Set([relationObj.node[0]['@id']+"_node"]));
-  }
+  mapAddToSet(jsondata.relations, nodeId, relationObj.node[0]['@id']+"_node");
 
   if(!relationObj['@type']){
     remarks += "relation from " + nodeName + " to " + relationObj.node[0]['@id'] + " has no type defined\n";
@@ -718,19 +752,11 @@ function parseRelationsAndLinksHelper(relationJson, metadata, nodeId, nodeName){
 
   //This checks if the node this relation links to already exists in the graph
   if(jsondata[relationObj.node[0]['@id']+"_node"]){
-    if (jsondata.links.has(nodeId)){
-      jsondata.links.get(nodeId).add(relationObj.node[0]['@id']+"_node");
-    } else {
-      jsondata.links.set(nodeId, new Set([relationObj.node[0]['@id']+"_node"]));
-    }
+    mapAddToSet(jsondata.links, nodeId, relationObj.node[0]['@id']+"_node");
   }
 
   if(urlMappings.has(relationObj.node[0]['@id']) && jsondata[urlMappings.get(relationObj.node[0]['@id'])+"_node"]){
-    if (jsondata.links.has(nodeId)){
-      jsondata.links.get(nodeId).add(urlMappings.get(relationObj.node[0]['@id'])+"_node");
-    } else {
-      jsondata.links.set(nodeId, new Set([urlMappings.get(relationObj.node[0]['@id'])+"_node"]));
-    }
+    mapAddToSet(jsondata.links, nodeId, urlMappings.get(relationObj.node[0]['@id'])+"_node");
   }
 }
 
@@ -758,17 +784,9 @@ function AddNewLinks(tempN, tempN2, tempNMapping){
   for (let [tempKey, tempSet] of jsondata.relations){
     for (let tempValue of tempSet){
       if (tempN.includes(tempValue)){
-        if (jsondata.links.has(tempKey)){
-          jsondata.links.get(tempKey).add(tempValue);
-        } else {
-          jsondata.links.set(tempKey, new Set([tempValue]));
-        }
+        mapAddToSet(jsondata.links, tempKey, tempValue);
       } else if (tempN2.includes(tempValue)){
-        if (jsondata.links.has(tempKey)){
-          jsondata.links.get(tempKey).add(tempNMapping.get(tempValue));
-        } else {
-          jsondata.links.set(tempKey, new Set([tempNMapping.get(tempValue)]));
-        }
+        mapAddToSet(jsondata.links, tempKey, tempNMapping.get(tempValue));
       }
     }
   }
@@ -831,11 +849,7 @@ function parseRegularNodes(collectionObj, metadata, collectionId){
         if (found){
           node.type = "View";
           jsondata.views.push(node);
-          if (jsondata.links.has(collectionId)){
-            jsondata.links.get(collectionId).add(viewNode['@id']+"_node");
-          } else {
-            jsondata.links.set(collectionId, new Set([viewNode['@id']+"_node"]));
-          }
+          mapAddToSet(jsondata.links, collectionId, viewNode['@id']+"_node");
         } else {
           node.type = "Node";
           jsondata.nodes.push(node);
@@ -870,11 +884,7 @@ function parseViewNodes(collectionObj, metadata, collectionId){
           node.relation_count = 0;
         }
         jsondata.views.push(node)
-        if (jsondata.links.has(collectionId)){
-          jsondata.links.get(collectionId).add(viewNode['@id']+"_node");
-        } else {
-          jsondata.links.set(collectionId, new Set([viewNode['@id']+"_node"]));
-        }
+        mapAddToSet(jsondata.links, collectionId, viewNode['@id']+"_node");
 
       } else if (!double){
         viewNode = metadata.nodes.get(viewNode['@id']);
@@ -895,11 +905,7 @@ function parseViewNodes(collectionObj, metadata, collectionId){
         addImportLinks(node);
 
         jsondata.views.push(node)
-        if (jsondata.links.has(collectionId)){
-          jsondata.links.get(collectionId).add(viewNode['@id']+"_node");
-        } else {
-          jsondata.links.set(collectionId, new Set([viewNode['@id']+"_node"]));
-        }
+        mapAddToSet(jsondata.links, collectionId, viewNode['@id']+"_node");
       }
     }
   }

@@ -336,11 +336,11 @@ export default {
     },
     cB(){
       this.copyData();
+      this.setSVGElements();
 
       if (!this.findLastNode(dF.data_url)){
-        if (dF.myMetadata.nodes && dF.myMetadata.nodes.size > 0){
-          this.findLastNode(Array.from(dF.myMetadata.nodes.keys())[0])
-        }
+        let tempArray = Array.from(dF.redirectMappings.get(dF.data_url));
+        while(tempArray.length > 0 && !this.findLastNode(tempArray.pop())){return;}
       }
 
       this.mainInfo = dF.mainInfo;
@@ -353,7 +353,7 @@ export default {
         this.shapePresent = undefined;
       }
 
-      dG.setValues(this.myGreen, dF.jsondata, dP.drawCurrentPage, dM.drawMembers, "graph", dF.relationLabelMap);
+      dG.setValues(this.myGreen, dF.jsondata, dP.drawCurrentPage, dM.drawMembers, "graph", dF.relationLabelMap, this.start);
       dG.drawGraph();
     },
     findLastNode(lastUrl){
@@ -424,6 +424,12 @@ export default {
       this.remainingMembers = str;
     },
     drawExtra(d){
+      dP.setValues(this.svgHolder, this.svgGHolder, this.remainingSetter, dF.jsondata, dF.addImportLinks, this.start);
+      dP.drawCurrentPage(d);
+      dM.setValues(dF.members, dF.membersFailed, this.remainingMembersSetter, dF.node_validation, "members")
+      dM.drawMembers(d);
+    },
+    setSVGElements(){
       if (!this.svgHolder){
         this.svgHolder =
         [
@@ -444,12 +450,7 @@ export default {
           this.svgHolder[2].append("g")
         ]
       }
-
-      dP.setValues(this.svgHolder, this.svgGHolder, this.remainingSetter, dF.jsondata, dF.addImportLinks, this.start);
-      dP.drawCurrentPage(d);
-      dM.setValues(dF.members, dF.membersFailed, this.remainingMembersSetter, dF.node_validation, "members")
-      dM.drawMembers(d);
-    },
+    }
 
   }
 

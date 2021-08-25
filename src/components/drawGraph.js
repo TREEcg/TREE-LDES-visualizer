@@ -8,14 +8,17 @@ var drawCurrentPage;
 var drawMembers;
 var svg;
 var link;
+var myLinkData;
+var linkLabel;
 var parentIdString;
 
-export function setValues(_myGreen, _jsondata, _drawCurrentPage, _drawMembers, _parentIdString){
+export function setValues(_myGreen, _jsondata, _drawCurrentPage, _drawMembers, _parentIdString, _linkData){
   myGreen = _myGreen;
   jsondata = _jsondata;
   drawCurrentPage = _drawCurrentPage;
   drawMembers = _drawMembers;
   parentIdString = _parentIdString;
+  myLinkData = _linkData;
 }
 
 
@@ -85,6 +88,14 @@ export function drawGraph() {
   })
   .attr("marker-mid", "url(#arrow)" );
 
+  linkLabel = svg.selectAll(".linkLabel")
+  .data(linkData)
+  .enter().append("text")
+  // .attr("filter", "url(#solid)")
+  .text(function(d){
+    return myLinkData.get("" + d.source + d.target);
+  });
+
 
   if (jsondata.collection.length > 0){
     const collection = svg
@@ -144,9 +155,9 @@ export function drawGraph() {
     .raise();
 
     for (let tg of d3.selectAll(".view_g")){
-      d3.select(tg).select("text")
-      .append("tspan").text(function(d){return d.type})
-      .attr("dx",5);
+      // d3.select(tg).select("text")
+      // .append("tspan").text(function(d){return d.type})
+      // .attr("dx",5);
 
       d3.select(tg).select("text")
       .append("tspan").text(function(d){
@@ -157,18 +168,18 @@ export function drawGraph() {
       })
       .attr("dx",5)
       .on("click", function(e, d){navigator.clipboard.writeText(d.name)})
-      .append("title").text(function(d){return d.name});
+      .append("title").text(function(d){return "click to copy link\n" + d.name});
 
-      d3.select(tg).select("text")
-      .append("tspan").text(function(d){
-        if (d.relation_count !== undefined){
-          return "relations: " + d.relation_count;
-        } else {
-          return "View not loaded yet"
-        }
-
-      })
-      .attr("dx",15);
+      // d3.select(tg).select("text")
+      // .append("tspan").text(function(d){
+      //   if (d.relation_count !== undefined){
+      //     return "relations: " + d.relation_count;
+      //   } else {
+      //     return "View not loaded yet"
+      //   }
+      //
+      // })
+      // .attr("dx",15);
 
       d3.select(tg).selectAll("tspan").attr("x", 0).attr("dy", 22);
 
@@ -252,9 +263,9 @@ export function drawGraph() {
     .raise();
 
     for (let tg of d3.selectAll(".node_g")){
-      d3.select(tg).select("text")
-      .append("tspan").text(function(d){return d.type})
-      .attr("dx",5);
+      // d3.select(tg).select("text")
+      // .append("tspan").text(function(d){return d.type})
+      // .attr("dx",5);
 
       d3.select(tg).select("text")
       .append("tspan").text(function(d){
@@ -265,11 +276,11 @@ export function drawGraph() {
       })
       .attr("dx",5)
       .on("click", function(e, d){navigator.clipboard.writeText(d.name)})
-      .append("title").text(function(d){return d.name});
+      .append("title").text(function(d){return "click to copy link\n" + d.name});
 
-      d3.select(tg).select("text")
-      .append("tspan").text(function(d){return "relations: " + d.relation_count})
-      .attr("dx",15);
+      // d3.select(tg).select("text")
+      // .append("tspan").text(function(d){return "relations: " + d.relation_count})
+      // .attr("dx",15);
 
       d3.select(tg).selectAll("tspan").attr("x", 0).attr("dy", 22);
 
@@ -363,7 +374,11 @@ function ticked() {
 
 
 function fixLinks(){
-  link.attr("transform", "scale("+svg.attr("scaleAll")+")");
+  let scaleN = 1;
+  if (svg.attr("scaleAll")){
+    scaleN = svg.attr("scaleAll");
+  }
+  link.attr("transform", "scale("+scaleN+")");
   // Calculate start, mid, end
   link.attr("points", function(d) {
     return [
@@ -372,6 +387,13 @@ function fixLinks(){
       d.target.x, d.target.y
     ].join(',');
   })
+
+  linkLabel.attr("transform", function(d) {
+    var angle = Math.atan((d.source.y - d.target.y) / (d.source.x - d.target.x)) * 180 / Math.PI;
+    return 'translate(' + [((d.source.x + d.target.x)*scaleN / 2), ((d.source.y + d.target.y)*scaleN / 2)] + ')rotate(' + angle + ')'+"scale("+scaleN+")";
+  })
+  .attr("y", "-10")
+  .attr("x", function(){return -1*d3.select(this).node().getBBox().width / 2});
 }
 
 

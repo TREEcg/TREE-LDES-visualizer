@@ -186,7 +186,7 @@ function expandRelationHolderNodeInfo(d, tt){
   .attr("x",0)
   .attr("dx",5)
   .on("click", function(){navigator.clipboard.writeText(d.name);})
-  .append("title").text(d.name);
+  .append("title").text("Click to copy link\n" + d.name);
 
   tt.append("tspan").text("relations: " + d.relation_count)
   .attr("dy", 22)

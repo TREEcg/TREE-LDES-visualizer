@@ -247,14 +247,13 @@ export default {
       if (!url && dF.data_url){
         window.history.pushState({}, document.title, this.emptyURL+"?p="+encodeURIComponent(dF.data_url));
         this.urlList = [dF.data_url];
-      } else if (dF.data_url && !this.urlList.includes(dF.data_url) && (window.location.length + 3 + encodeURIComponent(dF.data_url).length) < 2000){
+      } else if (dF.data_url && !this.urlList.includes(dF.data_url) && (window.location.toString().length + 3 + encodeURIComponent(dF.data_url).length) < 2000){
         window.history.pushState({}, document.title, window.location+"?p="+encodeURIComponent(dF.data_url));
         this.urlList.push(dF.data_url);
       } else if (!dF.data_url){
         window.history.pushState({}, document.title, this.emptyURL);
         this.urlList = [];
       }
-
     },
     derefList(url, list, promiseResolve){
       var promiseResolve1;
@@ -354,7 +353,7 @@ export default {
         this.shapePresent = undefined;
       }
 
-      dG.setValues(this.myGreen, dF.jsondata, dP.drawCurrentPage, dM.drawMembers, "graph");
+      dG.setValues(this.myGreen, dF.jsondata, dP.drawCurrentPage, dM.drawMembers, "graph", dF.relationLabelMap);
       dG.drawGraph();
     },
     findLastNode(lastUrl){

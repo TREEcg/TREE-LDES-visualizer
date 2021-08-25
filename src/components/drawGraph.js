@@ -156,7 +156,8 @@ export function drawGraph() {
         return d.name
       })
       .attr("dx",5)
-      .append("title").text(function(d){return d.name})
+      .on("click", function(e, d){navigator.clipboard.writeText(d.name)})
+      .append("title").text(function(d){return d.name});
 
       d3.select(tg).select("text")
       .append("tspan").text(function(d){
@@ -263,7 +264,8 @@ export function drawGraph() {
         return d.name
       })
       .attr("dx",5)
-      .append("title").text(function(d){return d.name})
+      .on("click", function(e, d){navigator.clipboard.writeText(d.name)})
+      .append("title").text(function(d){return d.name});
 
       d3.select(tg).select("text")
       .append("tspan").text(function(d){return "relations: " + d.relation_count})

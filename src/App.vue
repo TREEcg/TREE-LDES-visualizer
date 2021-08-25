@@ -27,15 +27,17 @@
           {{keyX}}: {{valueX}}
         </li>
         <div v-if="this.shapePresent" style="display:inline-block; margin-bottom:1rem;">
-          <p v-on:click="openShape" style="display:inline">Found a shape</p>
-          <p id="shapeClosed" v-on:click="openShape" style="display:inline">, click to show.</p>
-          <p id="shapeOpenedText" v-on:click="closeShape" style="display:none">, click to hide.</p>
+          <p v-on:click="openShape" style="display:inline">Found a shape, </p>
+          <p id="shapeClosed" v-on:click="openShape" style="display:inline; font-weight:bold; cursor: pointer;">click to show.</p>
+          <p id="shapeOpenedText" v-on:click="closeShape" style="display:none; font-weight:bold; cursor: pointer;">click to hide.</p>
           <p id="shapeOpened" v-on:click="closeShape" style="display:none;">{{this.shapeInformation}}</p>
           <br>
         </div>
-        <p>{{this.identifies}}</p>
-        <p>{{this.remaining}}</p>
-        <p>{{this.remainingMembers}}</p>
+        <div style="min-height:5rem;">
+          <p>{{this.identifies}}</p>
+          <p>{{this.remaining}}</p>
+          <p>{{this.remainingMembers}}</p>
+        </div>
       </div>
     </div>
 
@@ -43,21 +45,34 @@
 
 
       <div class="flexContainer">
-        <div id="currentPage" class="textContent">
+        <!-- <div id="currentPage" class="textContent"> -->
+          <!-- <h3>Selected resource</h3> -->
+        <!-- </div> -->
+        <div class="textContent resizableContainers">
           <h3>Selected resource</h3>
+          <div id="currentPage"></div>
         </div>
-        <div id="graphHolder" class="textContent">
+        <div class="textContent resizableContainers">
           <h3>Graph</h3>
           <div id="graph"></div>
         </div>
       </div>
       <div class="flexContainer">
-        <div id="members" class="textContent">
+        <!-- <div id="members" class="textContent">
           <h3>Members</h3>
+        </div> -->
+        <div class="textContent resizableContainers">
+          <h3>Members</h3>
+          <div id="members"></div>
         </div>
 
-        <div id="log" class="textContent">
+        <div class="textContent resizableContainers">
           <h3>Log</h3>
+          <!-- <div id="currentPage"></div> -->
+
+
+        <div id="log" class="textContent">
+          <!-- <h3>Log</h3> -->
 
           <div id="v-model-radiobutton">
             <input type="radio" id="one" value="Remarks" v-model="picked" />
@@ -91,6 +106,7 @@
             </div>
           </div>
 
+        </div>
         </div>
       </div>
       <!-- This empty div allows user to resize extra info screen easily -->
@@ -231,7 +247,7 @@ export default {
       if (!url && dF.data_url){
         window.history.pushState({}, document.title, this.emptyURL+"?p="+encodeURIComponent(dF.data_url));
         this.urlList = [dF.data_url];
-      } else if (dF.data_url && !this.urlList.includes(dF.data_url)){
+      } else if (dF.data_url && !this.urlList.includes(dF.data_url) && (window.location.length + 3 + encodeURIComponent(dF.data_url).length) < 2000){
         window.history.pushState({}, document.title, window.location+"?p="+encodeURIComponent(dF.data_url));
         this.urlList.push(dF.data_url);
       } else if (!dF.data_url){
@@ -339,7 +355,6 @@ export default {
       }
 
       dG.setValues(this.myGreen, dF.jsondata, dP.drawCurrentPage, dM.drawMembers, "graph");
-      console.log("width?", document.getElementById("graph").offsetWidth);
       dG.drawGraph();
     },
     findLastNode(lastUrl){
@@ -409,7 +424,6 @@ export default {
     remainingMembersSetter(str){
       this.remainingMembers = str;
     },
-
     drawExtra(d){
       if (!this.svgHolder){
         this.svgHolder =
@@ -432,9 +446,9 @@ export default {
         ]
       }
 
-      dP.setValues(this.svgHolder, this.svgGHolder, this.remainingSetter, dF.jsondata, this.myGreen, dF.addImportLinks, this.start);
+      dP.setValues(this.svgHolder, this.svgGHolder, this.remainingSetter, dF.jsondata, dF.addImportLinks, this.start);
       dP.drawCurrentPage(d);
-      dM.setValues(this.svgHolder, this.svgGHolder, dF.members, dF.membersFailed, this.remainingMembersSetter, dF.node_validation)
+      dM.setValues(dF.members, dF.membersFailed, this.remainingMembersSetter, dF.node_validation, "members")
       dM.drawMembers(d);
     },
 
@@ -527,16 +541,38 @@ export default {
 <div id="members"></div>
 <div id="log"></div> */
 
-#currentPage, #graphHolder, #members, #log {
+/* #currentPage, #graphHolder, #members, #log {
   height: 50vh;
   resize: both;
   overflow:auto;
   width: 40%;
   margin-left: 7%;
   margin-top: 3.5vh;
+} */
+
+#currentPage, #graph, #members, #log {
+  flex-grow: 1;
+  background-color: rgba(0, 0, 0, 0.02);
+  overflow:auto;
+  padding-bottom: 22px;
 }
 
-#graphHolder {
+/* #currentPage {
+
+} */
+
+.resizableContainers {
+  height: 50vh;
+  resize: both;
+  overflow:auto;
+  width: 40%;
+  margin-left: 7%;
+  margin-top: 3.5vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* #graphHolder {
   display: flex;
   flex-direction: column;
 }
@@ -546,15 +582,16 @@ export default {
 }
 #graph{
   flex-grow: 1;
+  background-color: rgba(0, 0, 0, 0.02);
   /* height: 100%; */
   /* width: 100%; */
-}
+/* }
 #members{
 
 }
 #log{
 
-}
+} */
 
 #information {
   margin: .75em 0 .75em 0;
@@ -573,6 +610,20 @@ export default {
   width: 98vw;
   margin-left: calc(-50vw + 430px);
   /* justify-content: space-evenly; */
+}
+
+
+#graph > svg > g {
+  cursor: pointer;
+}
+
+#members > details {
+  white-space: pre;
+  margin-bottom: 1.5rem;
+}
+
+.failedMember {
+  color: red;
 }
 
 /* .container {

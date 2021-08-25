@@ -4,7 +4,6 @@ var svgHolder;
 var svgGHolder;
 var remainingSetter;
 var jsondata;
-var myGreen;
 var addImportLinks;
 var start;
 var svgE;
@@ -12,12 +11,11 @@ var svgEG;
 var offH;
 var tt;
 
-export function setValues(_svgHolder, _svgGHolder, _remainingSetter, _jsondata, _myGreen, _addImportLinks, _start){
+export function setValues(_svgHolder, _svgGHolder, _remainingSetter, _jsondata, _addImportLinks, _start){
   svgHolder = _svgHolder;
   svgGHolder = _svgGHolder;
   remainingSetter = _remainingSetter;
   jsondata = _jsondata;
-  myGreen = _myGreen;
   addImportLinks = _addImportLinks;
   start = _start;
 }
@@ -49,11 +47,11 @@ export function drawCurrentPage(d){
   }
 
   if (d.relation_count !== undefined){
-    newG.append("rect").attr("x", 0).attr("y", 0).style("stroke", myGreen)//.style("stroke", "#69b3a2")
-    .attr("width", newG.node().getBBox().width+30)
-    .attr("height", newG.node().getBBox().height+30)
-    .attr("class", "outer_rect")
-    .lower();
+    // newG.append("rect").attr("x", 0).attr("y", 0).style("stroke", myGreen)//.style("stroke", "#69b3a2")
+    // .attr("width", newG.node().getBBox().width+30)
+    // .attr("height", newG.node().getBBox().height+30)
+    // .attr("class", "outer_rect")
+    // .lower();
 
 
     // Make the main svg holding this large enough to show everything
@@ -71,8 +69,8 @@ export function updateWidth(width){
     let newHeight = document.getElementById("currentPageTable").offsetHeight;
     document.getElementById("currentPageTableHolder").setAttribute("height", newHeight);
 
-    svgEG.selectAll("rect").attr("width", Math.max(width-20, tt.node().getBBox().width + 30));
-    svgEG.selectAll("rect").attr("height", newHeight+offH+30);
+    // svgEG.selectAll("rect").attr("width", Math.max(width-20, tt.node().getBBox().width + 30));
+    // svgEG.selectAll("rect").attr("height", newHeight+offH+30);
 
     let bbox = svgEG.node().getBBox();
     svgE.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
@@ -173,8 +171,6 @@ function expandRelationHolder(d, tt, newG){
   innerg.attr("width", bboxT.offsetWidth).attr("height", bboxT.offsetHeight);
 }
 
-
-
 function expandRelationHolderNodeInfo(d, tt){
   tt.append("tspan").text(d.type)
   .attr("dy", 22)
@@ -189,6 +185,7 @@ function expandRelationHolderNodeInfo(d, tt){
   .attr("dy", 22)
   .attr("x",0)
   .attr("dx",5)
+  .on("click", function(){navigator.clipboard.writeText(d.name);})
   .append("title").text(d.name);
 
   tt.append("tspan").text("relations: " + d.relation_count)
@@ -281,12 +278,12 @@ function tableClick(index, relationData, newG, innerg, table, expand = true){
     document.getElementById("large"+index).style.visibility = "collapse";
   }
 
-  newG.selectAll(".outer_rect").attr("width", 0).attr("height", 0);
+  // newG.selectAll(".outer_rect").attr("width", 0).attr("height", 0);
   let bboxT = table.node();
   innerg.attr("width", bboxT.offsetWidth).attr("height", bboxT.offsetHeight);
 
-  newG.selectAll(".outer_rect").attr("width", newG.node().getBBox().width+30)
-  .attr("height", newG.node().getBBox().height+30);
+  // newG.selectAll(".outer_rect").attr("width", newG.node().getBBox().width+30)
+  // .attr("height", newG.node().getBBox().height+30);
 
   let bbox = svgEG.node().getBBox();
   svgE.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))

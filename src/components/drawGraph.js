@@ -2,6 +2,7 @@ import * as d3 from "d3";
 import {collectionSpecial} from './dataFunctions.js'
 
 var myGreen;
+// Value between 1 and 0 deciding the speed of graph drawing (lower means slower but better spread betweed nodes)
 var alpha_decay_rate = 0.5;
 var jsondata;
 var svg;
@@ -10,7 +11,8 @@ var myLinkData;
 var linkLabel;
 var parentIdString;
 var start;
-// var zoomScale = 1;
+// Change this if you want nodes to be further apart
+const nodeDistance = 100;
 
 export function setValues(_myGreen, _jsondata, _parentIdString, _linkData, _start){
   myGreen = _myGreen;
@@ -65,6 +67,7 @@ export function drawGraph() {
   svg.attr("prevTX", 0).attr("prevTY", 0).attr("scaleAll", 1);
 
 
+  // This creates the 'arrows' on the link lines
   svg.append("marker")
   .attr("id", "arrow")
   .attr("markerUnits","userSpaceOnUse")
@@ -80,6 +83,7 @@ export function drawGraph() {
   .attr('fill','gray');//Arrow color
 
 
+  // This creates the diagonal line background on the currently selected rectangle
   svg
   .append('defs')
   .append('pattern')
@@ -111,8 +115,18 @@ export function drawGraph() {
   .data(linkData)
   .enter().append("text")
   .text(function(d){
-    return myLinkData.get("" + d.source + d.target);
+    if (!myLinkData.has("" + d.source + d.target)){
+      return "";
+    }
+    let txt = myLinkData.get("" + d.source + d.target);
+
+    if (txt.length > 25){
+      return txt.slice(0,18)+"..."+txt.slice(-5);
+    }
+    return txt;
   });
+
+  linkLabel.append("title").text(function(d){return myLinkData.get("" + d.source + d.target)});
 
 
   if (jsondata.collection.length > 0){
@@ -310,14 +324,14 @@ export function drawGraph() {
     }
   }
 
-
-
+  // This creates the actual graph, first create the links
+  // Then push every node to the center, then spread them out again
   d3.forceSimulation(all)
   .force("link", d3.forceLink()
   .id(function(d) { return d.id; })
   .links(linkData))
   .force("center", d3.forceCenter(width / 2, height / 2))
-  .force("collide", d3.forceCollide(100))
+  .force("collide", d3.forceCollide(nodeDistance))
   .alphaDecay(alpha_decay_rate)
   .on("end", firstTick);
 
@@ -365,6 +379,7 @@ function firstTick(){
 }
 
 
+// Call this after changing the graph
 function ticked() {
   // This simply sets the attribute to the given (parent) data x and y
   d3.selectAll(".maing_g")
@@ -410,7 +425,12 @@ function fixLinks(){
       return "15";
     }
   })
-  .attr("x", function(){return -1*d3.select(this).node().getBBox().width / 2});
+  .attr("x", function(){
+    if (!d3.select(this).node().getBBox()){
+      return 0;
+    }
+    return -1*d3.select(this).node().getBBox().width / 2;
+  });
 }
 
 

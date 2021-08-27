@@ -22,21 +22,19 @@ export function setValues(_svgHolder, _svgGHolder, _remainingSetter, _jsondata, 
   members = _members;
 }
 
-
+// Now that this is separate from the actual graph this should be changed to plain HTML and not use svg's & d3 stuff.
 
 export function drawCurrentPage(d){
   svgE = svgHolder[0];
   svgEG = svgGHolder[0];
 
   svgGHolder[0].selectAll("g").remove();
-  // this.remaining = undefined;
   remainingSetter(undefined);
   if (jsondata[d.id] && jsondata[d.id].remainingItems > 0){
     remainingSetter("Remaining items identified via relation properties for selected resource: " + jsondata[d.id].remainingItems + ".\n");
   }
 
   var newG;
-  // var tt;
 
   if (d.relation_count !== undefined){
     newG = svgEG.append("g").attr("class", "new_g");
@@ -49,13 +47,6 @@ export function drawCurrentPage(d){
   }
 
   if (d.relation_count !== undefined){
-    // newG.append("rect").attr("x", 0).attr("y", 0).style("stroke", myGreen)//.style("stroke", "#69b3a2")
-    // .attr("width", newG.node().getBBox().width+30)
-    // .attr("height", newG.node().getBBox().height+30)
-    // .attr("class", "outer_rect")
-    // .lower();
-
-
     // Make the main svg holding this large enough to show everything
     let bbox = svgEG.node().getBBox();
     svgE.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
@@ -70,9 +61,6 @@ export function updateWidth(width){
     document.getElementById("currentPageTableHolder").setAttribute("width", width-60);
     let newHeight = document.getElementById("currentPageTable").offsetHeight;
     document.getElementById("currentPageTableHolder").setAttribute("height", newHeight);
-
-    // svgEG.selectAll("rect").attr("width", Math.max(width-20, tt.node().getBBox().width + 30));
-    // svgEG.selectAll("rect").attr("height", newHeight+offH+30);
 
     let bbox = svgEG.node().getBBox();
     svgE.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))
@@ -116,7 +104,6 @@ function expandRelationHolder(d, tt, newG){
   for (let dataX of tableData){
     let trX = tbody.insertRow();
     trX.id = "small"+count;
-    // trX.onclick = tableClick.bind(this, count, jsondata[d.id][count], newG, innerg, table, true)
 
     for(let valueX of Object.values(dataX)){
       let textX = document.createTextNode(valueX);
@@ -126,7 +113,6 @@ function expandRelationHolder(d, tt, newG){
 
     let tdX = trX.insertCell();
     let btnExpand = document.createElement("button");
-    //this button does not need an onclick since it will propagate the event to the tablerow anyway
     btnExpand.onclick = tableClick.bind(this, count, jsondata[d.id][count], newG, innerg, table, true);
     btnExpand.innerHTML = "Expand"
     tdX.appendChild(btnExpand);
@@ -290,12 +276,8 @@ function tableClick(index, relationData, newG, innerg, table, expand = true){
     document.getElementById("large"+index).style.visibility = "collapse";
   }
 
-  // newG.selectAll(".outer_rect").attr("width", 0).attr("height", 0);
   let bboxT = table.node();
   innerg.attr("width", bboxT.offsetWidth).attr("height", bboxT.offsetHeight);
-
-  // newG.selectAll(".outer_rect").attr("width", newG.node().getBBox().width+30)
-  // .attr("height", newG.node().getBBox().height+30);
 
   let bbox = svgEG.node().getBBox();
   svgE.attr("viewBox", "0,0,"+(bbox.width+bbox.x)+","+(bbox.height+bbox.y))

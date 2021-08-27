@@ -47,7 +47,7 @@ var collectionStats = {};
 // Holds the label for every link between two nodes, used to look up when drawing the graph
 var relationLabelMap = new Map();
 // Maps a url onto what that url got redirected to when trying to dereference, happens alot when using ldes streams
-// Map("url", Set(redirects)) <- there is no reason why this still uses a set; legacy issue
+// Map("url", "final redirect")
 var redirectMappings = new Map();
 
 
@@ -93,7 +93,7 @@ export function setDataUrl(url){
   data_url = url;
 }
 
-
+/*
 // DEPRECATED
 // expected arguments: starting url and callBack function for when all possible nodes have been evaluated
 // This function will delete any previous saved data
@@ -149,7 +149,9 @@ function validateNext(todo, done, callBack){
   }
 
 }
+*/
 
+// clears all current data and resets it for a new collection
 export function clearData(){
   jsondata = {"collection":[], "links":new Map(), "shapes":[], "nodes":[], "views":[]};
   shape_validation = null;
@@ -190,16 +192,19 @@ function getImportLinks(data){
   return found;
 }
 
+// Get members by id
 async function extractId(store, id) {
   const quadsWithSubj = extractShapeHelp(store, id);
   const textStream = rdfSerializer.serialize(streamifyArray(quadsWithSubj), { contentType: 'text/turtle' });
   return await stringifyStream(textStream);
 }
 
+// Get the entire linked shape from the starting id
 async function extractShapeId(store, id){
-  return await stringifyStream(await extractShape(store, id));
+  return await stringifyStream(await extractShape(store, id, false));
 }
 
+// Get the starting id for the shape
 function getShapeIds(store){
   var shapeIds = [];
   shapeIds = shapeIds.concat(store.getQuads(null, tree+'shape', null, null).map(quad => quad.object.id));
@@ -208,6 +213,7 @@ function getShapeIds(store){
   return shapeIds;
 }
 
+// recursive function to get shape information from the current store
 function extractShapeHelp(store, id, checked = []) {
   var quadsWithSubj = store.getQuads(id, null, null, null);
   for (let quad of quadsWithSubj){
@@ -221,8 +227,8 @@ function extractShapeHelp(store, id, checked = []) {
   return quadsWithSubj;
 }
 
-
-async function extractShape(store, id){
+// Extract the actual shape, 'addTarget' will add a shacl targetting statement if no (implicit) targetting was found
+async function extractShape(store, id, addTarget = true){
   return new Promise(function(resolve){
     const store2 = new N3.Store();
     var quadsWithSubj = extractShapeHelp(store, id);
@@ -231,28 +237,33 @@ async function extractShape(store, id){
       let newq = [];
       rdfDereferencer.dereference(id)
       .catch((error) => {
-        remarks.set(data_url, remarks.get(data_url).concat("Error while parsing SHAPE data at:\n"+id+".\n\n"+error+"\n"));
-        return extractShapeNext(store2, quadsWithSubj, id, resolve);
+        if ((""+error).slice(0,23) === "Error: Error requesting") {
+          remarks.set(data_url, remarks.get(data_url).concat("Error while parsing SHAPE data at:\n"+id+".\nThis website may not have CORS enabled.\n"+error+"\n"));
+        } else {
+          remarks.set(data_url, remarks.get(data_url).concat("Error while parsing SHAPE data at:\n"+id+".\n"+error+"\n"));
+        }
+
+        return extractShapeNext(store2, quadsWithSubj, id, resolve, addTarget);
       })
       .then(v => {
         v.quads.on('data', (quad) => {newq.push(quad);})
         .on('error', (error) => {console.error(error); let errM = "Error while parsing SHAPE data at:\n"+id+".\n\n"+error+"\n"; remarks.set(data_url, remarks.get(data_url).concat(errM)); /*alert(errM);*/})
         .on('end', () => {
           store2.addQuads(newq);
-          return extractShapeNext(store2, quadsWithSubj, id, resolve);
+          return extractShapeNext(store2, quadsWithSubj, id, resolve, addTarget);
         })
       })
       .catch(() => {
-        return extractShapeNext(store2, quadsWithSubj, id, resolve);
+        return extractShapeNext(store2, quadsWithSubj, id, resolve, addTarget);
       });
     } else {
-      return extractShapeNext(store2, quadsWithSubj, id, resolve);
+      return extractShapeNext(store2, quadsWithSubj, id, resolve, addTarget);
     }
   });
 }
 
-
-function extractShapeNext(store2, quadsWithSubj, id, resolve){
+// Check for (implicit) targetting, if none found add defaul target all members
+function extractShapeNext(store2, quadsWithSubj, id, resolve, addTarget = true){
   store2.addQuads(quadsWithSubj);
   var targetQuads = [];
   for (let tempTarget of shapeTargets){
@@ -266,7 +277,7 @@ function extractShapeNext(store2, quadsWithSubj, id, resolve){
     let t2 = store2.getQuads(id, rdf+'type', rdfs+'Class', null);
 
     // If no target was given for the shape, make it target all tree:member objects
-    if (t1.length == 0 || t2.length == 0){
+    if ((t1.length == 0 || t2.length == 0) && addTarget){
       store2.addQuad(
         namedNode(id),
         namedNode(shacl+'targetObjectsOf'),
@@ -297,6 +308,7 @@ function extractShapeMembers(store, ids){
 }
 
 
+// this will get the collection from the given url to allow showing extra information like creator, etc
 async function derefCollection(collectionUrl, collectionCallBack){
   // This means we do not have to change any data
   if (collectionRef.url && collectionRef.url == collectionUrl){
@@ -312,8 +324,13 @@ async function derefCollection(collectionUrl, collectionCallBack){
   let newq = [];
   rdfDereferencer.dereference(collectionUrl)
   .catch((error) => {
-    let errM = "Error trying to get the collection root.\nWill be unable to provide extra information about the collection.\n" + error+"\n";
-    // alert(errM)
+    let errM;
+    if ((""+error).slice(0,23) === "Error: Error requesting") {
+      errM = "Error trying to get the collection root.\nThis website may not have CORS enabled.\nWill be unable to provide extra information about the collection.\n" + error+"\n";
+    } else {
+      errM = "Error trying to get the collection root.\nWill be unable to provide extra information about the collection.\n" + error+"\n";
+    }
+
     remarks.set(data_url, remarks.get(data_url).concat(errM));
     fallBackNoType();
     if (collectionCallBack){
@@ -398,8 +415,6 @@ function parseCollectionTreeData(newq){
             }
           }
 
-          // addImportLinks(node);
-
           jsondata.views.push(node)
           mapAddToSet(jsondata.links, collectionRef.url, viewNode['@id']+"_node");
         }
@@ -408,13 +423,14 @@ function parseCollectionTreeData(newq){
   })
 }
 
+// This 'parses' the actual info from the dereferenced collection
 function parseCollection(collectionCallBack){
   if (!myMetadata.collections || !myMetadata.collections.size > 0 || !Array.from(myMetadata.collections.values())[0]['@type']){
     let typeX = Array.from(collectionRef.store.getQuads(collectionRef.url, rdf+'type', null, null).map(quad => quad.object.id))[0];
     if (typeX){
       collectionStats.mainInfo = "Collection type: " + typeX + "\n";
     } else {
-      // mainInfo = "No type property was defined for this collection.\n";
+      // No type property was defined for this collection.
       collectionStats.mainInfo = "";
     }
   }
@@ -435,6 +451,7 @@ function parseCollection(collectionCallBack){
 
 // give a url to validate, url should include tree:member and tree:shape definitions
 // this function will automatically fetch all needed imports;
+// This is meant to be a standalone functionality -> calls getImportsAndMembers() which then calls validateShape()
 export async function onlyValidate(url){
   let newq = [];
 
@@ -494,18 +511,20 @@ function mapAddToSet(myMap, myKey, myValue){
 }
 
 
-// function dummyFunction(){
-//   return;
-// }
+function mapDeleteAll(myMap, myValue){
+  myMap.delete(myValue);
+  for (let vX of myMap.values()){
+    vX.delete(myValue);
+  }
+}
+
 
 
 // pass a url to add a new node OR set data_url to go to a new collection
 // presence of url variable will get checked BEFORE data_url and thus data_url gets ignored if url is not undefined
-// All callback functions will be called even when function quits with errors
-// callBack expects a funtion and will call it when all data has been extracted into jsondata, members, ..
-// fix expects a function and will be called either when shacl validation is done or when no validation is possible (no shape / no members)
-// CollectionCallBack will be called when the actual collection root has been dereferenced
+// Will return a promise with a giant object containing all needed objects, check at the top for more details on all included properties
 export async function getData(urlX) {
+  // Function will call three different asyncs later on
   var promiseResolve1;
   var p1 = new Promise(function(resolve){
     promiseResolve1 = resolve;
@@ -569,37 +588,42 @@ export async function getData(urlX) {
     dereferenced = false;
     return promiseResult;
   }
-  if (redirectMappings.has(data_url)){
-    for (let tX of redirectMappings.get(data_url)){
-      if (loaded.has(tX)){
-        stopped();
-        dereferenced = false
-        return promiseResult;
-      }
-    }
+  if (redirectMappings.has(data_url) && loaded.has(redirectMappings.get(data_url))){
+    stopped();
+    dereferenced = false;
+    return promiseResult;
   }
 
-  console.log("fetching ", data_url);
+  // console.log("fetching ", data_url);
   remarks.set(data_url, "");
 
-  const {quads, url} = await rdfDereferencer.dereference(data_url).catch(e => alert(e));
+  const {quads, url} = await rdfDereferencer.dereference(data_url).catch(error => {
+    if ((""+error).slice(0,23) === "Error: Error requesting") {
+      alert("This website may not have CORS enabled.\n"+error);
+    } else {
+      alert(error);
+    }
+  });
   urlMappings.set(url, data_url);
-  quads.on('data', (quad) => {qtext.push(quad); /*console.log(quad)*/})
+  quads.on('data', (quad) => {qtext.push(quad);})
   .on('error', (error) => {console.error(error); let errM = "Error while parsing data at:\n"+data_url+".\n\n"+error+"\n";remarks.set(data_url, remarks.get(data_url).concat(errM)); /*alert(errM);*/})
   .on('end', () => {
     extractMetadata(qtext).then(metadata => {
-      console.log("metadata:");
-      console.log(metadata);
+      // console.log("metadata:");
+      // console.log(metadata);
 
       loaded.add(url);
 
       if (data_url != url){
-        mapAddToSet(redirectMappings, data_url, url);
+        redirectMappings.set(data_url, url);
       }
 
-      if (metadata.nodes && metadata.nodes.size > 0){
-        mapAddToSet(redirectMappings, data_url, Array.from(metadata.nodes.keys())[0]);
+      // This removes 'fake' nodes where the actual node is a redirect
+      if (redirectMappings.has(data_url)){
+        jsondata.nodes = jsondata.nodes.filter(element => element.name != data_url && !redirectMappings.has(element.name));
+        mapDeleteAll(jsondata.links, data_url+"_node");
       }
+
 
       myMetadata = metadata;
       const store = new N3.Store(qtext)
@@ -700,12 +724,8 @@ export async function getData(urlX) {
       // This will also link the new nodes to old nodes and vice versa
       parseRelationsAndLinks(metadata);
 
-      console.log("jsondata:");
-      console.log(jsondata);
-
-      console.log("members:");
-      console.log(members);
-
+      // console.log("jsondata:");
+      // console.log(jsondata);
 
       // TODO shape is defined on the collection so shape is never allowed to change
       // Currently we just ignore new shapes instead of checking if they are correct compared to the original
@@ -863,7 +883,7 @@ function parseRelationsAndLinksHelper(relationJson, metadata, nodeId, nodeName){
   }
 }
 
-
+// create a label for every possible link, no matter if it actually exists or not
 function createLinkLabels(relationObj, nodeId){
   if (relationObj["value"]){
     let vT = "";
@@ -915,51 +935,41 @@ function parseRegularNodes(collectionObj, metadata, collectionId){
       if (metadata.nodes.has(viewNode['@id'])){
         viewNode = metadata.nodes.get(viewNode['@id']);
       }
-      let double = false;
-      // for (let checker of jsondata.nodes){
-      //   if (checker.name == viewNode['@id']){
-      //     double = true;
-      //   }
-      // }
 
-      if (!double){
-        let node = {};
-        node.id = viewNode['@id']+"_node";
-        node.name = viewNode['@id'];
+      let node = {};
+      node.id = viewNode['@id']+"_node";
+      node.name = viewNode['@id'];
 
-        if(metadata.nodes && metadata.nodes.get(viewNode['@id']) && metadata.nodes.get(viewNode['@id']).relation){
-          node.relation_count = metadata.nodes.get(viewNode['@id']).relation.length;
-        } else {
-          node.relation_count = 0;
-        }
-
-        for (let pAttr of nodeSpecial){
-          if (viewNode[pAttr]){
-            node[pAttr] = viewNode[pAttr];
-          }
-        }
-
-        // addImportLinks(node);
-
-        let found = false;
-        jsondata.views = jsondata.views.filter(v => {
-          if (v.name == node.name){
-            found = true;
-          }
-          return v.name != node.name;
-        })
-
-        if (found){
-          node.type = "View";
-          jsondata.views.push(node);
-          mapAddToSet(jsondata.links, collectionId, viewNode['@id']+"_node");
-        } else {
-          jsondata.nodes = jsondata.nodes.filter(element => element.name != viewNode['@id']);
-          node.type = "Node";
-          jsondata.nodes.push(node);
-        }
-
+      if(metadata.nodes && metadata.nodes.get(viewNode['@id']) && metadata.nodes.get(viewNode['@id']).relation){
+        node.relation_count = metadata.nodes.get(viewNode['@id']).relation.length;
+      } else {
+        node.relation_count = 0;
       }
+
+      for (let pAttr of nodeSpecial){
+        if (viewNode[pAttr]){
+          node[pAttr] = viewNode[pAttr];
+        }
+      }
+
+      let found = false;
+      jsondata.views = jsondata.views.filter(v => {
+        if (v.name == node.name){
+          found = true;
+        }
+        return v.name != node.name;
+      })
+
+      if (found){
+        node.type = "View";
+        jsondata.views.push(node);
+        mapAddToSet(jsondata.links, collectionId, viewNode['@id']+"_node");
+      } else {
+        jsondata.nodes = jsondata.nodes.filter(element => element.name != viewNode['@id']);
+        node.type = "Node";
+        jsondata.nodes.push(node);
+      }
+
     }
   }
 }
@@ -1005,8 +1015,6 @@ function parseViewNodes(collectionObj, metadata, collectionId){
             node[pAttr] = viewNode[pAttr];
           }
         }
-
-        // addImportLinks(node);
 
         jsondata.views.push(node)
         mapAddToSet(jsondata.links, collectionId, viewNode['@id']+"_node");
@@ -1094,11 +1102,14 @@ function getImportsAndMembers(metadata, store, collectionObj, fix = function(){r
   }
 }
 
+
 async function loadDatasetX (stream) {
   const parser = new ParserN3({ factory });
   return factory.dataset().import(parser.import(await stream));
 }
 
+
+// This function will extract members & shapes independently, it only needs member Ids and a store
 async function validateShape(membIds, store, newNodeMembersId, fix){
   for (let mId of newNodeMembersId){
     membersFailed[mId] = [];
@@ -1109,7 +1120,6 @@ async function validateShape(membIds, store, newNodeMembersId, fix){
 
   if (shapeIds.size > 1){
     let errM = "Found multiple shapes, will only validate using the first one.\n" + JSON.stringify(shapeIds);
-    // alert(errM);
     remarks.set(data_url, remarks.get(data_url).concat(errM));
   }
   if (shapeIds.size == 0){

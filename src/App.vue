@@ -1,5 +1,4 @@
 <template>
-  <!-- <myHeader></myHeader> -->
   <h1>Visualizer</h1>
   <div id="visualizerContainer">
     <div class="textContent">
@@ -130,12 +129,11 @@
           </div>
         </div>
       </div>
-      <!-- This empty div allows user to resize extra info screen easily -->
+      <!-- This empty div allows user to resize easily -->
       <div style="height: 100px;"></div>
     </div>
 
   </div>
-  <!-- <myFooter></myFooter> -->
 </template>
 
 
@@ -147,29 +145,21 @@ import * as dP from './components/drawCurrentPage.js';
 import * as dM from './components/drawCurrentMembers.js';
 import * as dG from './components/drawGraph.js';
 
-// import header from './components/header.html'
-// import footer from './components/footer.html'
-// import footer from 'https://raw.githubusercontent.com/TREEcg/site/master/_includes/footer.html'
-
 /*
 POSSIBLE TODO OVERVIEW
-  Get rid of using multiple nested promises as a way to observe function completion, I hate myself for coding that stuff
   show what members actually got validated, member might not have correct attributes targeted by shape
   support for multiple collections at the same URL?
   support for multiple nodes at the same URL?
   support for working importStream
     this means adding it to function addImportLinks(data)
   support for working tree:search
-  conditionalImport now gets imported without checking conditions
-    this means adding a check at function addImportLinks(data)
+  Fix graph to add nodes instead of always redrawing https://observablehq.com/@d3/build-your-own-graph?collection=@d3/d3-force
+  Shacl shape 'getter' only follows the link at tree:shape, there might be more to import
+  pagination / fragmentation info for ldes streams
 */
 
 export default {
-  name: 'App',
-  components: {
-    // 'myHeader':header,
-    // 'myFooter':footer
-  },
+  name: 'Visualizer',
   data(){
     return {
       exampleMap: new Map([
@@ -208,19 +198,14 @@ export default {
       dataResult: undefined,
     }
   },
-  // watch: {
-  //   picked: {
-  //     handler() {
-  //       this.remarks = dF.remarks;
-  //       this.nodeValidation = dF.nodeValidation;
-  //     },
-  //   }
-  // },
-
   created() {
-    var listUrl = ("" + window.location).split('?p=');
-    this.urlList = JSON.parse(JSON.stringify(listUrl));
+    var listUrl = ("" + window.location).split('#p=');
     this.emptyURL = listUrl.shift();
+    if (listUrl.length <= 0){
+      return;
+    }
+    listUrl = listUrl[0].split('&p=');
+    this.urlList = JSON.parse(JSON.stringify(listUrl));
     listUrl = listUrl.map(v => decodeURIComponent(v));
     if (listUrl.length > 0){
       const lastUrl = listUrl.pop();
@@ -268,10 +253,10 @@ export default {
       this.derefUrl(url, draw);
 
       if (!url && dF.data_url){
-        window.history.pushState({}, document.title, this.emptyURL+"?p="+encodeURIComponent(dF.data_url));
+        window.history.pushState({}, document.title, this.emptyURL+"#p="+encodeURIComponent(dF.data_url));
         this.urlList = [dF.data_url];
       } else if (dF.data_url && !this.urlList.includes(dF.data_url) && (window.location.toString().length + 3 + encodeURIComponent(dF.data_url).length) < 2000){
-        window.history.pushState({}, document.title, window.location+"?p="+encodeURIComponent(dF.data_url));
+        window.history.pushState({}, document.title, window.location+"&p="+encodeURIComponent(dF.data_url));
         this.urlList.push(dF.data_url);
       } else if (!dF.data_url){
         window.history.pushState({}, document.title, this.emptyURL);
@@ -311,10 +296,6 @@ export default {
       }
 
     },
-    validateAll(){
-      dF.setDataUrl(this.data_url);
-      dF.validateAll(this.data_url, this.cB);
-    },
     svgClear(){
 
       this.identifies = undefined;
@@ -325,18 +306,15 @@ export default {
         this.dataResult.shapePresent = undefined;
         this.dataResult.shapeInformation = undefined;
       }
-      // d3.selectAll("div").selectAll("svg").remove();
       this.svgHolder = null;
       this.svgGHolder = null;
       d3.selectAll("#currentPage").selectAll("svg").remove();
-      // d3.selectAll("#currentPage").selectAll("svg").remove();
     },
     cB(draw = true){
       this.setSVGElements();
 
       if (!this.findLastNode(this.dataResult.data_url)){
-        let tempArray = Array.from(this.dataResult.redirectMappings.get(this.dataResult.data_url));
-        while(tempArray.length > 0 && !this.findLastNode(tempArray.pop())){return;}
+        this.findLastNode(this.dataResult.redirectMappings.get(this.dataResult.data_url));
       }
 
       if (this.dataResult && this.dataResult.jsondata.shapes && this.dataResult.jsondata.shapes[0] && this.dataResult.jsondata.shapes[0]["shape_extra"]){
@@ -446,47 +424,6 @@ export default {
 
 
 <style>
-/* #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-} */
-
-/* #visualizerContainer {
-  position: inherit;
-  padding-left: -1000px;
-  margin-left: -1000px;
-  left: 0;
-} */
-
-/* #visualizerContainer:after {
-  content: " ";
-  padding-bottom: 1000px;
-} */
-
-/* body {
-  max-width: 100vw;
-} */
-
-/* #extra {
-  width:100%;
-  height:75vh;
-}
-
-#windowContainer {
-  position: fixed;
-  top: 0;
-  left: 0;
-  background-color: rgba(255, 255, 255, 0.75);
-  width: 100%;
-  height: 100%;
-  padding-top: 100px;
-  display: none;
-} */
-
-
 #fakeExamples {
   margin: 0 0 0 0;
   padding: 1px 0 0 0;
@@ -522,30 +459,12 @@ export default {
   border-width: 1px;
 }
 
-/* <div id="currentPage"></div>
-<div id="graph" style="overflow:scroll; resize: both;"></div>
-<div id="members"></div>
-<div id="log"></div> */
-
-/* #currentPage, #graphHolder, #members, #log {
-  height: 50vh;
-  resize: both;
-  overflow:auto;
-  width: 40%;
-  margin-left: 7%;
-  margin-top: 3.5vh;
-} */
-
 #currentPage, #graph, #members, #log {
   flex-grow: 1;
   background-color: rgba(0, 0, 0, 0.02);
   overflow:auto;
   padding-bottom: 22px;
 }
-
-/* #currentPage {
-
-} */
 
 .resizableContainers {
   height: 50vh;
@@ -557,27 +476,6 @@ export default {
   display: flex;
   flex-direction: column;
 }
-
-/* #graphHolder {
-  display: flex;
-  flex-direction: column;
-}
-
-#currentPage{
-
-}
-#graph{
-  flex-grow: 1;
-  background-color: rgba(0, 0, 0, 0.02);
-  /* height: 100%; */
-  /* width: 100%; */
-/* }
-#members{
-
-}
-#log{
-
-} */
 
 #information {
   margin: .75em 0 .75em 0;
@@ -595,7 +493,6 @@ export default {
   flex-wrap: wrap;
   width: 98vw;
   margin-left: calc(-50vw + 430px);
-  /* justify-content: space-evenly; */
 }
 
 
@@ -612,55 +509,6 @@ export default {
   color: red;
 }
 
-/* .container {
-  margin-bottom: 10px;
-  position: sticky;
-  left: 0%;
-} */
-
-/* .divFloat {
-  margin: 0 auto;
-  background-color: #FFF;
-  color: #000;
-  width: 600px;
-  height: auto;
-  padding: 20px;
-  border: solid 1px #999;
-  -webkit-border-radius: 3px;
-  -webkit-box-orient: vertical;
-  -webkit-transition: 200ms -webkit-transform;
-  box-shadow: 0 4px 23px 5px rgba(0, 0, 0, 0.2), 0 2px 6px rgba(0, 0, 0, 0.15);
-  display: block;
-  resize: both;
-  overflow:scroll;
-} */
-
-/* .close {
-  position: sticky;
-  left: 100%;
-  width: 20px;
-  height: 20px;
-  opacity: 0.3;
-  float: right;
-  z-index: 11;
-}
-.close:hover {
-  opacity: 1;
-}
-.close:before, .close:after {
-  position: absolute;
-  top: -1px;
-  content: ' ';
-  height: 20px;
-  width: 2px;
-  background-color: #333;
-}
-.close:before {
-  transform: rotate(45deg);
-}
-.close:after {
-  transform: rotate(-45deg);
-}*/
 .spacing {
   white-space: pre-wrap;
 }
@@ -673,11 +521,6 @@ rect {
   fill: white;
   stroke-width: 1.5px;
 }
-
-/* table {
-  width: 600px;
-  height: 600px;
-} */
 
 .tableTextContainer {
   max-width: 100%;
@@ -693,7 +536,6 @@ table {
   width: 100%;
   table-layout: fixed;
   border-collapse: collapse;
-  /* max-width: 80%; */
 }
 
 td > button {
@@ -735,21 +577,6 @@ th {
   text-align: left;
   font-weight: bold;
 }
-
-/* table {
-    text-align: right;
-    padding-right: 2px;
-    margin-right: 3px;
-    width: 100%;
-}
-
-td:nth-child(6) {
-    margin-right: 8px;
-}
-
-td:nth-child(1) {
-    width: 200px;
-}  */
 
 
 @media (max-width: 860px) {

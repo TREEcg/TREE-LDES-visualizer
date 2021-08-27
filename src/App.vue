@@ -227,9 +227,6 @@ export default {
     this.startObserver();
   },
   methods : {
-
-    // url = undefined & this.data_url defined if you wish to start a new collection
-    // url = undefined will also reset the path save in the page url
     startObserver(){
       // This fixes the size off the table showing relations etc.
       if (this.tableObserver){
@@ -246,6 +243,8 @@ export default {
       }
 
     },
+    // url = undefined & this.data_url defined if you wish to start a new collection
+    // url = undefined will also reset the path save in the page url
     start(url, draw = false){
       if (!url){
         draw = true;

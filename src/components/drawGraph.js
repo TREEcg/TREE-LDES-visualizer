@@ -4,35 +4,34 @@ import {collectionSpecial} from './dataFunctions.js'
 var myGreen;
 var alpha_decay_rate = 0.5;
 var jsondata;
-var drawCurrentPage;
-var drawMembers;
 var svg;
 var link;
 var myLinkData;
 var linkLabel;
 var parentIdString;
 var start;
+// var zoomScale = 1;
 
-export function setValues(_myGreen, _jsondata, _drawCurrentPage, _drawMembers, _parentIdString, _linkData, _start){
+export function setValues(_myGreen, _jsondata, _parentIdString, _linkData, _start){
   myGreen = _myGreen;
   jsondata = _jsondata;
-  drawCurrentPage = _drawCurrentPage;
-  drawMembers = _drawMembers;
   parentIdString = _parentIdString;
   myLinkData = _linkData;
   start = _start;
-  console.log(start);
+}
+
+
+export function updateSelected(d){
+  if (svg){
+    svg.selectAll("rect").style("stroke-width", "1").style("fill", "white");
+    svg.selectAll(".node_g[url_id='" + d.id + "'], .view_g[url_id='" + d.id + "']").selectAll("rect").style("stroke-width", "3").style("fill", "url(#diagonalHatch)");
+  }
 }
 
 
 export function drawGraph() {
   const width = document.getElementById(parentIdString).offsetWidth;
   const height = document.getElementById(parentIdString).offsetHeight;
-
-  const drawCurrentPageBound = (d) => drawCurrentPage(d);
-  const drawMembersBound = (d) => drawMembers(d);
-
-  // console.log(drawCurrentPageBound, drawMembersBound);
 
   //clear the graph on redrawing
   d3.select("#"+parentIdString).selectAll("svg").remove();
@@ -45,23 +44,25 @@ export function drawGraph() {
   jsondata.nodes.forEach(v => {
     if (!targets.includes(v.id)){
       linkData.push({"source":jsondata.collection[0].id,"target":v.id,"fakeLink":true});
+      myLinkData.set(jsondata.collection[0].id+v.id, "subset")
     }
   });
 
-
-  // console.log("linkData: ", linkData);
-  var all = jsondata.collection.concat(jsondata.shapes.concat(jsondata.nodes.concat(jsondata.views)));
-  // append the svg object to the body of the page
   svg = d3.select("#"+parentIdString)
   .append("svg")
   .attr("width", "100%")
   .attr("height", "100%")
-  .attr("pointer-events", "all");
+  .attr("pointer-events", "all")
+
+
+
+  var all = jsondata.collection.concat(jsondata.shapes.concat(jsondata.nodes.concat(jsondata.views)));
+
 
   // The event.transform does not change during session, it simply gets added onto every time
   // So just safe the value on the main svg so we can use it in calculations
   // We can't use this with transform directly because links depend on actual x and y data, not the translated attributes
-  svg.attr("prevTX", 0).attr("prevTY", 0).attr("scaleAllX", 1);
+  svg.attr("prevTX", 0).attr("prevTY", 0).attr("scaleAll", 1);
 
 
   svg.append("marker")
@@ -77,6 +78,19 @@ export function drawGraph() {
   .append("path")
   .attr("d", "M0,-5L10,0L0,5")//The path of the arrow
   .attr('fill','gray');//Arrow color
+
+
+  svg
+  .append('defs')
+  .append('pattern')
+    .attr('id', 'diagonalHatch')
+    .attr('patternUnits', 'userSpaceOnUse')
+    .attr('width', 4)
+    .attr('height', 4)
+  .append('path')
+    .attr('d', 'M-1,1 l2,-2 M0,4 l4,-4 M3,5 l2,-2')
+    .attr('stroke', '#cef5ce')
+    .attr('stroke-width', 1);
 
 
   link = svg.selectAll(".edgepath")
@@ -96,7 +110,6 @@ export function drawGraph() {
   linkLabel = svg.selectAll(".linkLabel")
   .data(linkData)
   .enter().append("text")
-  // .attr("filter", "url(#solid)")
   .text(function(d){
     return myLinkData.get("" + d.source + d.target);
   });
@@ -129,7 +142,6 @@ export function drawGraph() {
     .attr("class", "collection_rect main_rect")
     .attr("width", collection.select("text").node().getBBox().width+15)
     .attr("height", collection.select("text").node().getBBox().height+10)
-    // .style("stroke", "#5fd145")
     .style("stroke", "#2cbe16")
     .lower();
   }
@@ -141,17 +153,15 @@ export function drawGraph() {
     .join("g")
     .attr("class", "view_g main_g")
     .on("click", function(e, d) {
-      svg.selectAll("rect").style("stroke-width", "1");
-      drawCurrentPageBound(d);
-      drawMembersBound(d);
-      // console.log(e,d);
-      // start(d.name);
-      d3.select(this).selectAll("rect").style("stroke-width", "3");
+      svg.selectAll("rect").style("stroke-width", "1").style("fill", "white");
+      start(d.name);
+      d3.select(this).selectAll("rect").style("stroke-width", "3").style("fill", "url(#diagonalHatch)");
     })
     .call(d3.drag()
     .on("start", dragstartX)
     .on("end", dragendX)
-    .on("drag", dragX));
+    .on("drag", dragX))
+    .attr("url_id", function(d){return d.id});
 
     view.append("text")
     .attr("text-anchor", "start")
@@ -162,10 +172,6 @@ export function drawGraph() {
     .raise();
 
     for (let tg of d3.selectAll(".view_g")){
-      // d3.select(tg).select("text")
-      // .append("tspan").text(function(d){return d.type})
-      // .attr("dx",5);
-
       d3.select(tg).select("text")
       .append("tspan").text(function(d){
         if (d.name.length > 25){
@@ -177,24 +183,12 @@ export function drawGraph() {
       .on("click", function(e, d){navigator.clipboard.writeText(d.name)})
       .append("title").text(function(d){return "click to copy link\n" + d.name});
 
-      // d3.select(tg).select("text")
-      // .append("tspan").text(function(d){
-      //   if (d.relation_count !== undefined){
-      //     return "relations: " + d.relation_count;
-      //   } else {
-      //     return "View not loaded yet"
-      //   }
-      //
-      // })
-      // .attr("dx",15);
-
       d3.select(tg).selectAll("tspan").attr("x", 0).attr("dy", 22);
 
       d3.select(tg).append("rect")
       .attr("class", "view_rect main_rect")
       .attr("width", d3.select(tg).select("text").node().getBBox().width+15)
       .attr("height", d3.select(tg).select("text").node().getBBox().height+10)
-      // .style("stroke", "#69b3a2")
       .style("stroke", myGreen)
       .style('stroke-dasharray', '10,5')
       .style('stroke-linecap', 'butt')
@@ -203,6 +197,13 @@ export function drawGraph() {
           return "3";
         } else {
           return "1";
+        }
+      })
+      .style('fill', function(d){
+        if (d.selected){
+          return 'url(#diagonalHatch)';
+        } else {
+          return 'white';
         }
       })
       .lower();
@@ -251,17 +252,15 @@ export function drawGraph() {
     .join("g")
     .attr("class", "node_g main_g")
     .on("click", function(e, d) {
-      svg.selectAll("rect").style("stroke-width", "1");
-      drawCurrentPageBound(d);
-      drawMembersBound(d);
-      // console.log(e,d);
-      // start(d.name);
-      d3.select(this).selectAll("rect").style("stroke-width", "3");
+      svg.selectAll("rect").style("stroke-width", "1").style("fill", "white");
+      start(d.name);
+      d3.select(this).selectAll("rect").style("stroke-width", "3").style("fill", "url(#diagonalHatch)");
     })
     .call(d3.drag()
     .on("start", dragstartX)
     .on("end", dragendX)
-    .on("drag", dragX));
+    .on("drag", dragX))
+    .attr("url_id", function(d){return d.id});
 
     node.append("text")
     .attr("text-anchor", "start")
@@ -272,9 +271,6 @@ export function drawGraph() {
     .raise();
 
     for (let tg of d3.selectAll(".node_g")){
-      // d3.select(tg).select("text")
-      // .append("tspan").text(function(d){return d.type})
-      // .attr("dx",5);
 
       d3.select(tg).select("text")
       .append("tspan").text(function(d){
@@ -287,17 +283,12 @@ export function drawGraph() {
       .on("click", function(e, d){navigator.clipboard.writeText(d.name)})
       .append("title").text(function(d){return "click to copy link\n" + d.name});
 
-      // d3.select(tg).select("text")
-      // .append("tspan").text(function(d){return "relations: " + d.relation_count})
-      // .attr("dx",15);
-
       d3.select(tg).selectAll("tspan").attr("x", 0).attr("dy", 22);
 
       d3.select(tg).append("rect")
       .attr("class", "node_rect main_rect")
       .attr("width", d3.select(tg).select("text").node().getBBox().width+15)
       .attr("height", d3.select(tg).select("text").node().getBBox().height+10)
-      // .style("stroke", "#69b3a2")
       .style("stroke", myGreen)
       .style('stroke-dasharray', '10,5')
       .style('stroke-linecap', 'butt')
@@ -306,6 +297,13 @@ export function drawGraph() {
           return "3";
         } else {
           return "1";
+        }
+      })
+      .style('fill', function(d){
+        if (d.selected){
+          return 'url(#diagonalHatch)';
+        } else {
+          return 'white';
         }
       })
       .lower();
@@ -329,7 +327,7 @@ export function drawGraph() {
   // d3 sees zooming and panning as the same thing, strange design choice
   const zoom = d3.zoom();
 
-  //while panning links wont move because we use translate instead of changing x and y
+  //while panning linklabels wont move because we use translate instead of changing x and y
   zoom.on("zoom", function(e) {
     d3.selectAll(".main_g")
     .attr("transform", function(){return "translate("+(e.transform.x - svg.attr("prevTX"))+","+(e.transform.y - svg.attr("prevTY"))+")scale("+e.transform.k+")"});
@@ -347,7 +345,7 @@ export function drawGraph() {
 
 
     svg.attr("prevTX", e.transform.x).attr("prevTY", e.transform.y).attr("scaleAll", e.transform.k);
-
+    // zoomScale = e.transform.k;
     fixGroupChildren()
     fixLinks();
   });
@@ -359,8 +357,8 @@ export function drawGraph() {
 function firstTick(){
   ticked();
 
-  svg.selectAll(".collection_g").attr("x", function(d){d.x=50; return d.x}).attr("y", function(d){d.y=20; return d.y});
-  svg.selectAll(".shape_g").attr("x", function(d){d.x=200+50; return d.x}).attr("y", function(d){d.y=20; return d.y});
+  // svg.selectAll(".collection_g").attr("x", function(d){d.x=50; return d.x}).attr("y", function(d){d.y=20; return d.y});
+  // svg.selectAll(".shape_g").attr("x", function(d){d.x=200+50; return d.x}).attr("y", function(d){d.y=20; return d.y});
 
   fixGroupChildren();
   fixLinks();
@@ -399,9 +397,19 @@ function fixLinks(){
 
   linkLabel.attr("transform", function(d) {
     var angle = Math.atan((d.source.y - d.target.y) / (d.source.x - d.target.x)) * 180 / Math.PI;
+    if (!angle){
+      angle = 0;
+    }
     return 'translate(' + [((d.source.x + d.target.x)*scaleN / 2), ((d.source.y + d.target.y)*scaleN / 2)] + ')rotate(' + angle + ')'+"scale("+scaleN+")";
   })
-  .attr("y", "-10")
+  .attr("y", function(d){
+    // This fixes double links having labels on top of each other
+    if (d.source.x > d.target.x){
+      return "-10";
+    } else {
+      return "15";
+    }
+  })
   .attr("x", function(){return -1*d3.select(this).node().getBBox().width / 2});
 }
 
@@ -421,6 +429,7 @@ function dragstartX() {
 }
 
 function dragX(e, d) {
+  // d3.select(this).attr("x", d.x = d.x - (d.x-e.x)*scaleN).attr("y", d.y = d.y - (d.y-e.y)*scaleN);
   d3.select(this).attr("x", d.x = e.x).attr("y", d.y = e.y);
   ticked();
 }

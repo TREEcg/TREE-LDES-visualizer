@@ -6,18 +6,20 @@ var remainingSetter;
 var jsondata;
 var addImportLinks;
 var start;
+var members;
 var svgE;
 var svgEG;
 var offH;
 var tt;
 
-export function setValues(_svgHolder, _svgGHolder, _remainingSetter, _jsondata, _addImportLinks, _start){
+export function setValues(_svgHolder, _svgGHolder, _remainingSetter, _jsondata, _addImportLinks, _start, _members){
   svgHolder = _svgHolder;
   svgGHolder = _svgGHolder;
   remainingSetter = _remainingSetter;
   jsondata = _jsondata;
   addImportLinks = _addImportLinks;
   start = _start;
+  members = _members;
 }
 
 
@@ -189,6 +191,16 @@ function expandRelationHolderNodeInfo(d, tt){
   .append("title").text("Click to copy link\n" + d.name);
 
   tt.append("tspan").text("relations: " + d.relation_count)
+  .attr("dy", 22)
+  .attr("x",0)
+  .attr("dx",15);
+
+  let totalMembers = 0;
+  if(members[d.name] && members[d.name].size > 0) {
+    totalMembers = members[d.name].size;
+  }
+
+  tt.append("tspan").text("members: " + totalMembers)
   .attr("dy", 22)
   .attr("x",0)
   .attr("dx",15);

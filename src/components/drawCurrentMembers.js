@@ -1,19 +1,18 @@
 var members;
 var membersFailed;
 var remainingMembersSetter;
-var node_validation;
+var nodeValidation;
 var holder;
 var holderId;
 
 
 
-export function setValues(_members, _membersFailed, _remainingMembersSetter, _node_validation, _holderId){
+export function setValues(_members, _membersFailed, _remainingMembersSetter, _nodeValidation, _holderId){
   members = _members;
   membersFailed = _membersFailed;
   remainingMembersSetter = _remainingMembersSetter;
-  node_validation = _node_validation;
+  nodeValidation = _nodeValidation;
   holderId = _holderId;
-  console.log(node_validation);
 }
 
 export function drawMembers(d){
@@ -44,7 +43,7 @@ function showMemberHolder(d){
       summary.appendChild(document.createTextNode(tempA));
       details.appendChild(summary);
       let textHolder = document.createElement("div");
-      textHolder.appendChild(document.createTextNode(members[d.name].get(tempA) + "\n" + node_validation[tempA]));
+      textHolder.appendChild(document.createTextNode(members[d.name].get(tempA) + "\n" + nodeValidation[d.name][tempA]));
       textHolder.style["margin-left"] = "1.5rem";
       details.appendChild(textHolder);
       holder.appendChild(details);

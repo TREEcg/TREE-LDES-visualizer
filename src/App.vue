@@ -3,12 +3,12 @@
   <h1>Visualizer</h1>
   <div id="visualizerContainer">
     <div class="textContent">
-      <h2>A tool to visualize and validate a tree:collection</h2>
+      <h2>A tool to visualize and validate a tree:Collection</h2>
 
       <div>
         <label style="vertical-align: top;" for="url">Enter URL: </label>
         <div id="examplesDiv" style="margin: auto; display: inline-block; vertical-align: top;">
-          <input type="url" list="exT" v-model="data_url" placeholder="URL" name="url" v-on:click.stop="open()" v-on:keyup.enter="start(undefined)" v-on:blur="close()">
+          <input type="url" autocomplete="off" list="exT" v-model="data_url" placeholder="URL" name="url" v-on:click.stop="open()" v-on:keyup.enter="start(undefined)" v-on:blur="close()">
           <ul id="fakeExamples" tabindex="1" v-on:blur="close()">
             <li v-on:mousedown="setUrl(valueX)" v-for="[keyX, valueX] in this.exampleMap" v-bind:key="keyX" :title=valueX>
               {{keyX}}
@@ -19,18 +19,24 @@
       </div>
 
 
-      <div id="information" style="white-space: pre">
+      <div v-if="this.dataResult" id="information" style="white-space: pre">
         <br>
-        <p>{{this.rootInfo}}</p>
-        <p>{{this.mainInfo}}</p>
-        <li v-for="[keyX, valueX] in Object.entries(this.collectionStats)" v-bind:key="keyX">
-          {{keyX}}: {{valueX}}
-        </li>
-        <div v-if="this.shapePresent" style="display:inline-block; margin-bottom:1rem;">
+        <div v-if="this.dataResult.collectionStats.mainInfo">
+          <p>{{this.dataResult.collectionStats.mainInfo}}</p>
+        </div>
+        <div v-if="this.dataResult.collectionStats.rootInfo">
+          <p>{{this.dataResult.collectionStats.rootInfo}}</p>
+        </div>
+        <div v-if="this.dataResult.collectionStats.attributes">
+          <li v-for="[keyX, valueX] in Object.entries(this.dataResult.collectionStats.attributes)" v-bind:key="keyX">
+            {{keyX}}: {{valueX}}
+          </li>
+        </div>
+        <div v-if="this.dataResult.shapePresent" style="display:inline-block; margin-bottom:1rem;">
           <p v-on:click="openShape" style="display:inline">Found a shape, </p>
           <p id="shapeClosed" v-on:click="openShape" style="display:inline; font-weight:bold; cursor: pointer;">click to show.</p>
           <p id="shapeOpenedText" v-on:click="closeShape" style="display:none; font-weight:bold; cursor: pointer;">click to hide.</p>
-          <p id="shapeOpened" v-on:click="closeShape" style="display:none;">{{this.shapeInformation}}</p>
+          <p id="shapeOpened" v-on:click="closeShape" style="display:none;">{{this.dataResult.shapeInformation}}</p>
           <br>
         </div>
         <div style="min-height:5rem;">
@@ -45,9 +51,6 @@
 
 
       <div class="flexContainer">
-        <!-- <div id="currentPage" class="textContent"> -->
-          <!-- <h3>Selected resource</h3> -->
-        <!-- </div> -->
         <div class="textContent resizableContainers">
           <h3>Selected resource</h3>
           <div id="currentPage"></div>
@@ -58,9 +61,6 @@
         </div>
       </div>
       <div class="flexContainer">
-        <!-- <div id="members" class="textContent">
-          <h3>Members</h3>
-        </div> -->
         <div class="textContent resizableContainers">
           <h3>Members</h3>
           <div id="members"></div>
@@ -68,45 +68,66 @@
 
         <div class="textContent resizableContainers">
           <h3>Log</h3>
-          <!-- <div id="currentPage"></div> -->
 
+          <div id="log" class="textContent">
+            <div id="v-model-radiobutton">
+              <input type="radio" id="one" value="Remarks" v-model="picked" />
+              <label for="one">Remarks</label>
+              <br />
+              <input type="radio" id="two" value="Shape" v-model="picked" />
+              <label for="two">Shape Validation</label>
+              <br />
+            </div>
 
-        <div id="log" class="textContent">
-          <!-- <h3>Log</h3> -->
-
-          <div id="v-model-radiobutton">
-            <input type="radio" id="one" value="Remarks" v-model="picked" />
-            <label for="one">Remarks</label>
-            <br />
-            <input type="radio" id="two" value="Shape" v-model="picked" />
-            <label for="two">Shape Validation</label>
-            <br />
-          </div>
-
-          <div>
-            <div v-if="picked === 'Shape'">
-              <div v-if="this.shape_validation == false || this.shape_validation == true">
-                <br><p>All members conform to shape: {{this.shape_validation}}</p>
+            <div>
+              <div v-if="picked === 'Shape' && this.dataResult">
+                <div v-if="this.dataResult.shape_validation == false || this.dataResult.shape_validation == true">
+                  <br><p>All members conform to shape: {{this.dataResult.shape_validation}}</p><br>
+                </div>
+                <div v-else>
+                  <br><p>No validation report available.<br>
+                    Either no members were found in all dereferenced resources or no shape was found.</p>
+                </div>
+                <div v-for="(valueX, keyX) in this.dataResult.nodeValidation" v-bind:key="valueX" >
+                  <p style="font-weight:bold;">Report for {{keyX}}:</p>
+                  <div v-if="Object.keys(valueX).length > 0">
+                     <br>
+                     <div class="spacing" v-for="(valueY, keyY) in valueX" v-bind:key="valueY" >
+                       {{keyY}}
+                       {{valueY}}
+                       <br>
+                     </div>
+                  </div>
+                  <div v-else>
+                    All members passed validation.
+                  </div>
+                </div>
               </div>
-              <div v-if="this.shape_report">
-                <div style="white-space: pre-line">{{this.shape_report}}</div>
+            </div>
+
+            <div v-if="picked === 'Remarks' && this.dataResult">
+              <div v-if="this.dataResult.remarks.size > 0">
+                <div style="white-space: pre-line">
+                  <li v-for="[keyX, valueX] in this.dataResult.remarks" v-bind:key="valueX" >
+                    <div style="white-space: pre" v-if="valueX != ''">
+                      <br>
+                      <p style="font-weight:bold;">Remarks for {{keyX}}:</p>
+                      <p>{{valueX}}</p>
+                    </div>
+                    <div v-else>
+                      <br>
+                      <p style="font-weight:bold;">Remarks for {{keyX}}:</p>
+                      <p>Nothing to remark.</p>
+                    </div>
+                  </li>
+                </div>
               </div>
               <div v-else>
-                <p>No report available.</p>
+                <p>No remarks available.</p>
               </div>
             </div>
-          </div>
 
-          <div v-if="picked === 'Remarks'">
-            <div v-if="this.remarks">
-              <div style="white-space: pre-line">{{this.remarks}}</div>
-            </div>
-            <div v-else>
-              <p>No remarks available.</p>
-            </div>
           </div>
-
-        </div>
         </div>
       </div>
       <!-- This empty div allows user to resize extra info screen easily -->
@@ -164,21 +185,18 @@ export default {
       ]),
       svgHolder: null,
       svgGHolder: null,
-      remarks: "",
+      remarks: new Map(),
       next_url: "",
       checked_shape: false,
       checked_remarks: false,
       picked: 'Remarks',
       data_url: undefined,
       shape_validation: null,
-      node_validation: [],
-      shape_report: "",
+      nodeValidation: {},
       selected: 0,
       alpha_decay_rate: 0.5,//1 - Math.pow(0.001, 1 / 300)
       emptyURL: "",
       urlList: [],
-      rootInfo: "",
-      mainInfo: "",
       remaining: "",
       remainingMembers: "",
       identifies: "",
@@ -186,16 +204,18 @@ export default {
       shapeInformation: "",
       shapePresent: undefined,
       myGreen: "rgba(0, 128, 0, 0.5)",
-      tableObserver: undefined
+      tableObserver: undefined,
+      dataResult: undefined,
     }
   },
-  watch: {
-    picked: {
-      handler() {
-        this.remarks = dF.remarks;
-      },
-    }
-  },
+  // watch: {
+  //   picked: {
+  //     handler() {
+  //       this.remarks = dF.remarks;
+  //       this.nodeValidation = dF.nodeValidation;
+  //     },
+  //   }
+  // },
 
   created() {
     var listUrl = ("" + window.location).split('?p=');
@@ -212,9 +232,9 @@ export default {
         });
         this.derefList(listUrl.shift(), listUrl, promiseResolve);
 
-        p.then(() => this.derefUrl(lastUrl));
+        p.then(() => this.derefUrl(lastUrl, true));
       } else {
-        this.derefUrl(lastUrl);
+        this.derefUrl(lastUrl, true);
       }
     }
   },
@@ -241,8 +261,11 @@ export default {
       }
 
     },
-    start(url){
-      this.derefUrl(url);
+    start(url, draw = false){
+      if (!url){
+        draw = true;
+      }
+      this.derefUrl(url, draw);
 
       if (!url && dF.data_url){
         window.history.pushState({}, document.title, this.emptyURL+"?p="+encodeURIComponent(dF.data_url));
@@ -256,22 +279,7 @@ export default {
       }
     },
     derefList(url, list, promiseResolve){
-      var promiseResolve1;
-      var p1 = new Promise(function(resolve){
-        promiseResolve1 = resolve;
-      });
-
-      var promiseResolve2;
-      var p2 = new Promise(function(resolve){
-        promiseResolve2 = resolve;
-      });
-
-      var promiseResolve3;
-      var p3 = new Promise(function(resolve){
-        promiseResolve3 = resolve;
-      });
-      dF.getData(url, promiseResolve1, promiseResolve2, undefined, promiseResolve3)
-      Promise.all([p1, p2, p3]).then(() => {
+      dF.getData(url).then(() => {
         if (list.length == 0){
           promiseResolve();
         } else {
@@ -279,7 +287,7 @@ export default {
         }
       });
     },
-    derefUrl(url){
+    async derefUrl(url, draw = false){
       if (!url && !this.data_url){
         this.svgClear();
         dF.setDataUrl(undefined);
@@ -287,85 +295,72 @@ export default {
         return;
       }
 
-      var promiseResolve1;
-      var p1 = new Promise(function(resolve){
-        promiseResolve1 = resolve;
-      });
-
-      var promiseResolve2;
-      var p2 = new Promise(function(resolve){
-        promiseResolve2 = resolve;
-      });
-
       if (url){
         this.data_url = url;
+      } else {
+        this.svgClear();
       }
 
       dF.setDataUrl(this.data_url);
-      dF.getData(url, promiseResolve1, promiseResolve2, this.svgClear, this.collectionCB);
-      Promise.all([p1,p2]).then(() => this.cB())
+      this.dataResult = await dF.getData(url);
+      this.data_url = this.dataResult.data_url
+      if (!this.dataResult.dereferenced){
+        this.cB(draw);
+      } else {
+        this.cB();
+      }
+
     },
     validateAll(){
       dF.setDataUrl(this.data_url);
       dF.validateAll(this.data_url, this.cB);
     },
-    copyData(){
-      this.remaining = undefined;
-      this.data_url = dF.data_url;
-      this.shape_validation = dF.shape_validation;
-      this.node_validation = dF.node_validation;
-      this.shape_report = dF.shape_report;
-      this.collectionStats = dF.collectionStats;
-      this.remarks = dF.remarks;
-      this.mainInfo = dF.mainInfo;
-      this.rootInfo = dF.rootInfo;
-      this.startObserver();
-    },
     svgClear(){
-      this.rootInfo = undefined;
-      this.mainInfo = undefined;
-      this.shapePresent = undefined;
-      this.shapeInformation = undefined;
+
       this.identifies = undefined;
       this.remaining = undefined;
       this.remainingMembers = undefined;
-      this.collectionStats = {};
-      d3.selectAll("div").selectAll("svg").remove();
+      if (this.dataResult){
+        this.dataResult.collectionStats = {};
+        this.dataResult.shapePresent = undefined;
+        this.dataResult.shapeInformation = undefined;
+      }
+      // d3.selectAll("div").selectAll("svg").remove();
       this.svgHolder = null;
       this.svgGHolder = null;
+      d3.selectAll("#currentPage").selectAll("svg").remove();
+      // d3.selectAll("#currentPage").selectAll("svg").remove();
     },
-    cB(){
-      this.copyData();
+    cB(draw = true){
       this.setSVGElements();
 
-      if (!this.findLastNode(dF.data_url)){
-        let tempArray = Array.from(dF.redirectMappings.get(dF.data_url));
+      if (!this.findLastNode(this.dataResult.data_url)){
+        let tempArray = Array.from(this.dataResult.redirectMappings.get(this.dataResult.data_url));
         while(tempArray.length > 0 && !this.findLastNode(tempArray.pop())){return;}
       }
 
-      this.mainInfo = dF.mainInfo;
-      this.rootInfo = dF.rootInfo;
-
-      if (dF.jsondata.shapes && dF.jsondata.shapes[0] && dF.jsondata.shapes[0]["shape_extra"]){
-        this.shapeInformation = dF.jsondata.shapes[0]["shape_extra"];
-        this.shapePresent = true;
-      } else {
-        this.shapePresent = undefined;
+      if (this.dataResult && this.dataResult.jsondata.shapes && this.dataResult.jsondata.shapes[0] && this.dataResult.jsondata.shapes[0]["shape_extra"]){
+        this.dataResult.shapeInformation = this.dataResult.jsondata.shapes[0]["shape_extra"];
+        this.dataResult.shapePresent = true;
+      } else if (this.dataResult){
+        this.dataResult.shapePresent = undefined;
       }
 
-      dG.setValues(this.myGreen, dF.jsondata, dP.drawCurrentPage, dM.drawMembers, "graph", dF.relationLabelMap, this.start);
-      dG.drawGraph();
+      dG.setValues(this.myGreen, this.dataResult.jsondata, "graph", this.dataResult.relationLabelMap, this.start);
+      if (draw){
+        dG.drawGraph();
+      }
     },
     findLastNode(lastUrl){
       let found = false;
-      if (dF.jsondata.nodes.length > 0){
-        for (let n of dF.jsondata.nodes){
+      if (this.dataResult.jsondata.nodes.length > 0){
+        for (let n of this.dataResult.jsondata.nodes){
           if (n.name == lastUrl){
             n.selected = true;
             this.drawExtra(n);
             found = true;
-            if (dF.jsondata[n.id] && dF.jsondata[n.id].remainingItems > 0){
-              this.remaining = "Remaining items identified via relation properties for selected resource: " + dF.jsondata[n.id].remainingItems + ".\n";
+            if (this.dataResult.jsondata[n.id] && this.dataResult.jsondata[n.id].remainingItems > 0){
+              this.remaining = "Remaining items identified via relation properties for selected resource: " + this.dataResult.jsondata[n.id].remainingItems + ".\n";
             }
             this.identifies = "Selected resource identifies a node.\n";
           } else {
@@ -374,14 +369,14 @@ export default {
         }
       }
 
-      if (dF.jsondata.views.length > 0){
-        for (let n of dF.jsondata.views){
+      if (this.dataResult.jsondata.views.length > 0){
+        for (let n of this.dataResult.jsondata.views){
           if (n.name == lastUrl){
             n.selected = true;
             this.drawExtra(n);
             found = true;
-            if (dF.jsondata[n.id] && dF.jsondata[n.id].remainingItems > 0){
-              this.remaining = "Remaining items identified via relation properties for selected resource: " + dF.jsondata[n.id].remainingItems + ".\n";
+            if (this.dataResult.jsondata[n.id] && this.dataResult.jsondata[n.id].remainingItems > 0){
+              this.remaining = "Remaining items identified via relation properties for selected resource: " + this.dataResult.jsondata[n.id].remainingItems + ".\n";
             }
             this.identifies = "Selected resource identifies a view.\n";
           } else {
@@ -392,10 +387,8 @@ export default {
       return found;
     },
     collectionCB(){
-      this.collectionStats = dF.collectionStats;
-      this.remarks = dF.remarks;
-      this.mainInfo = dF.mainInfo;
-      this.rootInfo = dF.rootInfo;
+      this.collectionStats = this.dataResult.collectionStats;
+      this.remarks = this.dataResult.remarks;
     },
     setUrl(value){
       this.data_url = value;
@@ -424,10 +417,11 @@ export default {
       this.remainingMembers = str;
     },
     drawExtra(d){
-      dP.setValues(this.svgHolder, this.svgGHolder, this.remainingSetter, dF.jsondata, dF.addImportLinks, this.start);
+      dP.setValues(this.svgHolder, this.svgGHolder, this.remainingSetter, this.dataResult.jsondata, dF.addImportLinks, this.start, this.dataResult.members);
       dP.drawCurrentPage(d);
-      dM.setValues(dF.members, dF.membersFailed, this.remainingMembersSetter, dF.node_validation, "members")
+      dM.setValues(this.dataResult.members, this.dataResult.membersFailed, this.remainingMembersSetter, this.dataResult.nodeValidation, "members")
       dM.drawMembers(d);
+      dG.updateSelected(d);
     },
     setSVGElements(){
       if (!this.svgHolder){
@@ -435,19 +429,11 @@ export default {
         [
           d3.select("#currentPage")
           .append("svg")
-          .attr("pointer-events", "all"),
-          d3.select("#members")
-          .append("svg")
-          .attr("pointer-events", "all"),
-          d3.select("#extra")
-          .append("svg")
           .attr("pointer-events", "all")
         ]
         this.svgGHolder =
         [
-          this.svgHolder[0].append("g"),
-          this.svgHolder[1].append("g"),
-          this.svgHolder[2].append("g")
+          this.svgHolder[0].append("g")
         ]
       }
     }
@@ -764,4 +750,18 @@ td:nth-child(6) {
 td:nth-child(1) {
     width: 200px;
 }  */
+
+
+@media (max-width: 860px) {
+  .flexContainer {
+    margin-left: 0px;
+    flex-direction: column;
+  }
+
+  .resizableContainers {
+    width: 90%;
+    margin-left: 5%;
+    margin-top: 3.5vh;
+  }
+}
 </style>

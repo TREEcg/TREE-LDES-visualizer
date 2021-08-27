@@ -480,7 +480,7 @@ export async function onlyValidate(url){
     })
   })
 
-  return new Promise()
+  return promiseResult;
 }
 
 

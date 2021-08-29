@@ -8,11 +8,18 @@ npm install
 ### Compiles and hot-reloads for development
 ```
 npm run serve
+or
+npx vue-cli-service serve
 ```
 
 ### Compiles and minifies for production
 ```
 npm run build
+```
+
+### Compiles to github pages
+```
+npm run deploy
 ```
 
 ### Lints and fixes files
